@@ -9,9 +9,12 @@ import { deleteMatch } from "@/actions/matches";
 interface Match {
   id: string;
   name: string;
-  description: string;
-  isPublic: boolean;
+  description: string | null;
+  location: string | null;
+  mark: number | null;
+  updatedAt: string;
   createdAt: string;
+  isReviewed: boolean;
 }
 
 /**
@@ -64,7 +67,7 @@ export default function DashboardPage() {
     try {
       const result = await deleteMatch(id, user.id);
       if (result.success) {
-        setMatches(matches.filter((s) => s.id !== id));
+        setMatches(matches.filter((m) => m.id !== id));
       } else {
         alert(result.error || "Failed to delete match");
       }
@@ -89,34 +92,37 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
+    <section className="container mx-auto px-6 py-10">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-base-content/70 mt-1">
+          <h1 className="text-4xl font-bold text-primary">Dashboard</h1>
+          <p className="text-base-content/70 mt-2">
             Welcome back, {user?.name}!
           </p>
         </div>
-        <Link href="/dashboard/matches/new" className="btn btn-primary">
+
+        <Link href="/matches/create" className="btn btn-primary">
           + Create Match
         </Link>
       </div>
 
-      <div className="stats shadow mb-8">
+      {/* Stats */}
+        <div className="stats shadow mb-8">
         <div className="stat">
           <div className="stat-title">Total Matches</div>
           <div className="stat-value">{matches.length}</div>
         </div>
         <div className="stat">
-          <div className="stat-title">Public</div>
+          <div className="stat-title">Reviewed</div>
           <div className="stat-value text-primary">
-            {matches.filter((s) => s.isPublic).length}
+            {matches.filter((s) => s.isReviewed).length}
           </div>
         </div>
         <div className="stat">
-          <div className="stat-title">Private</div>
+          <div className="stat-title">Pending</div>
           <div className="stat-value text-secondary">
-            {matches.filter((s) => !s.isPublic).length}
+            {matches.filter((s) => !s.isReviewed).length}
           </div>
         </div>
       </div>
@@ -124,68 +130,99 @@ export default function DashboardPage() {
       <h2 className="text-xl font-semibold mb-4">Your Matches</h2>
 
       {loadingMatches ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid gap-4">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="card bg-base-200">
+            <div key={i} className="card bg-base-100 border border-base-200">
               <div className="card-body">
                 <div className="skeleton h-6 w-3/4"></div>
                 <div className="skeleton h-4 w-full mt-2"></div>
-                <div className="skeleton h-8 w-24 mt-4"></div>
+                <div className="skeleton h-4 w-1/2 mt-4"></div>
               </div>
             </div>
           ))}
         </div>
       ) : matches.length === 0 ? (
-        <div className="text-center py-12 bg-base-200 rounded-lg">
-          <div className="text-4xl mb-4">📝</div>
-          <h3 className="text-lg font-semibold mb-2">No matches yet</h3>
-          <p className="text-base-content/70 mb-4">
-            Create your first agent match to get started
-          </p>
-          <Link href="/dashboard/matches/new" className="btn btn-primary">
-            Create Match
-          </Link>
+        <div className="hero bg-base-200 rounded-box mt-8">
+          <div className="hero-content text-center">
+            <div>
+              <div className="text-4xl mb-4">📝</div>
+              <h2 className="text-2xl font-bold">No matches yet</h2>
+              <p className="py-3 text-base-content/70">
+                Create your first match to start tracking player performance
+                and feedback.
+              </p>
+              <Link href="/matches/create" className="btn btn-primary">
+                Create First Match
+              </Link>
+            </div>
+          </div>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid gap-4">
           {matches.map((match) => (
-            <div key={match.id} className="card bg-base-200">
+            <div
+              key={match.id}
+              className="card bg-base-100 shadow-md hover:shadow-xl transition-all duration-200 border border-base-200"
+            >
               <div className="card-body">
                 <div className="flex justify-between items-start">
-                  <h3 className="card-title text-lg">{match.name}</h3>
-                  <div
-                    className={`badge ${match.isPublic ? "badge-success" : "badge-ghost"}`}
-                  >
-                    {match.isPublic ? "Public" : "Private"}
-                  </div>
-                </div>
-                <p className="text-base-content/70 text-sm line-clamp-2">
-                  {match.description}
-                </p>
-                <div className="card-actions justify-end mt-4">
-                  <Link
-                    href={`/dashboard/matches/${match.id}/edit`}
-                    className="btn btn-ghost btn-sm"
-                  >
-                    Edit
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(match.id)}
-                    className="btn btn-error btn-sm btn-outline"
-                    disabled={deletingId === match.id}
-                  >
-                    {deletingId === match.id ? (
-                      <span className="loading loading-spinner loading-xs"></span>
-                    ) : (
-                      "Delete"
+                  <Link href={`/matches/${match.id}`} className="flex-1">
+                    <h2 className="card-title text-xl hover:text-primary transition-colors">
+                      {match.name}
+                    </h2>
+
+                    {match.description && (
+                      <p className="text-base-content/70 mt-1">
+                        {match.description}
+                      </p>
                     )}
-                  </button>
+                  </Link>
+
+                  {match.mark != null && (
+                    <div className="badge badge-primary badge-lg">
+                      {match.mark}/10
+                    </div>
+                  )}
+                </div>
+
+                <div className="divider my-2"></div>
+
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex flex-wrap gap-4 text-sm text-base-content/70">
+                    {match.location && <span>📍 {match.location}</span>}
+
+                    {match.updatedAt && (
+                      <span>
+                        🗓️ {new Date(match.updatedAt).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="card-actions justify-end">
+                    <Link
+                      href={`/matches/${match.id}/edit`}
+                      className="btn btn-ghost btn-sm"
+                    >
+                      Edit
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(match.id)}
+                      className="btn btn-error btn-sm btn-outline"
+                      disabled={deletingId === match.id}
+                    >
+                      {deletingId === match.id ? (
+                        <span className="loading loading-spinner loading-xs"></span>
+                      ) : (
+                        "Delete"
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           ))}
         </div>
       )}
-    </div>
+    </section>
   );
 }

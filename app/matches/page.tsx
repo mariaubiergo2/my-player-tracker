@@ -1,8 +1,10 @@
 import Link from "next/link"
-import { getMatches } from "./[identifier]/MATCHES"
+import { prisma } from "@/lib/prisma"
 
 export default async function MatchesPage() {
-  const matches = await getMatches()
+  const matches = await prisma.match.findMany({
+    orderBy: { date: "desc" },
+  })
 
   return (
     <section className="container mx-auto px-6 py-10">
