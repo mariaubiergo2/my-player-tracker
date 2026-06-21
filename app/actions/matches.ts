@@ -50,7 +50,7 @@ export async function createMatch(prevState: any, formData: FormData) {
   const isReviewed = formData.get('isReviewed')
   const reviewedAt = formData.get('reviewedAt')
 
-  if (!name || !date || !status|| !trainerId || !playerId){
+  if (!name || !date || !status || !trainerId || !playerId) {
     // throw new Error("Missing required fields: name, date, status, trainerId and playerId are required");
     return { message: 'Missing required fields: name, date, status, trainerId and playerId are required' };
   }
@@ -78,9 +78,9 @@ export async function createMatch(prevState: any, formData: FormData) {
     intensity: intensity ? Number(intensity) : undefined,
     attitude: attitude ? Number(attitude) : undefined,
     performance: performance ? Number(performance) : undefined,
-    goals: goals ? Number(goals) : undefined,
-    assists: assists ? Number(assists) : undefined,
-    minutesPlayed: minutesPlayed ? Number(minutesPlayed) : undefined,
+    goals: goals ? Number(goals) : 0,
+    assists: assists ? Number(assists) : 0,
+    minutesPlayed: minutesPlayed ? Number(minutesPlayed) : 0,
     strengths: strengths ? String(strengths).split(',').map((s) => s.trim()) : [],
     weaknesses: weaknesses ? String(weaknesses).split(',').map((s) => s.trim()) : [],
     improvementAreas: improvementAreas ? String(improvementAreas).split(',').map((s) => s.trim()) : [],
@@ -97,17 +97,43 @@ export async function createMatch(prevState: any, formData: FormData) {
 
 // 3. UPDATE MATCH
 export async function updateMatch(matchId: string, updates: Partial<Match>) {
-  const matchIndex = MATCHES.findIndex((m) => m.id === matchId);
+  try {
+    const matchIndex = MATCHES.findIndex((m) => m.id === matchId);
 
-  if (matchIndex === -1) return null;
+    if (matchIndex === -1) {
+      return { success: false, error: "Match not found" };
+    }
 
-  MATCHES[matchIndex] = {
-    ...MATCHES[matchIndex],
-    ...updates,
-    updatedAt: new Date().toISOString(),
-  };
+    MATCHES[matchIndex] = {
+      ...MATCHES[matchIndex],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
 
-  return MATCHES[matchIndex];
+    return { success: true, match: MATCHES[matchIndex] };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : "Failed to update match" };
+  }
 }
 
 
+export async function deleteMatch(id: string, userId: string) {
+  try {
+    const matchIndex = MATCHES.findIndex((s) => s.id.toString() === id);
+
+    if (matchIndex === -1) {
+      return { error: "Match not found" };
+    }
+
+    if (MATCHES[matchIndex].trainerId !== userId) {
+      return { error: "Unauthorized to delete this match" };
+    }
+
+    MATCHES.splice(matchIndex, 1);
+    revalidatePath("/matches");
+
+    return { success: true };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Failed to delete match" };
+  }
+}

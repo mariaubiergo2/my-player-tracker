@@ -1,13 +1,95 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
-
-generator client {
-  provider = "prisma-client"
-  output   = "../app/generated/prisma"
-}
-
 datasource db {
   provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  PLAYER
+  TRAINER
+  ADMIN
+}
+
+enum MatchStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+enum MatchType {
+  FRIENDLY
+  LEAGUE
+  CUP
+  TRAINING
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  surname   String
+  email     String   @unique
+  password  String
+  role      UserRole @default(PLAYER)
+
+  phone     String?
+  avatarUrl String?
+  birthDate DateTime?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  playerMatches  Match[] @relation("PlayerMatches")
+  trainerMatches Match[] @relation("TrainerMatches")
+
+  @@map("users")
+}
+
+model Match {
+  id          String @id @default(cuid())
+
+  name        String
+  description String?
+  location    String?
+
+  date      DateTime
+  startTime String?
+  endTime   String?
+
+  opponent  String?
+  matchType MatchType?
+  status    MatchStatus @default(SCHEDULED)
+
+  playerId  String @map("player_id")
+  trainerId String @map("trainer_id")
+  teamId    String? @map("team_id")
+
+  player  User @relation("PlayerMatches", fields: [playerId], references: [id])
+  trainer User @relation("TrainerMatches", fields: [trainerId], references: [id])
+
+  comment          String?
+  trainerFeedback  String? @map("trainer_feedback")
+  playerReflection String? @map("player_reflection")
+
+  mark        Int?
+  intensity   Int?
+  attitude    Int?
+  performance Int?
+
+  goals         Int @default(0)
+  assists       Int @default(0)
+  minutesPlayed Int @default(0) @map("minutes_played")
+
+  strengths        String[]
+  weaknesses       String[]
+  improvementAreas String[] @map("improvement_areas")
+
+  isReviewed Boolean   @default(false) @map("is_reviewed")
+  reviewedAt DateTime? @map("reviewed_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("matches")
 }
