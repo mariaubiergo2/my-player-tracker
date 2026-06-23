@@ -65,8 +65,8 @@ model Match {
   trainerId String @map("trainer_id")
   teamId    String? @map("team_id")
 
-  player  User @relation("PlayerMatches", fields: [playerId], references: [id])
-  trainer User @relation("TrainerMatches", fields: [trainerId], references: [id])
+  player  User @relation("PlayerMatches", fields: [playerId], references: [id], onDelete: Cascade)
+  trainer User @relation("TrainerMatches", fields: [trainerId], references: [id], onDelete: Cascade)
 
   comment          String?
   trainerFeedback  String? @map("trainer_feedback")

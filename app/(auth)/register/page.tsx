@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/useAuth";
  */
 export default function RegisterPage() {
   const router = useRouter();
-  const { register, isAuthenticated, isLoading } = useAuth();
+  const { register, isAuthenticated, isLoading, user } = useAuth();
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
   const [email, setEmail] = useState("");
@@ -21,9 +21,22 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Redirect if already authenticated
-  if (!isLoading && isAuthenticated) {
-    router.push("/dashboard");
-    return null;
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      if (user?.role === "ADMIN") {
+        router.push("/admin/users");
+      } else {
+        router.push("/dashboard");
+      }
+    }
+  }, [isLoading, isAuthenticated, user, router]);
+
+  if (isLoading || isAuthenticated) {
+    return (
+      <div className="flex justify-center items-center py-10">
+        <span className="loading loading-spinner loading-lg"></span>
+      </div>
+    );
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,7 +69,7 @@ export default function RegisterPage() {
     <>
       <h2 className="card-title text-2xl justify-center">Create Account</h2>
       <p className="text-center text-base-content/70">
-        Join to create and share agent skills
+        Join to track player matches and feedback
       </p>
 
       <form onSubmit={handleSubmit} className="mt-4">

@@ -32,12 +32,16 @@ export default function Header() {
           >
             {isAuthenticated && (
               <li>
-                <Link href="/dashboard">Dashboard</Link>
+                {user?.role === "ADMIN" ? (
+                  <Link href="/admin/users">Users</Link>
+                ) : (
+                  <Link href="/dashboard">Dashboard</Link>
+                )}
               </li>
             )}
           </ul>
         </div>
-        <Link href="/" className="btn btn-ghost text-xl">
+        <Link href="/about" className="btn btn-ghost text-xl">
           🤖 Agent Matches
         </Link>
       </div>
@@ -45,7 +49,11 @@ export default function Header() {
         <ul className="menu menu-horizontal px-1">
           {isAuthenticated && (
             <li>
-              <Link href="/dashboard">Dashboard</Link>
+              {user?.role === "ADMIN" ? (
+                <Link href="/admin/users">Users</Link>
+              ) : (
+                <Link href="/dashboard">Dashboard</Link>
+              )}
             </li>
           )}
         </ul>
@@ -70,13 +78,19 @@ export default function Header() {
               tabIndex={0}
               className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
             >
-              <li className="menu-title">{user?.name}</li>
+              <li className="menu-title">{user?.name} ({user?.role})</li>
               <li>
-                <Link href="/dashboard">Dashboard</Link>
+                {user?.role === "ADMIN" ? (
+                  <Link href="/admin/users">Users</Link>
+                ) : (
+                  <Link href="/dashboard">Dashboard</Link>
+                )}
               </li>
-              <li>
-                <Link href="/matches/create">Create Match</Link>
-              </li>
+              {user?.role !== "ADMIN" && (
+                <li>
+                  <Link href="/matches/create">Create Match</Link>
+                </li>
+              )}
               <li>
                 <button onClick={logout}>Logout</button>
               </li>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,16 +11,29 @@ import { useAuth } from "@/hooks/useAuth";
  */
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isAuthenticated, isLoading } = useAuth();
+  const { login, isAuthenticated, isLoading, user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Redirect if already authenticated
-  if (!isLoading && isAuthenticated) {
-    router.push("/dashboard");
-    return null;
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      if (user?.role === "ADMIN") {
+        router.push("/admin/users");
+      } else {
+        router.push("/dashboard");
+      }
+    }
+  }, [isLoading, isAuthenticated, user, router]);
+
+  if (isLoading || isAuthenticated) {
+    return (
+      <div className="flex justify-center items-center py-10">
+        <span className="loading loading-spinner loading-lg"></span>
+      </div>
+    );
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,8 +42,12 @@ export default function LoginPage() {
     setIsSubmitting(true);
 
     try {
-      await login({ email, password });
-      router.push("/dashboard");
+      const res = await login({ email, password });
+      if (res.user.role === "ADMIN") {
+        router.push("/admin/users");
+      } else {
+        router.push("/dashboard");
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     } finally {
@@ -42,7 +59,7 @@ export default function LoginPage() {
     <>
       <h2 className="card-title text-2xl justify-center">Welcome Back</h2>
       <p className="text-center text-base-content/70">
-        Sign in to manage your agent skills
+        Sign in to track player matches and feedback
       </p>
 
       <form onSubmit={handleSubmit} className="mt-4">

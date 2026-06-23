@@ -16,12 +16,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Agent Skills Manager",
+  title: "Player Tracker",
   description:
-    "Create, manage, and share AI agent skills. A Next.js demo showcasing SSG, SSR, ISR, and CSR patterns with Prisma and DaisyUI.",
+    "Track player matches and give feedback. A Next.js application showcasing player performance monitoring with Prisma and DaisyUI.",
   openGraph: {
-    title: "Agent Skills Manager",
-    description: "Create, manage, and share AI agent skills publicly",
+    title: "Player Tracker",
+    description: "Track player matches and give feedback publicly",
     type: "website",
   },
 };

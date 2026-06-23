@@ -11,6 +11,7 @@ export interface TokenPayload {
   userId: string;
   email: string;
   name: string;
+  role: UserRole;
   exp: number;
 }
 
@@ -45,6 +46,7 @@ export function generateToken(user: {
     userId: user.id,
     email: user.email,
     name: user.name,
+    role: user.role,
     exp: Date.now() + TOKEN_EXPIRY_HOURS * 60 * 60 * 1000,
   };
 

@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
       id: payload.userId,
       email: payload.email,
       name: payload.name,
+      role: payload.role,
     },
   });
 }
