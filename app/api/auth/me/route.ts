@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
       email: payload.email,
       name: payload.name,
       role: payload.role,
+      avatarUrl: payload.avatarUrl,
     },
   });
 }

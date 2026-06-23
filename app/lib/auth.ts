@@ -12,6 +12,7 @@ export interface TokenPayload {
   email: string;
   name: string;
   role: UserRole;
+  avatarUrl?: string | null;
   exp: number;
 }
 
@@ -41,12 +42,14 @@ export function generateToken(user: {
   email: string;
   name: string;
   role: UserRole;
+  avatarUrl?: string | null;
 }): string {
   const payload: TokenPayload = {
     userId: user.id,
     email: user.email,
     name: user.name,
     role: user.role,
+    avatarUrl: user.avatarUrl || null,
     exp: Date.now() + TOKEN_EXPIRY_HOURS * 60 * 60 * 1000,
   };
 

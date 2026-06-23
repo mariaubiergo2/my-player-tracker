@@ -66,12 +66,20 @@ export default function Header() {
             <div
               tabIndex={0}
               role="button"
-              className="btn btn-ghost btn-circle avatar placeholder"
+              className={`btn btn-ghost btn-circle avatar ${user?.avatarUrl ? "" : "placeholder"}`}
             >
-              <div className="bg-primary text-primary-content w-10 rounded-full flex items-center justify-center">
-                <span className="text-lg">
-                  {user?.name?.charAt(0).toUpperCase()}
-                </span>
+              <div className="bg-primary text-primary-content w-10 rounded-full flex items-center justify-center overflow-hidden">
+                {user?.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt={user.name || "User avatar"}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-lg">
+                    {user?.name?.charAt(0).toUpperCase()}
+                  </span>
+                )}
               </div>
             </div>
             <ul
@@ -89,6 +97,11 @@ export default function Header() {
               {user?.role !== "ADMIN" && (
                 <li>
                   <Link href="/matches/create">Create Match</Link>
+                </li>
+              )}
+              {(user?.role === "PLAYER" || user?.role === "TRAINER") && (
+                <li>
+                  <Link href="/profile">Edit Profile</Link>
                 </li>
               )}
               <li>
