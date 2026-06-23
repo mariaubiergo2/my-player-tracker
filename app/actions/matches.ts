@@ -66,7 +66,7 @@ export async function createMatch(prevState: any, formData: FormData) {
     return { message: 'Missing required fields: name, date, status, trainerId and playerId are required' };
   }
 
-  let redirectTarget = '/matches';
+  let redirectTarget = '/dashboard';
 
   try {
     // 1. Verify player and trainer exist in PostgreSQL to prevent FK constraint crashes
@@ -159,7 +159,6 @@ export async function createMatch(prevState: any, formData: FormData) {
 
   // 7. Revalidate and redirect (outside try/catch to work correctly in Next.js)
   revalidatePath("/dashboard");
-  revalidatePath("/matches");
   redirect(redirectTarget);
 
   return { message: "Success" };
@@ -196,8 +195,6 @@ export async function updateMatch(matchId: string, updates: any) {
     });
 
     revalidatePath("/dashboard");
-    revalidatePath(`/dashboard/matches/${matchId}/edit`);
-    revalidatePath(`/dashboard/matches/${matchId}`);
     revalidatePath("/matches");
     revalidatePath(`/matches/${matchId}`);
 

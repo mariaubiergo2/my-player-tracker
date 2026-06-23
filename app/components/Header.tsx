@@ -30,9 +30,6 @@ export default function Header() {
             tabIndex={0}
             className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
           >
-            <li>
-              <Link href="/matches">Browse Matches</Link>
-            </li>
             {isAuthenticated && (
               <li>
                 <Link href="/dashboard">Dashboard</Link>
@@ -46,9 +43,6 @@ export default function Header() {
       </div>
       <div className="navbar-center hidden lg:flex">
         <ul className="menu menu-horizontal px-1">
-          <li>
-            <Link href="/matches">Browse Matches</Link>
-          </li>
           {isAuthenticated && (
             <li>
               <Link href="/dashboard">Dashboard</Link>
@@ -81,7 +75,7 @@ export default function Header() {
                 <Link href="/dashboard">Dashboard</Link>
               </li>
               <li>
-                <Link href="/dashboard/matches/new">Create Match</Link>
+                <Link href="/matches/create">Create Match</Link>
               </li>
               <li>
                 <button onClick={logout}>Logout</button>

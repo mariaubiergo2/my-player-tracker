@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { getMatches } from "./MATCHES"
+import { cookies } from "next/headers"
 
 export default async function MatchPage({
   params,
@@ -8,38 +8,33 @@ export default async function MatchPage({
   params: Promise<{ identifier: string }>
 }) {
   const { identifier } = await params
-  const matches = await getMatches()
-  const match = matches.find((match) => match.id === identifier)
+  const cookieStore = await cookies()
+  const cookieHeader = cookieStore.toString()
 
-  if (!match) {
-    notFound()
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_BASE_URL}/api/matches/${identifier}`,
+    {
+      headers: { cookie: cookieHeader },
+      cache: "no-store",
+    }
+  )
+
+  if (response.status === 404) notFound()
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch match: ${response.status}`)
   }
 
-  if (!match) {
-    return (
-      <section className="container mx-auto px-6 py-10">
-        <div className="hero bg-base-200 rounded-box">
-          <div className="hero-content text-center">
-            <div>
-              <h1 className="text-3xl font-bold">Match not found</h1>
-              <p className="py-4 text-base-content/70">
-                The match you are looking for does not exist.
-              </p>
-              <Link href="/matches" className="btn btn-primary">
-                Back to Matches
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-    )
-  }
+  const data = await response.json()
+  const match = data.match
+
+  if (!match) notFound()
 
   return (
     <section className="container mx-auto px-6 py-10">
       <div className="mb-10">
-        <Link href="/matches" className="btn btn-ghost mb-4">
-          ← Back to Matches
+        <Link href="/dashboard" className="btn btn-ghost mb-4">
+          ← Back to Dashboard
         </Link>
 
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">

@@ -5,17 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { deleteMatch } from "@/actions/matches";
-
-interface Match {
-  id: string;
-  name: string;
-  description: string | null;
-  location: string | null;
-  mark: number | null;
-  updatedAt: string;
-  createdAt: string;
-  isReviewed: boolean;
-}
+import type { SimpleMatch } from "@/lib/types/match";
 
 /**
  * Dashboard Page - Client Component with httpOnly Cookie Auth
@@ -24,7 +14,7 @@ interface Match {
 export default function DashboardPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
-  const [matches, setMatches] = useState<Match[]>([]);
+  const [matches, setMatches] = useState<SimpleMatch[]>([]);
   const [loadingMatches, setLoadingMatches] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 

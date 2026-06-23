@@ -1,248 +1,117 @@
-// app/matches/[id]/edit/page.tsx
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { useAuth } from "@/hooks/useAuth";
-import { updateMatch } from "@/actions/matches";
-import { MatchType, MatchStatus } from "@/matches/[identifier]/MATCHES";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import Link from "next/link"
+import { updateMatch } from "@/actions/matches"
+import { MatchType, MatchStatus } from "@/matches/[identifier]/MATCHES"
+import type { CompleteMatch } from "@/lib/types/match";
+import { toDateInput, toDateTimeInput } from "@/lib/utils"
 
-interface PageProps {
-  params: Promise<{ id: string }>;
-}
+const matchTypes = ["FRIENDLY", "LEAGUE", "CUP", "TRAINING"]
+const matchStatuses = ["SCHEDULED", "COMPLETED", "CANCELLED"]
 
-const matchTypes = ["FRIENDLY", "LEAGUE", "CUP", "TRAINING"];
-const matchStatuses = ["SCHEDULED", "COMPLETED", "CANCELLED"];
 
-function toDateInput(value: string | null) {
-  if (!value) return "";
-  return new Date(value).toISOString().slice(0, 10);
-}
+export default function EditMatchForm({ match }: { match: CompleteMatch }) {
+  const router = useRouter()
 
-function toDateTimeInput(value: string | null) {
-  if (!value) return "";
-  const d = new Date(value);
-  const offset = d.getTimezoneOffset();
-  const local = new Date(d.getTime() - offset * 60000);
-  return local.toISOString().slice(0, 16);
-}
+  const [name, setName] = useState(match.name ?? "")
+  const [description, setDescription] = useState(match.description ?? "")
+  const [location, setLocation] = useState(match.location ?? "")
+  const [opponent, setOpponent] = useState(match.opponent ?? "")
+  const [matchType, setMatchType] = useState(match.matchType ?? "")
+  const [status, setStatus] = useState(match.status ?? "SCHEDULED")
+  const [date, setDate] = useState(toDateInput(match.date))
+  const [startTime, setStartTime] = useState(match.startTime ?? "")
+  const [endTime, setEndTime] = useState(match.endTime ?? "")
 
-/**
- * Edit Match Page - CSR (Client-Side Rendering)
- * Uses client state for form handling with dynamic route
- */
-export default function EditMatchPage({ params }: PageProps) {
-  const router = useRouter();
-  const { user, isAuthenticated, isLoading } = useAuth();
-  const [matchId, setMatchId] = useState<string | null>(null);
+  const [playerId, setPlayerId] = useState(match.playerId ?? "")
+  const [trainerId, setTrainerId] = useState(match.trainerId ?? "")
+  const [teamId, setTeamId] = useState(match.teamId ?? "")
 
-  // Match details
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [location, setLocation] = useState("");
-  const [opponent, setOpponent] = useState("");
-  const [matchType, setMatchType] = useState("");
-  const [status, setStatus] = useState("SCHEDULED");
-  const [date, setDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
+  const [mark, setMark] = useState(match.mark != null ? String(match.mark) : "")
+  const [intensity, setIntensity] = useState(match.intensity != null ? String(match.intensity) : "")
+  const [attitude, setAttitude] = useState(match.attitude != null ? String(match.attitude) : "")
+  const [performance, setPerformance] = useState(match.performance != null ? String(match.performance) : "")
+  const [goals, setGoals] = useState(String(match.goals ?? 0))
+  const [assists, setAssists] = useState(String(match.assists ?? 0))
+  const [minutesPlayed, setMinutesPlayed] = useState(String(match.minutesPlayed ?? 0))
 
-  // People & team
-  const [playerId, setPlayerId] = useState("");
-  const [trainerId, setTrainerId] = useState("");
-  const [teamId, setTeamId] = useState("");
+  const [comment, setComment] = useState(match.comment ?? "")
+  const [trainerFeedback, setTrainerFeedback] = useState(match.trainerFeedback ?? "")
+  const [playerReflection, setPlayerReflection] = useState(match.playerReflection ?? "")
+  const [strengths, setStrengths] = useState((match.strengths ?? []).join(", "))
+  const [weaknesses, setWeaknesses] = useState((match.weaknesses ?? []).join(", "))
+  const [improvementAreas, setImprovementAreas] = useState((match.improvementAreas ?? []).join(", "))
 
-  // Performance
-  const [mark, setMark] = useState("");
-  const [intensity, setIntensity] = useState("");
-  const [attitude, setAttitude] = useState("");
-  const [performance, setPerformance] = useState("");
-  const [goals, setGoals] = useState("0");
-  const [assists, setAssists] = useState("0");
-  const [minutesPlayed, setMinutesPlayed] = useState("0");
+  const [isReviewed, setIsReviewed] = useState(!!match.isReviewed)
+  const [reviewedAt, setReviewedAt] = useState(toDateTimeInput(match.reviewedAt ?? null))
 
-  // Feedback
-  const [comment, setComment] = useState("");
-  const [trainerFeedback, setTrainerFeedback] = useState("");
-  const [playerReflection, setPlayerReflection] = useState("");
-  const [strengths, setStrengths] = useState("");
-  const [weaknesses, setWeaknesses] = useState("");
-  const [improvementAreas, setImprovementAreas] = useState("");
+  const [error, setError] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Review
-  const [isReviewed, setIsReviewed] = useState(false);
-  const [reviewedAt, setReviewedAt] = useState("");
+  const toIntOrUndefined = (val: string) =>
+    val.trim() === "" ? undefined : parseInt(val, 10)
 
-  const [error, setError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loadingMatch, setLoadingMatch] = useState(true);
-
-  // Get params
-  useEffect(() => {
-    params.then((p) => setMatchId(p.id));
-  }, [params]);
-
-  // Redirect if not authenticated
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push("/login");
-    }
-  }, [isLoading, isAuthenticated, router]);
-
-  // Fetch match data
-  useEffect(() => {
-    if (matchId && user) {
-      fetchMatch();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [matchId, user]);
-
-  const fetchMatch = async () => {
-    try {
-      if (!matchId) return;
-
-      const response = await fetch(`/api/matches/${matchId}`, {
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const m = data.match;
-        if (m) {
-          setName(m.name ?? "");
-          setDescription(m.description ?? "");
-          setLocation(m.location ?? "");
-          setOpponent(m.opponent ?? "");
-          setMatchType(m.matchType ?? "");
-          setStatus(m.status ?? "SCHEDULED");
-          setDate(toDateInput(m.date));
-          setStartTime(m.startTime ?? "");
-          setEndTime(m.endTime ?? "");
-
-          setPlayerId(m.playerId ?? "");
-          setTrainerId(m.trainerId ?? "");
-          setTeamId(m.teamId ?? "");
-
-          setMark(m.mark ?? m.mark === 0 ? String(m.mark) : "");
-          setIntensity(m.intensity ?? m.intensity === 0 ? String(m.intensity) : "");
-          setAttitude(m.attitude ?? m.attitude === 0 ? String(m.attitude) : "");
-          setPerformance(m.performance ?? m.performance === 0 ? String(m.performance) : "");
-          setGoals(String(m.goals ?? 0));
-          setAssists(String(m.assists ?? 0));
-          setMinutesPlayed(String(m.minutesPlayed ?? 0));
-
-          setComment(m.comment ?? "");
-          setTrainerFeedback(m.trainerFeedback ?? "");
-          setPlayerReflection(m.playerReflection ?? "");
-          setStrengths((m.strengths ?? []).join(", "));
-          setWeaknesses((m.weaknesses ?? []).join(", "));
-          setImprovementAreas((m.improvementAreas ?? []).join(", "));
-
-          setIsReviewed(!!m.isReviewed);
-          setReviewedAt(toDateTimeInput(m.reviewedAt));
-        }
-      } else if (response.status === 404) {
-        setError("Match not found");
-      } else if (response.status === 403) {
-        setError("You don't have permission to edit this match");
-      }
-    } catch (err) {
-      setError("Failed to load match");
-    } finally {
-      setLoadingMatch(false);
-    }
-  };
-
-  const toIntOrUndefined = (val: string) => (val.trim() === "" ? undefined : parseInt(val, 10));
   const toListOrEmpty = (val: string) =>
-    val
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
+    val.split(",").map((s) => s.trim()).filter(Boolean)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+    e.preventDefault()
+    setError("")
 
     if (!name.trim() || !date || !playerId.trim() || !trainerId.trim()) {
-      setError("Name, date, player, and trainer are required");
-      return;
+      setError("Name, date, player, and trainer are required")
+      return
     }
 
-    if (!matchId || !user) return;
-
-    setIsSubmitting(true);
+    setIsSubmitting(true)
 
     try {
-      const result = await updateMatch(
-        matchId,
-        {
-          name: name.trim(),
-          description: description.trim() || undefined,
-          location: location.trim() || undefined,
-          opponent: opponent.trim() || undefined,
-          matchType: (matchType || undefined) as MatchType | undefined,
-          status: status as MatchStatus,
-          date: new Date(date).toISOString(),
-          startTime: startTime || undefined,
-          endTime: endTime || undefined,
+      const result = await updateMatch(match.id, {
+        name: name.trim(),
+        description: description.trim() || undefined,
+        location: location.trim() || undefined,
+        opponent: opponent.trim() || undefined,
+        matchType: (matchType || undefined) as MatchType | undefined,
+        status: status as MatchStatus,
+        date: new Date(date).toISOString(),
+        startTime: startTime || undefined,
+        endTime: endTime || undefined,
 
-          playerId: playerId.trim(),
-          trainerId: trainerId.trim(),
-          teamId: teamId.trim() || undefined,
+        playerId: playerId.trim(),
+        trainerId: trainerId.trim(),
+        teamId: teamId.trim() || undefined,
 
-          mark: toIntOrUndefined(mark),
-          intensity: toIntOrUndefined(intensity),
-          attitude: toIntOrUndefined(attitude),
-          performance: toIntOrUndefined(performance),
-          goals: parseInt(goals, 10) || 0,
-          assists: parseInt(assists, 10) || 0,
-          minutesPlayed: parseInt(minutesPlayed, 10) || 0,
+        mark: toIntOrUndefined(mark),
+        intensity: toIntOrUndefined(intensity),
+        attitude: toIntOrUndefined(attitude),
+        performance: toIntOrUndefined(performance),
+        goals: parseInt(goals, 10) || 0,
+        assists: parseInt(assists, 10) || 0,
+        minutesPlayed: parseInt(minutesPlayed, 10) || 0,
 
-          comment: comment.trim() || undefined,
-          trainerFeedback: trainerFeedback.trim() || undefined,
-          playerReflection: playerReflection.trim() || undefined,
-          strengths: toListOrEmpty(strengths),
-          weaknesses: toListOrEmpty(weaknesses),
-          improvementAreas: toListOrEmpty(improvementAreas),
+        comment: comment.trim() || undefined,
+        trainerFeedback: trainerFeedback.trim() || undefined,
+        playerReflection: playerReflection.trim() || undefined,
+        strengths: toListOrEmpty(strengths),
+        weaknesses: toListOrEmpty(weaknesses),
+        improvementAreas: toListOrEmpty(improvementAreas),
 
-          isReviewed,
-          reviewedAt: reviewedAt ? new Date(reviewedAt).toISOString() : undefined,
-        }
-      );
+        isReviewed,
+        reviewedAt: reviewedAt ? new Date(reviewedAt).toISOString() : undefined,
+      })
 
       if (result.success) {
-        router.push("/dashboard");
+        router.push("/dashboard")
       } else {
-        setError(result.error || "Failed to update match");
+        setError(result.error || "Failed to update match")
       }
     } catch (err) {
-      setError("An error occurred while updating the match");
+      setError("An error occurred while updating the match")
     } finally {
-      setIsSubmitting(false);
+      setIsSubmitting(false)
     }
-  };
-
-  if (isLoading || loadingMatch) {
-    return (
-      <div className="flex justify-center items-center min-h-[50vh]">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
-    );
-  }
-
-  if (error && !name) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
-        <div className="alert alert-error">
-          <span>{error}</span>
-        </div>
-        <Link href="/dashboard" className="btn btn-ghost mt-4">
-          ← Back to Dashboard
-        </Link>
-      </div>
-    );
   }
 
   return (
@@ -299,9 +168,7 @@ export default function EditMatchPage({ params }: PageProps) {
               >
                 <option value="">Match type</option>
                 {matchTypes.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
+                  <option key={t} value={t}>{t}</option>
                 ))}
               </select>
 
@@ -311,9 +178,7 @@ export default function EditMatchPage({ params }: PageProps) {
                 onChange={(e) => setStatus(e.target.value)}
               >
                 {matchStatuses.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
+                  <option key={s} value={s}>{s}</option>
                 ))}
               </select>
 
@@ -514,7 +379,6 @@ export default function EditMatchPage({ params }: PageProps) {
               </label>
 
               <input
-                placeholder="Reviewed at"
                 type="datetime-local"
                 className="input input-bordered w-full"
                 value={reviewedAt}
@@ -546,5 +410,5 @@ export default function EditMatchPage({ params }: PageProps) {
         </div>
       </form>
     </section>
-  );
+  )
 }

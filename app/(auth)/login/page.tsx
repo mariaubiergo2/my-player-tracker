@@ -19,7 +19,7 @@ export default function LoginPage() {
 
   // Redirect if already authenticated
   if (!isLoading && isAuthenticated) {
-    router.push("/matches");
+    router.push("/dashboard");
     return null;
   }
 

@@ -18,8 +18,8 @@ export default function NewMatchPage() {
   return (
     <section className="container mx-auto px-6 py-10">
       <div className="mb-10">
-        <Link href="/matches" className="btn btn-ghost mb-4">
-          ← Back to Matches
+        <Link href="/dashboard" className="btn btn-ghost mb-4">
+          ← Back to Dashboard
         </Link>
 
         <h1 className="text-4xl font-bold text-primary">
@@ -253,7 +253,7 @@ export default function NewMatchPage() {
         )}
 
         <div className="flex justify-end gap-3">
-          <Link href="/matches" className="btn btn-ghost">
+          <Link href="/dashboard" className="btn btn-ghost">
             Cancel
           </Link>
 
