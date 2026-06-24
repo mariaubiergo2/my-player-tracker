@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { updateMatch } from "@/actions/matches"
 import { MatchType, MatchStatus } from "@/matches/[identifier]/MATCHES"
-import type { CompleteMatch } from "@/lib/types/match";
+import type { CompleteMatch } from "@/types/match";
 import { toDateInput, toDateTimeInput } from "@/lib/utils"
 
 const matchTypes = ["FRIENDLY", "LEAGUE", "CUP", "TRAINING"]

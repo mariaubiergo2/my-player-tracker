@@ -19,9 +19,12 @@
       }
     ],
     "paths": {
-      "@/*": [
-        "./app/*"
-      ]
+      "@/components/*": ["./components/*"],
+      "@/hooks/*": ["./hooks/*"],
+      "@/lib/*": ["./lib/*"],
+      "@/actions/*": ["./actions/*"],
+      "@/types/*": ["./types/*"],
+      "@/*": ["./app/*"]
     }
   },
   "include": [

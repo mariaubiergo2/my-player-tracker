@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { deleteMatch } from "@/actions/matches";
-import type { SimpleMatch } from "@/lib/types/match";
+import type { SimpleMatch } from "@/types/match";
 
 /**
  * Dashboard Page - Client Component with httpOnly Cookie Auth
