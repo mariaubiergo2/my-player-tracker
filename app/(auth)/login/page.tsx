@@ -22,6 +22,8 @@ export default function LoginPage() {
     if (!isLoading && isAuthenticated) {
       if (user?.role === "ADMIN") {
         router.push("/admin/users");
+      } else if (user?.role === "TRAINER") {
+        router.push("/trainer/players");
       } else {
         router.push("/dashboard");
       }
@@ -45,6 +47,8 @@ export default function LoginPage() {
       const res = await login({ email, password });
       if (res.user.role === "ADMIN") {
         router.push("/admin/users");
+      } else if (res.user.role === "TRAINER") {
+        router.push("/trainer/players");
       } else {
         router.push("/dashboard");
       }

@@ -25,6 +25,8 @@ export default function RegisterPage() {
     if (!isLoading && isAuthenticated) {
       if (user?.role === "ADMIN") {
         router.push("/admin/users");
+      } else if (user?.role === "TRAINER") {
+        router.push("/trainer/players");
       } else {
         router.push("/dashboard");
       }

@@ -31,13 +31,20 @@ export default function Header() {
             className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
           >
             {isAuthenticated && (
-              <li>
-                {user?.role === "ADMIN" ? (
-                  <Link href="/admin/users">Users</Link>
-                ) : (
-                  <Link href="/dashboard">Dashboard</Link>
+              <>
+                {user?.role === "ADMIN" && (
+                  <li><Link href="/admin/users">Users</Link></li>
                 )}
-              </li>
+                {user?.role === "TRAINER" && (
+                  <>
+                    <li><Link href="/trainer/players">All Players</Link></li>
+                    <li><Link href="/trainer/my-players">My Players</Link></li>
+                  </>
+                )}
+                {user?.role === "PLAYER" && (
+                  <li><Link href="/dashboard">Dashboard</Link></li>
+                )}
+              </>
             )}
           </ul>
         </div>
@@ -48,13 +55,20 @@ export default function Header() {
       <div className="navbar-center hidden lg:flex">
         <ul className="menu menu-horizontal px-1">
           {isAuthenticated && (
-            <li>
-              {user?.role === "ADMIN" ? (
-                <Link href="/admin/users">Users</Link>
-              ) : (
-                <Link href="/dashboard">Dashboard</Link>
+            <>
+              {user?.role === "ADMIN" && (
+                <li><Link href="/admin/users">Users</Link></li>
               )}
-            </li>
+              {user?.role === "TRAINER" && (
+                <>
+                  <li><Link href="/trainer/players">All Players</Link></li>
+                  <li><Link href="/trainer/my-players">My Players</Link></li>
+                </>
+              )}
+              {user?.role === "PLAYER" && (
+                <li><Link href="/dashboard">Dashboard</Link></li>
+              )}
+            </>
           )}
         </ul>
       </div>
@@ -87,13 +101,18 @@ export default function Header() {
               className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
             >
               <li className="menu-title">{user?.name} ({user?.role})</li>
-              <li>
-                {user?.role === "ADMIN" ? (
-                  <Link href="/admin/users">Users</Link>
-                ) : (
-                  <Link href="/dashboard">Dashboard</Link>
-                )}
-              </li>
+              {user?.role === "ADMIN" && (
+                <li><Link href="/admin/users">Users</Link></li>
+              )}
+              {user?.role === "TRAINER" && (
+                <>
+                  <li><Link href="/trainer/players">All Players</Link></li>
+                  <li><Link href="/trainer/my-players">My Players</Link></li>
+                </>
+              )}
+              {user?.role === "PLAYER" && (
+                <li><Link href="/dashboard">Dashboard</Link></li>
+              )}
               {user?.role !== "ADMIN" && (
                 <li>
                   <Link href="/matches/create">Create Match</Link>

@@ -24,6 +24,8 @@ export default function DashboardPage() {
         router.push("/login");
       } else if (user?.role === "ADMIN") {
         router.push("/admin/users");
+      } else if (user?.role === "TRAINER") {
+        router.push("/trainer/players");
       }
     }
   }, [isLoading, isAuthenticated, user, router]);

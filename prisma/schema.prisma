@@ -43,6 +43,10 @@ model User {
   playerMatches  Match[] @relation("PlayerMatches")
   trainerMatches Match[] @relation("TrainerMatches")
 
+  trainerId String? @map("trainer_id")
+  trainer   User?   @relation("TrainerPlayers", fields: [trainerId], references: [id])
+  players   User[]  @relation("TrainerPlayers")
+
   @@map("users")
 }
 
