@@ -20,7 +20,7 @@ export interface Match {
   status: MatchStatus;
 
   playerId: string;
-  trainerId: string;
+  trainerId?: string | null;
   teamId?: string;
 
   comment?: string;

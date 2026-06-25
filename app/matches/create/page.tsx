@@ -2,7 +2,9 @@
 "use client"
 
 import Link from "next/link"
-import { useActionState } from "react"
+import { useActionState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/hooks/useAuth"
 import { createMatch } from "@/actions/matches"
 
 const initialState = {
@@ -10,10 +12,33 @@ const initialState = {
 }
 
 export default function NewMatchPage() {
+  const router = useRouter()
+  const { user, isAuthenticated, isLoading } = useAuth()
+
   const [state, formAction, pending] = useActionState(
     createMatch,
     initialState
   )
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push("/login")
+      }
+    }
+  }, [isLoading, isAuthenticated, router])
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <span className="loading loading-spinner loading-lg"></span>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated || !user) {
+    return null
+  }
 
   return (
     <section className="container mx-auto px-6 py-10">
@@ -103,18 +128,28 @@ export default function NewMatchPage() {
           <div className="card-body">
             <h2 className="card-title">People & Team</h2>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <input
-                placeholder="Player"
-                className="input input-bordered w-full"
-                name="playerId"
-              />
+            <div className={`grid grid-cols-1 ${user.role === "PLAYER" ? "md:grid-cols-1" : "md:grid-cols-3"} gap-4`}>
+              {user.role === "PLAYER" ? (
+                <input
+                  type="hidden"
+                  name="playerId"
+                  value={user.id}
+                />
+              ) : (
+                <>
+                  <input
+                    placeholder="Player"
+                    className="input input-bordered w-full"
+                    name="playerId"
+                  />
 
-              <input
-                placeholder="Trainer"
-                className="input input-bordered w-full"
-                name="trainerId"
-              />
+                  <input
+                    placeholder="Trainer"
+                    className="input input-bordered w-full"
+                    name="trainerId"
+                  />
+                </>
+              )}
 
               <input
                 placeholder="Team"

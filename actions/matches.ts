@@ -6,6 +6,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { MatchStatus, MatchType } from "@prisma/client";
 import { cookies } from "next/headers";
+import { getCurrentUser } from "@/lib/auth";
+
 
 // 1. GET ALL MATCHES of a trainer
 export async function getAllMatchesByTrainer(trainerId: string) {
@@ -43,8 +45,8 @@ export async function createMatch(prevState: any, formData: FormData) {
   const opponent = formData.get('opponent');
   const matchType = formData.get('matchType');
   const status = formData.get('status');
-  const playerId = formData.get('playerId');
-  const trainerId = formData.get('trainerId');
+  let playerId = formData.get('playerId') ;
+  let trainerId = formData.get('trainerId') as string | null;
   const teamId = formData.get('teamId');
   const comment = formData.get('comment');
   const trainerFeedback = formData.get('trainerFeedback');
@@ -62,8 +64,24 @@ export async function createMatch(prevState: any, formData: FormData) {
   const isReviewed = formData.get('isReviewed');
   const reviewedAt = formData.get('reviewedAt');
 
-  if (!name || !date || !status || !trainerId || !playerId) {
-    return { message: 'Missing required fields: name, date, status, trainerId and playerId are required' };
+  // Check if current user is a PLAYER to auto-resolve playerId and trainerId
+  const currentUser = await getCurrentUser();
+  const isPlayer = currentUser?.role === "PLAYER";
+  if (isPlayer && currentUser) {
+    playerId = currentUser.userId;
+    const playerUser = await prisma.user.findUnique({
+      where: { id: currentUser.userId },
+      select: { trainerId: true }
+    });
+    if (playerUser?.trainerId) {
+      trainerId = playerUser.trainerId;
+    } else {
+      trainerId = null;
+    }
+  }
+
+  if (!name || !date || !status || !playerId || (!isPlayer && !trainerId)) {
+    return { message: 'Missing required fields: name, date, status, playerId (and trainerId for non-players) are required' };
   }
 
   let redirectTarget = '/dashboard';
@@ -77,11 +95,13 @@ export async function createMatch(prevState: any, formData: FormData) {
       return { message: `Player with ID "${playerId}" does not exist in the database.` };
     }
 
-    const trainerExists = await prisma.user.findUnique({
-      where: { id: trainerId as string },
-    });
-    if (!trainerExists) {
-      // return { message: `Trainer with ID "${trainerId}" does not exist in the database.` };
+    if (trainerId) {
+      const trainerExists = await prisma.user.findUnique({
+        where: { id: trainerId as string },
+      });
+      if (!trainerExists) {
+        // return { message: `Trainer with ID "${trainerId}" does not exist in the database.` };
+      }
     }
 
     // 2. Parse enum fields
@@ -125,7 +145,7 @@ export async function createMatch(prevState: any, formData: FormData) {
         matchType: parsedMatchType,
         status: parsedStatus,
         playerId: playerId as string,
-        trainerId: trainerId as string,
+        trainerId: trainerId ?? undefined,
         teamId: teamId ? String(teamId) : null,
         comment: comment ? String(comment) : null,
         trainerFeedback: trainerFeedback ? String(trainerFeedback) : null,

@@ -21,7 +21,7 @@ export interface CompleteMatch {
   startTime?: string | null
   endTime?: string | null
   playerId: string
-  trainerId: string
+  trainerId?: string | null
   teamId?: string | null
   mark?: number | null
   intensity?: number | null
