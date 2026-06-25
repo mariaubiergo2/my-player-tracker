@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { deleteMatch } from "@/actions/matches";
+import { useTranslation } from "@/components/LanguageProvider";
 import type { SimpleMatch } from "@/types/match";
 
 /**
@@ -14,6 +15,7 @@ import type { SimpleMatch } from "@/types/match";
 export default function DashboardPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { t } = useTranslation();
   const [matches, setMatches] = useState<SimpleMatch[]>([]);
   const [loadingMatches, setLoadingMatches] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -55,7 +57,7 @@ export default function DashboardPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!user || !confirm("Are you sure you want to delete this match?")) {
+    if (!user || !confirm(t("dashboard_page.confirm_delete"))) {
       return;
     }
 
@@ -65,11 +67,11 @@ export default function DashboardPage() {
       if (result.success) {
         setMatches(matches.filter((m) => m.id !== id));
       } else {
-        alert(result.error || "Failed to delete match");
+        alert(result.error || t("dashboard_page.delete_error"));
       }
     } catch (error) {
       console.error("Delete error:", error);
-      alert("Failed to delete match");
+      alert(t("dashboard_page.delete_error"));
     } finally {
       setDeletingId(null);
     }
@@ -92,38 +94,38 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
         <div>
-          <h1 className="text-4xl font-bold text-primary">Dashboard</h1>
+          <h1 className="text-4xl font-bold text-primary">{t("dashboard_page.title")}</h1>
           <p className="text-base-content/70 mt-2">
-            Welcome back, {user?.name}!
+            {t("dashboard_page.welcome", { name: user?.name || "" })}
           </p>
         </div>
 
         <Link href="/matches/create" className="btn btn-primary">
-          + Create Match
+          + {t("dashboard_page.create_btn")}
         </Link>
       </div>
 
       {/* Stats */}
         <div className="stats shadow mb-8">
         <div className="stat">
-          <div className="stat-title">Total Matches</div>
+          <div className="stat-title">{t("dashboard_page.stats_total")}</div>
           <div className="stat-value">{matches.length}</div>
         </div>
         <div className="stat">
-          <div className="stat-title">Reviewed</div>
+          <div className="stat-title">{t("dashboard_page.stats_reviewed")}</div>
           <div className="stat-value text-primary">
             {matches.filter((s) => s.isReviewed).length}
           </div>
         </div>
         <div className="stat">
-          <div className="stat-title">Pending</div>
+          <div className="stat-title">{t("dashboard_page.stats_pending")}</div>
           <div className="stat-value text-secondary">
             {matches.filter((s) => !s.isReviewed).length}
           </div>
         </div>
       </div>
 
-      <h2 className="text-xl font-semibold mb-4">Your Matches</h2>
+      <h2 className="text-xl font-semibold mb-4">{t("dashboard_page.your_matches")}</h2>
 
       {loadingMatches ? (
         <div className="grid gap-4">
@@ -142,13 +144,12 @@ export default function DashboardPage() {
           <div className="hero-content text-center">
             <div>
               <div className="text-4xl mb-4">📝</div>
-              <h2 className="text-2xl font-bold">No matches yet</h2>
+              <h2 className="text-2xl font-bold">{t("dashboard_page.no_matches_title")}</h2>
               <p className="py-3 text-base-content/70">
-                Create your first match to start tracking player performance
-                and feedback.
+                {t("dashboard_page.no_matches_desc")}
               </p>
               <Link href="/matches/create" className="btn btn-primary">
-                Create First Match
+                {t("dashboard_page.create_first")}
               </Link>
             </div>
           </div>
@@ -199,7 +200,7 @@ export default function DashboardPage() {
                       href={`/matches/${match.id}/edit`}
                       className="btn btn-ghost btn-sm"
                     >
-                      Edit
+                      {t("dashboard_page.edit_btn")}
                     </Link>
                     <button
                       onClick={() => handleDelete(match.id)}
@@ -209,7 +210,7 @@ export default function DashboardPage() {
                       {deletingId === match.id ? (
                         <span className="loading loading-spinner loading-xs"></span>
                       ) : (
-                        "Delete"
+                        t("dashboard_page.delete_btn")
                       )}
                     </button>
                   </div>
@@ -221,4 +222,4 @@ export default function DashboardPage() {
       )}
     </section>
   );
-}
+}

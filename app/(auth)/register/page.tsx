@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "@/components/LanguageProvider";
 
 /**
  * Register Page - CSR (Client-Side Rendering)
@@ -12,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 export default function RegisterPage() {
   const router = useRouter();
   const { register, isAuthenticated, isLoading, user } = useAuth();
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [surname, setSurname] = useState("");
   const [email, setEmail] = useState("");
@@ -46,12 +48,12 @@ export default function RegisterPage() {
     setError("");
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t("register_page.error_match"));
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+      setError(t("register_page.error_length"));
       return;
     }
 
@@ -69,9 +71,9 @@ export default function RegisterPage() {
 
   return (
     <>
-      <h2 className="card-title text-2xl justify-center">Create Account</h2>
+      <h2 className="card-title text-2xl justify-center">{t("register_page.title")}</h2>
       <p className="text-center text-base-content/70">
-        Join to track player matches and feedback
+        {t("register_page.subtitle")}
       </p>
 
       <form onSubmit={handleSubmit} className="mt-4">
@@ -83,7 +85,7 @@ export default function RegisterPage() {
 
         <div className="form-control">
           <label className="label">
-            <span className="label-text">Name</span>
+            <span className="label-text">{t("register_page.name")}</span>
           </label>
           <input
             type="text"
@@ -97,7 +99,7 @@ export default function RegisterPage() {
 
         <div className="form-control mt-4">
           <label className="label">
-            <span className="label-text">Surname</span>
+            <span className="label-text">{t("register_page.surname")}</span>
           </label>
           <input
             type="text"
@@ -111,7 +113,7 @@ export default function RegisterPage() {
 
         <div className="form-control mt-4">
           <label className="label">
-            <span className="label-text">Email</span>
+            <span className="label-text">{t("register_page.email")}</span>
           </label>
           <input
             type="email"
@@ -125,7 +127,7 @@ export default function RegisterPage() {
 
         <div className="form-control mt-4">
           <label className="label">
-            <span className="label-text">Password</span>
+            <span className="label-text">{t("register_page.password")}</span>
           </label>
           <input
             type="password"
@@ -140,7 +142,7 @@ export default function RegisterPage() {
 
         <div className="form-control mt-4">
           <label className="label">
-            <span className="label-text">Confirm Password</span>
+            <span className="label-text">{t("register_page.confirm_password")}</span>
           </label>
           <input
             type="password"
@@ -161,20 +163,20 @@ export default function RegisterPage() {
             {isSubmitting ? (
               <span className="loading loading-spinner loading-sm"></span>
             ) : (
-              "Create Account"
+              t("register_page.create_btn")
             )}
           </button>
         </div>
       </form>
 
-      <div className="divider">OR</div>
+      <div className="divider">{t("register_page.or")}</div>
 
       <p className="text-center">
-        Already have an account?{" "}
+        {t("register_page.have_account")}{" "}
         <Link href="/login" className="link link-primary">
-          Sign in
+          {t("register_page.signin_link")}
         </Link>
       </p>
     </>
   );
-}
+}

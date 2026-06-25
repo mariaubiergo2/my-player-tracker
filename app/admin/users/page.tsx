@@ -10,6 +10,7 @@ import {
   updateUser,
   deleteUser,
 } from "@/actions/users";
+import { useTranslation } from "@/components/LanguageProvider";
 
 interface UserListItem {
   id: string;
@@ -25,6 +26,7 @@ interface UserListItem {
 export default function AdminUsersPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { t } = useTranslation();
   
   // State variables
   const [users, setUsers] = useState<UserListItem[]>([]);
@@ -81,11 +83,11 @@ export default function AdminUsersPage() {
         }));
         setUsers(mappedUsers);
       } else {
-        showError(res.error || "Failed to retrieve user directory.");
+        showError(res.error || t("common.error"));
       }
     } catch (err) {
       console.error(err);
-      showError("An unexpected error occurred while fetching users.");
+      showError(t("common.error"));
     } finally {
       setLoadingUsers(false);
     }
@@ -156,15 +158,15 @@ export default function AdminUsersPage() {
       });
 
       if (res.success) {
-        showSuccess(`Successfully created user: ${formData.name}`);
+        showSuccess(t("admin_users.success_create"));
         setIsCreateOpen(false);
         fetchUsers();
       } else {
-        showError(res.error || "Failed to create user.");
+        showError(res.error || t("common.error"));
       }
     } catch (err) {
       console.error(err);
-      showError("Unexpected error occurred while creating user.");
+      showError(t("common.error"));
     } finally {
       setActionLoading(false);
     }
@@ -187,15 +189,15 @@ export default function AdminUsersPage() {
       });
 
       if (res.success) {
-        showSuccess(`Successfully updated profile of ${formData.name}`);
+        showSuccess(t("admin_users.success_update"));
         setIsEditOpen(false);
         fetchUsers();
       } else {
-        showError(res.error || "Failed to update user.");
+        showError(res.error || t("common.error"));
       }
     } catch (err) {
       console.error(err);
-      showError("Unexpected error occurred while updating user.");
+      showError(t("common.error"));
     } finally {
       setActionLoading(false);
     }
@@ -209,15 +211,15 @@ export default function AdminUsersPage() {
     try {
       const res = await deleteUser(selectedUser.id);
       if (res.success) {
-        showSuccess("User account and all associated matches deleted.");
+        showSuccess(t("admin_users.success_delete"));
         setIsDeleteOpen(false);
         fetchUsers();
       } else {
-        showError(res.error || "Failed to delete user.");
+        showError(res.error || t("common.error"));
       }
     } catch (err) {
       console.error(err);
-      showError("Unexpected error occurred during user deletion.");
+      showError(t("common.error"));
     } finally {
       setActionLoading(false);
     }
@@ -228,15 +230,15 @@ export default function AdminUsersPage() {
     try {
       const res = await updateUser(userId, { role: newRole });
       if (res.success) {
-        showSuccess(`Updated role of ${currentName} to ${newRole}`);
+        showSuccess(t("admin_users.success_role", { name: currentName, role: newRole }));
         // Locally update role in state to avoid full table redraws
         setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
       } else {
-        showError(res.error || "Failed to update user role.");
+        showError(res.error || t("common.error"));
       }
     } catch (err) {
       console.error(err);
-      showError("Failed to update user role.");
+      showError(t("common.error"));
     }
   };
 
@@ -268,7 +270,7 @@ export default function AdminUsersPage() {
       <div className="flex justify-center items-center min-h-[50vh]">
         <div className="flex flex-col items-center gap-4">
           <span className="loading loading-spinner loading-lg text-primary"></span>
-          <p className="text-base-content/60 font-medium">Loading user database...</p>
+          <p className="text-base-content/60 font-medium">{t("admin_users.loading_users")}</p>
         </div>
       </div>
     );
@@ -300,14 +302,14 @@ export default function AdminUsersPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            User Management
+            {t("admin_users.title")}
           </h1>
           <p className="text-base-content/70 mt-2">
-            Create, update roles, manage profiles, and delete platform users.
+            {t("admin_users.subtitle")}
           </p>
         </div>
         <button onClick={handleOpenCreate} className="btn btn-primary shadow-md hover:scale-105 active:scale-95 transition-all">
-          + Create User
+          + {t("admin_users.create_btn")}
         </button>
       </div>
 
@@ -318,7 +320,7 @@ export default function AdminUsersPage() {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search users by name or email..."
+                placeholder={t("admin_users.search_placeholder")}
                 className="input input-bordered w-full pl-10"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -328,16 +330,16 @@ export default function AdminUsersPage() {
           </div>
 
           <div className="flex gap-2 w-full md:w-auto items-center justify-end">
-            <span className="text-sm font-semibold text-base-content/70 whitespace-nowrap">Filter Role:</span>
+            <span className="text-sm font-semibold text-base-content/70 whitespace-nowrap">{t("admin_users.filter_role")}:</span>
             <select
               className="select select-bordered w-full md:w-auto min-w-[150px]"
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
             >
-              <option value="ALL">All Roles</option>
-              <option value="ADMIN">Administrators</option>
-              <option value="TRAINER">Trainers</option>
-              <option value="PLAYER">Players</option>
+              <option value="ALL">{t("admin_users.all_roles")}</option>
+              <option value="ADMIN">{t("admin_users.admins")}</option>
+              <option value="TRAINER">{t("admin_users.trainers")}</option>
+              <option value="PLAYER">{t("admin_users.players")}</option>
             </select>
           </div>
         </div>
@@ -348,9 +350,9 @@ export default function AdminUsersPage() {
         <div className="hero bg-base-200 rounded-2xl p-10 text-center shadow-inner border border-base-content/5">
           <div className="max-w-md">
             <span className="text-5xl">👥</span>
-            <h3 className="text-2xl font-bold mt-4">No users found</h3>
+            <h3 className="text-2xl font-bold mt-4">{t("admin_users.no_users")}</h3>
             <p className="py-2 text-base-content/60">
-              Try adjusting your filters or search query, or register a new user using the creation panel.
+              {t("admin_users.adjust_filter")}
             </p>
           </div>
         </div>
@@ -359,13 +361,13 @@ export default function AdminUsersPage() {
           <table className="table table-zebra w-full">
             <thead>
               <tr className="bg-base-200/50">
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role (Quick Toggle)</th>
-                <th className="hidden lg:table-cell">Phone</th>
-                <th className="hidden md:table-cell">Birth Date</th>
-                <th className="hidden xl:table-cell">Registered</th>
-                <th className="text-right">Actions</th>
+                <th>{t("admin_users.table_name")}</th>
+                <th>{t("admin_users.table_email")}</th>
+                <th>{t("admin_users.table_role")}</th>
+                <th className="hidden lg:table-cell">{t("admin_users.table_phone")}</th>
+                <th className="hidden md:table-cell">{t("admin_users.table_birth")}</th>
+                <th className="hidden xl:table-cell">{t("admin_users.table_registered")}</th>
+                <th className="text-right">{t("admin_users.table_actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -413,10 +415,10 @@ export default function AdminUsersPage() {
                     </div>
                   </td>
                   <td className="hidden lg:table-cell text-sm text-base-content/75">
-                    {u.phone || <span className="text-base-content/30 italic">Not set</span>}
+                    {u.phone || <span className="text-base-content/30 italic">{t("common.not_specified")}</span>}
                   </td>
                   <td className="hidden md:table-cell text-sm text-base-content/75">
-                    {u.birthDate || <span className="text-base-content/30 italic">Not set</span>}
+                    {u.birthDate || <span className="text-base-content/30 italic">{t("common.not_specified")}</span>}
                   </td>
                   <td className="hidden xl:table-cell text-sm text-base-content/50">
                     {u.createdAt}
@@ -426,7 +428,7 @@ export default function AdminUsersPage() {
                       <button
                         onClick={() => handleOpenEdit(u)}
                         className="btn btn-ghost btn-sm text-primary hover:bg-primary/10"
-                        title="Edit User Info"
+                        title={t("common.edit")}
                       >
                         ✏️
                       </button>
@@ -434,7 +436,7 @@ export default function AdminUsersPage() {
                         onClick={() => handleOpenDelete(u)}
                         className="btn btn-ghost btn-sm text-error hover:bg-error/10"
                         disabled={u.id === user.id}
-                        title={u.id === user.id ? "Cannot delete yourself" : "Delete User"}
+                        title={u.id === user.id ? "Cannot delete yourself" : t("common.delete")}
                       >
                         🗑️
                       </button>
@@ -457,32 +459,32 @@ export default function AdminUsersPage() {
             >
               ✕
             </button>
-            <h3 className="font-bold text-2xl text-primary mb-6">Create New Account</h3>
+            <h3 className="font-bold text-2xl text-primary mb-6">{t("admin_users.create_title")}</h3>
             
             <form onSubmit={handleCreateSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-semibold">First Name *</span>
+                    <span className="label-text font-semibold">{t("admin_users.first_name")}</span>
                   </label>
                   <input
                     type="text"
                     required
                     className="input input-bordered w-full"
-                    placeholder="Name"
+                    placeholder={t("admin_users.table_name")}
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
                 </div>
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-semibold">Surname *</span>
+                    <span className="label-text font-semibold">{t("admin_users.surname")}</span>
                   </label>
                   <input
                     type="text"
                     required
                     className="input input-bordered w-full"
-                    placeholder="Surname"
+                    placeholder={t("admin_users.surname").replace(" *", "")}
                     value={formData.surname}
                     onChange={(e) => setFormData({ ...formData, surname: e.target.value })}
                   />
@@ -491,7 +493,7 @@ export default function AdminUsersPage() {
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text font-semibold">Email *</span>
+                  <span className="label-text font-semibold">{t("admin_users.email")}</span>
                 </label>
                 <input
                   type="email"
@@ -506,7 +508,7 @@ export default function AdminUsersPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-semibold">Role *</span>
+                    <span className="label-text font-semibold">{t("admin_users.role")}</span>
                   </label>
                   <select
                     className="select select-bordered w-full"
@@ -520,7 +522,7 @@ export default function AdminUsersPage() {
                 </div>
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-semibold">Phone</span>
+                    <span className="label-text font-semibold">{t("admin_users.phone")}</span>
                   </label>
                   <input
                     type="text"
@@ -535,7 +537,7 @@ export default function AdminUsersPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-semibold">Birth Date</span>
+                    <span className="label-text font-semibold">{t("admin_users.birth_date")}</span>
                   </label>
                   <input
                     type="date"
@@ -546,7 +548,7 @@ export default function AdminUsersPage() {
                 </div>
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-semibold">Password *</span>
+                    <span className="label-text font-semibold">{t("admin_users.password")}</span>
                   </label>
                   <input
                     type="password"
@@ -567,13 +569,13 @@ export default function AdminUsersPage() {
                   className="btn btn-ghost"
                   disabled={actionLoading}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={actionLoading}>
                   {actionLoading ? (
                     <span className="loading loading-spinner loading-sm"></span>
                   ) : (
-                    "Create User"
+                    t("admin_users.create_btn")
                   )}
                 </button>
               </div>
@@ -592,32 +594,32 @@ export default function AdminUsersPage() {
             >
               ✕
             </button>
-            <h3 className="font-bold text-2xl text-primary mb-6">Edit User Profile</h3>
+            <h3 className="font-bold text-2xl text-primary mb-6">{t("admin_users.edit_title")}</h3>
             
             <form onSubmit={handleEditSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-semibold">First Name *</span>
+                    <span className="label-text font-semibold">{t("admin_users.first_name")}</span>
                   </label>
                   <input
                     type="text"
                     required
                     className="input input-bordered w-full"
-                    placeholder="Name"
+                    placeholder={t("admin_users.table_name")}
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
                 </div>
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-semibold">Surname *</span>
+                    <span className="label-text font-semibold">{t("admin_users.surname")}</span>
                   </label>
                   <input
                     type="text"
                     required
                     className="input input-bordered w-full"
-                    placeholder="Surname"
+                    placeholder={t("admin_users.surname").replace(" *", "")}
                     value={formData.surname}
                     onChange={(e) => setFormData({ ...formData, surname: e.target.value })}
                   />
@@ -626,7 +628,7 @@ export default function AdminUsersPage() {
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text font-semibold">Email *</span>
+                  <span className="label-text font-semibold">{t("admin_users.email")}</span>
                 </label>
                 <input
                   type="email"
@@ -641,7 +643,7 @@ export default function AdminUsersPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-semibold">Role *</span>
+                    <span className="label-text font-semibold">{t("admin_users.role")}</span>
                   </label>
                   <select
                     className="select select-bordered w-full"
@@ -657,7 +659,7 @@ export default function AdminUsersPage() {
                 </div>
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-semibold">Phone</span>
+                    <span className="label-text font-semibold">{t("admin_users.phone")}</span>
                   </label>
                   <input
                     type="text"
@@ -671,7 +673,7 @@ export default function AdminUsersPage() {
 
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text font-semibold">Birth Date</span>
+                  <span className="label-text font-semibold">{t("admin_users.birth_date")}</span>
                 </label>
                 <input
                   type="date"
@@ -688,13 +690,13 @@ export default function AdminUsersPage() {
                   className="btn btn-ghost"
                   disabled={actionLoading}
                 >
-                  Cancel
+                  {t("common.cancel")}
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={actionLoading}>
                   {actionLoading ? (
                     <span className="loading loading-spinner loading-sm"></span>
                   ) : (
-                    "Save Changes"
+                    t("common.save")
                   )}
                 </button>
               </div>
@@ -707,9 +709,9 @@ export default function AdminUsersPage() {
       {isDeleteOpen && selectedUser && (
         <div className="modal modal-open">
           <div className="modal-box border-2 border-error/20 shadow-2xl">
-            <h3 className="font-extrabold text-2xl text-error mb-4">⚠️ Delete Account?</h3>
+            <h3 className="font-extrabold text-2xl text-error mb-4">{t("admin_users.delete_title")}</h3>
             <p className="py-2 text-base-content/80">
-              Are you sure you want to permanently delete the account for{" "}
+              {t("admin_users.delete_confirm_text")}{" "}
               <strong className="text-base-content font-bold">
                 {selectedUser.name} {selectedUser.surname}
               </strong>{" "}
@@ -719,9 +721,7 @@ export default function AdminUsersPage() {
             <div className="alert alert-warning mt-4 text-xs font-semibold py-3 border border-warning/20">
               <div>
                 <span>
-                  <strong>CRITICAL INFORMATION:</strong> Deleting this user will automatically
-                  cascade and delete all match logs where they are designated as the Player or Trainer.
-                  This action is permanent and cannot be undone.
+                  {t("admin_users.delete_warning")}
                 </span>
               </div>
             </div>
@@ -733,7 +733,7 @@ export default function AdminUsersPage() {
                 className="btn btn-ghost"
                 disabled={actionLoading}
               >
-                Cancel
+                {t("common.cancel")}
               </button>
               <button
                 onClick={handleDeleteSubmit}
@@ -743,7 +743,7 @@ export default function AdminUsersPage() {
                 {actionLoading ? (
                   <span className="loading loading-spinner loading-sm"></span>
                 ) : (
-                  "Yes, Delete Account"
+                  t("admin_users.delete_btn")
                 )}
               </button>
             </div>

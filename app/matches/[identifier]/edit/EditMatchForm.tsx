@@ -7,6 +7,7 @@ import { updateMatch } from "@/actions/matches"
 import { MatchType, MatchStatus } from "@/matches/[identifier]/MATCHES"
 import type { CompleteMatch } from "@/types/match";
 import { toDateInput, toDateTimeInput } from "@/lib/utils"
+import { useTranslation } from "@/components/LanguageProvider"
 
 const matchTypes = ["FRIENDLY", "LEAGUE", "CUP", "TRAINING"]
 const matchStatuses = ["SCHEDULED", "COMPLETED", "CANCELLED"]
@@ -14,6 +15,7 @@ const matchStatuses = ["SCHEDULED", "COMPLETED", "CANCELLED"]
 
 export default function EditMatchForm({ match }: { match: CompleteMatch }) {
   const router = useRouter()
+  const { t } = useTranslation()
 
   const [name, setName] = useState(match.name ?? "")
   const [description, setDescription] = useState(match.description ?? "")
@@ -61,7 +63,7 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
     setError("")
 
     if (!name.trim() || !date || !playerId.trim() || !trainerId.trim()) {
-      setError("Name, date, player, and trainer are required")
+      setError(t("match_form.error_name_date"))
       return
     }
 
@@ -105,10 +107,10 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
       if (result.success) {
         router.push("/dashboard")
       } else {
-        setError(result.error || "Failed to update match")
+        setError(result.error || t("common.error"))
       }
     } catch (err) {
-      setError("An error occurred while updating the match")
+      setError(t("common.error"))
     } finally {
       setIsSubmitting(false)
     }
@@ -118,11 +120,11 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
     <section className="container mx-auto px-6 py-10">
       <div className="mb-10">
         <Link href="/dashboard" className="btn btn-ghost btn-sm gap-2 mb-4">
-          ← Back to Dashboard
+          {t("match_details.back_dashboard")}
         </Link>
-        <h1 className="text-4xl font-bold text-primary">Edit Match</h1>
+        <h1 className="text-4xl font-bold text-primary">{t("match_form.edit_title")}</h1>
         <p className="text-base-content/70 mt-2">
-          Update the match details and feedback.
+          {t("match_form.edit_subtitle")}
         </p>
       </div>
 
@@ -136,11 +138,11 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
         {/* Match details */}
         <div className="card bg-base-100 shadow-md border border-base-200">
           <div className="card-body">
-            <h2 className="card-title">Match Details</h2>
+            <h2 className="card-title">{t("match_form.basic_info")}</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input
-                placeholder="Match name"
+                placeholder={t("match_form.match_name")}
                 className="input input-bordered w-full"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -148,14 +150,14 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
               />
 
               <input
-                placeholder="Opponent"
+                placeholder={t("common.opponent")}
                 className="input input-bordered w-full"
                 value={opponent}
                 onChange={(e) => setOpponent(e.target.value)}
               />
 
               <input
-                placeholder="Location"
+                placeholder={t("common.location")}
                 className="input input-bordered w-full"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
@@ -166,9 +168,9 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
                 value={matchType}
                 onChange={(e) => setMatchType(e.target.value)}
               >
-                <option value="">Match type</option>
-                {matchTypes.map((t) => (
-                  <option key={t} value={t}>{t}</option>
+                <option value="">{t("match_form.match_type")}</option>
+                {matchTypes.map((type) => (
+                  <option key={type} value={type}>{type}</option>
                 ))}
               </select>
 
@@ -177,8 +179,8 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
               >
-                {matchStatuses.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                {matchStatuses.map((stat) => (
+                  <option key={stat} value={stat}>{stat}</option>
                 ))}
               </select>
 
@@ -205,7 +207,7 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
               />
 
               <textarea
-                placeholder="Description"
+                placeholder={t("match_form.description")}
                 className="textarea textarea-bordered w-full md:col-span-2"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -217,11 +219,11 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
         {/* People */}
         <div className="card bg-base-100 shadow-md border border-base-200">
           <div className="card-body">
-            <h2 className="card-title">People & Team</h2>
+            <h2 className="card-title">{t("match_form.player")} & {t("match_form.trainer")}</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <input
-                placeholder="Player ID"
+                placeholder={t("match_details.player_id")}
                 className="input input-bordered w-full"
                 value={playerId}
                 onChange={(e) => setPlayerId(e.target.value)}
@@ -229,7 +231,7 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
               />
 
               <input
-                placeholder="Trainer ID"
+                placeholder={t("match_details.trainer_id")}
                 className="input input-bordered w-full"
                 value={trainerId}
                 onChange={(e) => setTrainerId(e.target.value)}
@@ -237,7 +239,7 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
               />
 
               <input
-                placeholder="Team ID"
+                placeholder={t("match_details.team_id")}
                 className="input input-bordered w-full"
                 value={teamId}
                 onChange={(e) => setTeamId(e.target.value)}
@@ -249,11 +251,11 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
         {/* Performance */}
         <div className="card bg-base-100 shadow-md border border-base-200">
           <div className="card-body">
-            <h2 className="card-title">Performance</h2>
+            <h2 className="card-title">{t("match_details.perf_title")}</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <input
-                placeholder="Mark"
+                placeholder={t("common.mark")}
                 type="number"
                 className="input input-bordered w-full"
                 value={mark}
@@ -261,7 +263,7 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
               />
 
               <input
-                placeholder="Intensity"
+                placeholder={t("common.intensity")}
                 type="number"
                 className="input input-bordered w-full"
                 value={intensity}
@@ -269,7 +271,7 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
               />
 
               <input
-                placeholder="Attitude"
+                placeholder={t("common.attitude")}
                 type="number"
                 className="input input-bordered w-full"
                 value={attitude}
@@ -277,7 +279,7 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
               />
 
               <input
-                placeholder="Performance"
+                placeholder={t("common.performance")}
                 type="number"
                 className="input input-bordered w-full"
                 value={performance}
@@ -285,7 +287,7 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
               />
 
               <input
-                placeholder="Goals"
+                placeholder={t("common.goals")}
                 type="number"
                 className="input input-bordered w-full"
                 value={goals}
@@ -293,7 +295,7 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
               />
 
               <input
-                placeholder="Assists"
+                placeholder={t("common.assists")}
                 type="number"
                 className="input input-bordered w-full"
                 value={assists}
@@ -301,7 +303,7 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
               />
 
               <input
-                placeholder="Minutes played"
+                placeholder={t("common.minutes")}
                 type="number"
                 className="input input-bordered w-full"
                 value={minutesPlayed}
@@ -314,46 +316,46 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
         {/* Feedback */}
         <div className="card bg-base-100 shadow-md border border-base-200">
           <div className="card-body">
-            <h2 className="card-title">Feedback</h2>
+            <h2 className="card-title">{t("match_details.feedback_title")}</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <textarea
-                placeholder="Comment"
+                placeholder={t("match_details.comment_label")}
                 className="textarea textarea-bordered w-full"
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
               />
 
               <textarea
-                placeholder="Trainer feedback"
+                placeholder={t("match_details.trainer_feedback_label")}
                 className="textarea textarea-bordered w-full"
                 value={trainerFeedback}
                 onChange={(e) => setTrainerFeedback(e.target.value)}
               />
 
               <textarea
-                placeholder="Player reflection"
+                placeholder={t("match_details.player_reflection_label")}
                 className="textarea textarea-bordered w-full"
                 value={playerReflection}
                 onChange={(e) => setPlayerReflection(e.target.value)}
               />
 
               <textarea
-                placeholder="Strengths (comma separated)"
+                placeholder={t("match_form.strengths")}
                 className="textarea textarea-bordered w-full"
                 value={strengths}
                 onChange={(e) => setStrengths(e.target.value)}
               />
 
               <textarea
-                placeholder="Weaknesses (comma separated)"
+                placeholder={t("match_form.weaknesses")}
                 className="textarea textarea-bordered w-full"
                 value={weaknesses}
                 onChange={(e) => setWeaknesses(e.target.value)}
               />
 
               <textarea
-                placeholder="Improvement areas (comma separated)"
+                placeholder={t("match_form.improvement")}
                 className="textarea textarea-bordered w-full"
                 value={improvementAreas}
                 onChange={(e) => setImprovementAreas(e.target.value)}
@@ -365,7 +367,7 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
         {/* Review */}
         <div className="card bg-base-100 shadow-md border border-base-200">
           <div className="card-body">
-            <h2 className="card-title">Review Status</h2>
+            <h2 className="card-title">{t("match_form.review_status_label")}</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
               <label className="label cursor-pointer justify-start gap-3">
@@ -375,7 +377,7 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
                   checked={isReviewed}
                   onChange={(e) => setIsReviewed(e.target.checked)}
                 />
-                <span className="label-text">Reviewed</span>
+                <span className="label-text">{t("match_details.reviewed_badge")}</span>
               </label>
 
               <input
@@ -390,7 +392,7 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
 
         <div className="flex justify-end gap-3">
           <Link href="/dashboard" className="btn btn-ghost">
-            Cancel
+            {t("common.cancel")}
           </Link>
 
           <button
@@ -401,14 +403,14 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
             {isSubmitting ? (
               <>
                 <span className="loading loading-spinner loading-sm"></span>
-                Saving...
+                {t("match_form.submitting")}
               </>
             ) : (
-              "Save Changes"
+              t("match_form.save_btn")
             )}
           </button>
         </div>
       </form>
     </section>
   )
-}
+}

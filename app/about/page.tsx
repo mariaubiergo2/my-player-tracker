@@ -2,104 +2,28 @@
 
 import Link from "next/link";
 import { useState } from "react";
-
-interface TabContent {
-  title: string;
-  badge: string;
-  description: string;
-  emoji: string;
-  features: string[];
-  mockData: Record<string, string | number | string[]>;
-}
+import { useTranslation } from "@/components/LanguageProvider";
 
 export default function AboutPage() {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<string>("tracking");
 
-  const tabs: Record<string, TabContent> = {
-    tracking: {
-      title: "Match Tracking & Log",
-      badge: "Structure",
-      emoji: "⚽",
-      description: "Organize every game, training session, or friendly with rich contextual data. Know where, when, and who you played.",
-      features: [
-        "Track Match Types: League, Cup, Friendly, or Training sessions",
-        "Record opponent name, location, and match date/time",
-        "Manage status workflows: Scheduled, Completed, or Cancelled",
-      ],
-      mockData: {
-        "Match Type": "League Game 🏆",
-        "Opponent": "F.C. Dynamo",
-        "Location": "Estadio Central, Field 2",
-        "Status": "Completed",
-      }
-    },
-    performance: {
-      title: "Player Performance Statistics",
-      badge: "Numbers",
-      emoji: "📈",
-      description: "Hard data is the key to tracking progress. Log standard key indicators for each player's match contribution.",
-      features: [
-        "Log goals scored and goal assists in every match",
-        "Track exact minutes played to measure stamina and workload",
-        "Accumulate data over time to view seasonal averages",
-      ],
-      mockData: {
-        "Minutes Played": 90,
-        "Goals": 2,
-        "Assists": 1,
-        "Pass Accuracy": "88%",
-      }
-    },
-    metrics: {
-      title: "Core Evaluation Metrics",
-      badge: "Ratings",
-      emoji: "🎯",
-      description: "Evaluate qualitative performance using our standard 1-10 scoring sliders to track physical and psychological indicators.",
-      features: [
-        "Mark: Standard score representing the overall performance quality",
-        "Intensity: Physical engagement and workload rate during the match",
-        "Attitude: Sportspersonship, team spirit, and mental resilience",
-        "Performance: Tactical execution and consistency on the pitch",
-      ],
-      mockData: {
-        "Overall Mark": "8/10",
-        "Intensity Score": "9/10",
-        "Attitude Score": "10/10",
-        "Tactical Performance": "8/10",
-      }
-    },
-    collaboration: {
-      title: "Trainer & Player Collaboration",
-      badge: "Feedback",
-      emoji: "💬",
-      description: "Build communication between trainers and players. Combine structured feedback with player self-reflections.",
-      features: [
-        "Trainer Feedback: Expert guidance and tactical instructions from trainers",
-        "Player Reflection: Self-evaluation space for players to express feelings",
-        "General Match Comments: Contextual notes on tactical patterns or events",
-      ],
-      mockData: {
-        "Trainer Feedback": "Great positioning on transition. Work on weak foot distribution.",
-        "Player Reflection": "Felt confident in the first half, but fatigued around the 75th minute.",
-      }
-    },
-    growth: {
-      title: "Growth & Actionable Plans",
-      badge: "Development",
-      emoji: "🚀",
-      description: "Translate match logs into structured growth templates. Track strengths, weaknesses, and improvement areas.",
-      features: [
-        "List key match strengths to build player confidence",
-        "Identify specific weaknesses to target in upcoming training",
-        "Formulate explicit improvement areas for action plans",
-      ],
-      mockData: {
-        "Strengths": ["Aerial duels", "Off-the-ball runs", "Tactical awareness"],
-        "Weaknesses": ["Right-foot crossing"],
-        "Improvement Areas": ["Corner kick positioning", "Cardio endurance"],
-      }
-    }
+  const tabKeys = ["tracking", "performance", "metrics", "collaboration", "growth"];
+  const tabEmojis: Record<string, string> = {
+    tracking: "⚽",
+    performance: "📈",
+    metrics: "🎯",
+    collaboration: "💬",
+    growth: "🚀"
   };
+
+  const activeTabBadge = t(`about_page.tabs.${activeTab}.badge`);
+  const activeTabTitle = t(`about_page.tabs.${activeTab}.title`);
+  const activeTabDescription = t(`about_page.tabs.${activeTab}.description`);
+  
+  // Safely parse array / object from translations
+  const activeTabFeatures = (t(`about_page.tabs.${activeTab}.features`) as unknown as string[]) || [];
+  const activeTabMockData = (t(`about_page.tabs.${activeTab}.mockData`) as unknown as Record<string, string | number | string[]>) || {};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-base-300 via-base-200 to-base-100 py-12 px-4 sm:px-6 lg:px-8">
@@ -108,20 +32,20 @@ export default function AboutPage() {
         {/* Header Hero Section */}
         <div className="text-center space-y-4 max-w-3xl mx-auto">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-wider mb-2">
-            <span>⚡ Next-Gen Sports Analytics</span>
+            <span>{t("about_page.badge")}</span>
           </div>
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-            Agent Matches Hub
+            {t("about_page.title")}
           </h1>
           <p className="text-lg text-base-content/75 leading-relaxed">
-            Welcome to the ultimate player tracker application. Designed for teams, trainers, and aspiring athletes, Agent Matches bridges quantitative statistics with qualitative feedback to elevate player development.
+            {t("about_page.subtitle")}
           </p>
           <div className="flex justify-center gap-4 pt-2">
             <Link href="/dashboard" className="btn btn-primary shadow-lg hover:scale-105 active:scale-95 transition-all">
-              Go to Dashboard
+              {t("about_page.btn_dashboard")}
             </Link>
             <a href="#features" className="btn btn-outline btn-secondary hover:scale-105 active:scale-95 transition-all">
-              Explore Features
+              {t("about_page.btn_explore")}
             </a>
           </div>
         </div>
@@ -130,49 +54,52 @@ export default function AboutPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-base-100/50 backdrop-blur-md rounded-2xl border border-base-content/10 shadow-xl">
           <div className="text-center space-y-1">
             <span className="text-3xl sm:text-4xl">⚽</span>
-            <div className="text-2xl font-bold text-primary">Log Matches</div>
-            <div className="text-xs text-base-content/65">Full Match Scheduling</div>
+            <div className="text-2xl font-bold text-primary">{t("about_page.stats.log")}</div>
+            <div className="text-xs text-base-content/65">{t("about_page.stats.log_sub")}</div>
           </div>
           <div className="text-center space-y-1">
             <span className="text-3xl sm:text-4xl">📊</span>
-            <div className="text-2xl font-bold text-secondary">Track Stats</div>
-            <div className="text-xs text-base-content/65">Goals, Assists & Minutes</div>
+            <div className="text-2xl font-bold text-secondary">{t("about_page.stats.track")}</div>
+            <div className="text-xs text-base-content/65">{t("about_page.stats.track_sub")}</div>
           </div>
           <div className="text-center space-y-1">
             <span className="text-3xl sm:text-4xl">🎯</span>
-            <div className="text-2xl font-bold text-accent">Rate Metrics</div>
-            <div className="text-xs text-base-content/65">Workload & Attitude</div>
+            <div className="text-2xl font-bold text-accent">{t("about_page.stats.rate")}</div>
+            <div className="text-xs text-base-content/65">{t("about_page.stats.rate_sub")}</div>
           </div>
           <div className="text-center space-y-1">
             <span className="text-3xl sm:text-4xl">🤝</span>
-            <div className="text-2xl font-bold text-info">Collaborate</div>
-            <div className="text-xs text-base-content/65">Trainer-Player Feedback</div>
+            <div className="text-2xl font-bold text-info">{t("about_page.stats.collab")}</div>
+            <div className="text-xs text-base-content/65">{t("about_page.stats.collab_sub")}</div>
           </div>
         </div>
 
         {/* Main Features Exploration Section */}
         <div id="features" className="space-y-8 scroll-mt-6">
           <div className="text-center">
-            <h2 className="text-3xl font-bold">Comprehensive Feature Suite</h2>
-            <p className="text-base-content/60 mt-1">Select a category below to explore how we track player development.</p>
+            <h2 className="text-3xl font-bold">{t("about_page.features_title")}</h2>
+            <p className="text-base-content/60 mt-1">{t("about_page.features_subtitle")}</p>
           </div>
 
           {/* Feature Tabs Buttons */}
           <div className="flex flex-wrap justify-center gap-2 p-1.5 bg-base-300 rounded-xl max-w-4xl mx-auto">
-            {Object.keys(tabs).map((tabKey) => (
-              <button
-                key={tabKey}
-                onClick={() => setActiveTab(tabKey)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                  activeTab === tabKey
-                    ? "bg-primary text-primary-content shadow-md scale-105"
-                    : "hover:bg-base-200 text-base-content/80"
-                }`}
-              >
-                <span>{tabs[tabKey].emoji}</span>
-                <span>{tabs[tabKey].title.split(" ")[0]}</span>
-              </button>
-            ))}
+            {tabKeys.map((tabKey) => {
+              const tabTitle = t(`about_page.tabs.${tabKey}.title`);
+              return (
+                <button
+                  key={tabKey}
+                  onClick={() => setActiveTab(tabKey)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                    activeTab === tabKey
+                      ? "bg-primary text-primary-content shadow-md scale-105"
+                      : "hover:bg-base-200 text-base-content/80"
+                  }`}
+                >
+                  <span>{tabEmojis[tabKey]}</span>
+                  <span>{tabTitle.split(" ")[0]}</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Active Tab Panel */}
@@ -180,20 +107,20 @@ export default function AboutPage() {
             {/* Tab Info */}
             <div className="lg:col-span-3 space-y-6 flex flex-col justify-center">
               <div className="space-y-3">
-                <div className="badge badge-accent font-semibold">{tabs[activeTab].badge}</div>
+                <div className="badge badge-accent font-semibold">{activeTabBadge}</div>
                 <h3 className="text-2xl sm:text-3xl font-bold text-base-content flex items-center gap-3">
-                  <span>{tabs[activeTab].emoji}</span>
-                  <span>{tabs[activeTab].title}</span>
+                  <span>{tabEmojis[activeTab]}</span>
+                  <span>{activeTabTitle}</span>
                 </h3>
                 <p className="text-base-content/75 leading-relaxed text-base sm:text-lg">
-                  {tabs[activeTab].description}
+                  {activeTabDescription}
                 </p>
               </div>
 
-              <div className="divider">Core Highlights</div>
+              <div className="divider">{t("about_page.core_highlights")}</div>
 
               <ul className="space-y-3">
-                {tabs[activeTab].features.map((feature, idx) => (
+                {activeTabFeatures.map((feature, idx) => (
                   <li key={idx} className="flex items-start gap-2.5 text-sm sm:text-base text-base-content/85">
                     <span className="text-success text-lg mt-0.5">✔</span>
                     <span>{feature}</span>
@@ -206,12 +133,12 @@ export default function AboutPage() {
             <div className="lg:col-span-2 bg-base-200/80 rounded-2xl p-6 border border-base-300/50 shadow-inner flex flex-col justify-between min-h-[300px]">
               <div>
                 <div className="flex items-center justify-between mb-4 border-b border-base-300 pb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-base-content/40">Visual Database Preview</span>
-                  <span className="badge badge-sm badge-success">Live Fields</span>
+                  <span className="text-xs font-bold uppercase tracking-wider text-base-content/40">{t("about_page.db_preview")}</span>
+                  <span className="badge badge-sm badge-success">{t("about_page.live_fields")}</span>
                 </div>
                 
                 <div className="space-y-4">
-                  {Object.entries(tabs[activeTab].mockData).map(([key, val]) => (
+                  {Object.entries(activeTabMockData).map(([key, val]) => (
                     <div key={key} className="space-y-1">
                       <div className="text-xs font-semibold text-base-content/50">{key}</div>
                       {Array.isArray(val) ? (
@@ -232,7 +159,7 @@ export default function AboutPage() {
 
               <div className="mt-6 pt-4 border-t border-base-300 text-center">
                 <span className="text-xs text-base-content/40 italic">
-                  * Saved directly inside database using Prisma ORM
+                  {t("about_page.db_note")}
                 </span>
               </div>
             </div>
@@ -247,16 +174,16 @@ export default function AboutPage() {
               <div className="flex items-center gap-3">
                 <span className="text-3xl">🏃‍♂️</span>
                 <div>
-                  <h3 className="card-title text-xl font-bold">The Player Workflow</h3>
-                  <p className="text-xs text-primary font-semibold">Self-Reflective Development</p>
+                  <h3 className="card-title text-xl font-bold">{t("about_page.roles.player_title")}</h3>
+                  <p className="text-xs text-primary font-semibold">{t("about_page.roles.player_subtitle")}</p>
                 </div>
               </div>
               <p className="text-sm text-base-content/75 leading-relaxed">
-                Players utilize the tracker to review statistics, enter post-match reflections, and maintain a historical ledger of their pitch minutes, goals, and assists. Identifying strengths and addressing personal weaknesses directly boosts performance.
+                {t("about_page.roles.player_desc")}
               </p>
               <div className="card-actions justify-end pt-2">
-                <div className="badge badge-primary badge-outline text-xs">Self-reflection</div>
-                <div className="badge badge-primary badge-outline text-xs">Personal Ledger</div>
+                <div className="badge badge-primary badge-outline text-xs">{t("about_page.roles.self_reflection")}</div>
+                <div className="badge badge-primary badge-outline text-xs">{t("about_page.roles.personal_ledger")}</div>
               </div>
             </div>
           </div>
@@ -267,16 +194,16 @@ export default function AboutPage() {
               <div className="flex items-center gap-3">
                 <span className="text-3xl">📋</span>
                 <div>
-                  <h3 className="card-title text-xl font-bold">The Trainer Workflow</h3>
-                  <p className="text-xs text-secondary font-semibold">Insight & Mentorship</p>
+                  <h3 className="card-title text-xl font-bold">{t("about_page.roles.trainer_title")}</h3>
+                  <p className="text-xs text-secondary font-semibold">{t("about_page.roles.trainer_subtitle")}</p>
                 </div>
               </div>
               <p className="text-sm text-base-content/75 leading-relaxed">
-                Trainers gain administrative capacity to view player records, add notes, and finalize professional matches. By checking reviews, trainers can assign values for Intensity, Attitude, and Performance, offering concrete action items.
+                {t("about_page.roles.trainer_desc")}
               </p>
               <div className="card-actions justify-end pt-2">
-                <div className="badge badge-secondary badge-outline text-xs">Grading Metrics</div>
-                <div className="badge badge-secondary badge-outline text-xs">Review Portal</div>
+                <div className="badge badge-secondary badge-outline text-xs">{t("about_page.roles.grading_metrics")}</div>
+                <div className="badge badge-secondary badge-outline text-xs">{t("about_page.roles.review_portal")}</div>
               </div>
             </div>
           </div>
@@ -286,16 +213,16 @@ export default function AboutPage() {
         <div className="hero bg-base-100 rounded-3xl border border-base-content/10 shadow-2xl p-6 sm:p-12 text-center max-w-5xl mx-auto relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
           <div className="max-w-md mx-auto space-y-6 relative z-10">
-            <h2 className="text-3xl font-extrabold">Ready to track player progress?</h2>
+            <h2 className="text-3xl font-extrabold">{t("about_page.ready_title")}</h2>
             <p className="text-sm sm:text-base text-base-content/70">
-              Start creating matches, recording stats, and collaborating with your team today. Log in or create a player profile.
+              {t("about_page.ready_desc")}
             </p>
             <div className="flex justify-center gap-4">
               <Link href="/dashboard" className="btn btn-primary hover:scale-105 active:scale-95 transition-all px-6">
-                Enter Dashboard
+                {t("about_page.btn_dashboard")}
               </Link>
               <Link href="/" className="btn btn-ghost hover:scale-105 active:scale-95 transition-all">
-                Home Page
+                {t("about_page.btn_home")}
               </Link>
             </div>
           </div>
@@ -304,4 +231,4 @@ export default function AboutPage() {
       </div>
     </div>
   );
-}
+}

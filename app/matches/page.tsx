@@ -1,10 +1,12 @@
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
+import { getTranslationsServer } from "@/lib/i18n-server"
 
 export default async function MatchesPage() {
   const matches = await prisma.match.findMany({
     orderBy: { date: "desc" },
   })
+  const t = await getTranslationsServer()
 
   return (
     <section className="container mx-auto px-6 py-10">
@@ -12,14 +14,14 @@ export default async function MatchesPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
         <div>
           <h1 className="text-4xl font-bold text-primary">
-            Matches
+            {t("matches_list.title")}
           </h1>
           <p className="text-base-content/70 mt-2">
-            View, manage and review your feedback sessions.
+            {t("matches_list.subtitle")}
           </p>
         </div>
 
-        <Link href="/matches/create" className="btn btn-primary">+ Create Match</Link>
+        <Link href="/matches/create" className="btn btn-primary">+ {t("dashboard_page.create_btn")}</Link>
       </div>
 
       {/* Stats */}
@@ -27,7 +29,7 @@ export default async function MatchesPage() {
     <div className="stats shadow">
         <div className="stat text-right">
         <div className="text-base-content/70 mt-2">
-            Total Matches
+            {t("dashboard_page.stats_total")}
         </div>
         <div className="stat-value text-primary">
             {matches.length}
@@ -88,16 +90,16 @@ export default async function MatchesPage() {
           <div className="hero-content text-center">
             <div>
               <h2 className="text-2xl font-bold">
-                No matches yet
+                {t("dashboard_page.no_matches_title")}
               </h2>
               <p className="py-3 text-base-content/70">
-                Create your first match to start tracking player performance and feedback.
+                {t("dashboard_page.no_matches_desc")}
               </p>
-              <Link href="/matches/create" className="btn btn-primary">Create First Match</Link>
+              <Link href="/matches/create" className="btn btn-primary">{t("dashboard_page.create_first")}</Link>
             </div>
           </div>
         </div>
       )}
     </section>
   )
-}
+}

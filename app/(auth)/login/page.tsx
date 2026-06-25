@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "@/components/LanguageProvider";
 
 /**
  * Login Page - CSR (Client-Side Rendering)
@@ -12,6 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 export default function LoginPage() {
   const router = useRouter();
   const { login, isAuthenticated, isLoading, user } = useAuth();
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -61,9 +63,9 @@ export default function LoginPage() {
 
   return (
     <>
-      <h2 className="card-title text-2xl justify-center">Welcome Back</h2>
+      <h2 className="card-title text-2xl justify-center">{t("login_page.title")}</h2>
       <p className="text-center text-base-content/70">
-        Sign in to track player matches and feedback
+        {t("login_page.subtitle")}
       </p>
 
       <form onSubmit={handleSubmit} className="mt-4">
@@ -75,7 +77,7 @@ export default function LoginPage() {
 
         <div className="form-control">
           <label className="label">
-            <span className="label-text">Email</span>
+            <span className="label-text">{t("login_page.email")}</span>
           </label>
           <input
             type="email"
@@ -89,7 +91,7 @@ export default function LoginPage() {
 
         <div className="form-control mt-4">
           <label className="label">
-            <span className="label-text">Password</span>
+            <span className="label-text">{t("login_page.password")}</span>
           </label>
           <input
             type="password"
@@ -110,20 +112,20 @@ export default function LoginPage() {
             {isSubmitting ? (
               <span className="loading loading-spinner loading-sm"></span>
             ) : (
-              "Sign In"
+              t("login_page.signin_btn")
             )}
           </button>
         </div>
       </form>
 
-      <div className="divider">OR</div>
+      <div className="divider">{t("login_page.or")}</div>
 
       <p className="text-center">
-        Don&apos;t have an account?{" "}
+        {t("login_page.no_account")}{" "}
         <Link href="/register" className="link link-primary">
-          Sign up
+          {t("login_page.signup_link")}
         </Link>
       </p>
     </>
   );
-}
+}

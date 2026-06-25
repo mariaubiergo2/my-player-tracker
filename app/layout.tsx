@@ -4,6 +4,8 @@ import "./globals.css";
 import Header from "@/components/ui/Header";
 import Footer from "@/components/ui/Footer";
 import { Providers } from "@/components/Providers";
+import { cookies } from "next/headers";
+import { defaultLocale, Locale } from "@/lib/i18n";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,17 +28,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const locale = (cookieStore.get("locale")?.value as Locale) || defaultLocale;
+
   return (
-    <html lang="en" data-theme="dark">
+    <html lang={locale} data-theme="dark">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
-        <Providers>
+        <Providers initialLocale={locale}>
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />

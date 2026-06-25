@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { useTranslation } from "@/components/LanguageProvider";
 
 export default function Header() {
   const { isAuthenticated, user, logout, isLoading } = useAuth();
+  const { locale, setLocale, t } = useTranslation();
 
   return (
     <div className="navbar bg-base-200 shadow-lg">
@@ -33,23 +35,23 @@ export default function Header() {
             {isAuthenticated && (
               <>
                 {user?.role === "ADMIN" && (
-                  <li><Link href="/admin/users">Users</Link></li>
+                  <li><Link href="/admin/users">{t("header.users")}</Link></li>
                 )}
                 {user?.role === "TRAINER" && (
                   <>
-                    <li><Link href="/trainer/players">All Players</Link></li>
-                    <li><Link href="/trainer/my-players">My Players</Link></li>
+                    <li><Link href="/trainer/players">{t("header.all_players")}</Link></li>
+                    <li><Link href="/trainer/my-players">{t("header.my_players")}</Link></li>
                   </>
                 )}
                 {user?.role === "PLAYER" && (
-                  <li><Link href="/dashboard">Dashboard</Link></li>
+                  <li><Link href="/dashboard">{t("header.dashboard")}</Link></li>
                 )}
               </>
             )}
           </ul>
         </div>
         <Link href="/about" className="btn btn-ghost text-xl">
-          🤖 Agent Matches
+          {t("header.brand")}
         </Link>
       </div>
       <div className="navbar-center hidden lg:flex">
@@ -57,22 +59,64 @@ export default function Header() {
           {isAuthenticated && (
             <>
               {user?.role === "ADMIN" && (
-                <li><Link href="/admin/users">Users</Link></li>
+                <li><Link href="/admin/users">{t("header.users")}</Link></li>
               )}
               {user?.role === "TRAINER" && (
                 <>
-                  <li><Link href="/trainer/players">All Players</Link></li>
-                  <li><Link href="/trainer/my-players">My Players</Link></li>
+                  <li><Link href="/trainer/players">{t("header.all_players")}</Link></li>
+                  <li><Link href="/trainer/my-players">{t("header.my_players")}</Link></li>
                 </>
               )}
               {user?.role === "PLAYER" && (
-                <li><Link href="/dashboard">Dashboard</Link></li>
+                <li><Link href="/dashboard">{t("header.dashboard")}</Link></li>
               )}
             </>
           )}
         </ul>
       </div>
-      <div className="navbar-end">
+      <div className="navbar-end flex gap-2">
+        {/* Language Selector Dropdown */}
+        <div className="dropdown dropdown-end">
+          <div
+            tabIndex={0}
+            role="button"
+            className="btn btn-ghost btn-sm flex items-center gap-1.5 border border-base-content/10 bg-base-100/50 hover:bg-base-200"
+          >
+            <span>🌐</span>
+            <span className="uppercase text-xs font-bold">{locale}</span>
+            <span className="text-[10px] opacity-60">▼</span>
+          </div>
+          <ul
+            tabIndex={0}
+            className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[10] mt-3 w-32 p-2 shadow-2xl border border-base-content/10"
+          >
+            <li>
+              <button
+                onClick={() => setLocale("ca")}
+                className={locale === "ca" ? "active font-bold" : ""}
+              >
+                Català
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => setLocale("es")}
+                className={locale === "es" ? "active font-bold" : ""}
+              >
+                Español
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => setLocale("en")}
+                className={locale === "en" ? "active font-bold" : ""}
+              >
+                English
+              </button>
+            </li>
+          </ul>
+        </div>
+
         {isLoading ? (
           <span className="loading loading-spinner loading-sm"></span>
         ) : isAuthenticated ? (
@@ -102,43 +146,43 @@ export default function Header() {
             >
               <li className="menu-title">{user?.name} ({user?.role})</li>
               {user?.role === "ADMIN" && (
-                <li><Link href="/admin/users">Users</Link></li>
+                <li><Link href="/admin/users">{t("header.users")}</Link></li>
               )}
               {user?.role === "TRAINER" && (
                 <>
-                  <li><Link href="/trainer/players">All Players</Link></li>
-                  <li><Link href="/trainer/my-players">My Players</Link></li>
+                  <li><Link href="/trainer/players">{t("header.all_players")}</Link></li>
+                  <li><Link href="/trainer/my-players">{t("header.my_players")}</Link></li>
                 </>
               )}
               {user?.role === "PLAYER" && (
-                <li><Link href="/dashboard">Dashboard</Link></li>
+                <li><Link href="/dashboard">{t("header.dashboard")}</Link></li>
               )}
               {user?.role !== "ADMIN" && (
                 <li>
-                  <Link href="/matches/create">Create Match</Link>
+                  <Link href="/matches/create">{t("header.create_match")}</Link>
                 </li>
               )}
               {(user?.role === "PLAYER" || user?.role === "TRAINER") && (
                 <li>
-                  <Link href="/profile">Edit Profile</Link>
+                  <Link href="/profile">{t("header.edit_profile")}</Link>
                 </li>
               )}
               <li>
-                <button onClick={logout}>Logout</button>
+                <button onClick={logout}>{t("header.logout")}</button>
               </li>
             </ul>
           </div>
         ) : (
           <div className="flex gap-2">
             <Link href="/login" className="btn btn-ghost btn-sm">
-              Login
+              {t("header.login")}
             </Link>
             <Link href="/register" className="btn btn-primary btn-sm">
-              Sign Up
+              {t("header.signup")}
             </Link>
           </div>
         )}
       </div>
     </div>
   );
-}
+}

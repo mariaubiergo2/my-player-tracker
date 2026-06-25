@@ -6,6 +6,7 @@ import { useActionState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/hooks/useAuth"
 import { createMatch } from "@/actions/matches"
+import { useTranslation } from "@/components/LanguageProvider"
 
 const initialState = {
   message: "",
@@ -14,6 +15,7 @@ const initialState = {
 export default function NewMatchPage() {
   const router = useRouter()
   const { user, isAuthenticated, isLoading } = useAuth()
+  const { t } = useTranslation()
 
   const [state, formAction, pending] = useActionState(
     createMatch,
@@ -44,15 +46,15 @@ export default function NewMatchPage() {
     <section className="container mx-auto px-6 py-10">
       <div className="mb-10">
         <Link href="/dashboard" className="btn btn-ghost mb-4">
-          ← Back to Dashboard
+          {t("match_details.back_dashboard")}
         </Link>
 
         <h1 className="text-4xl font-bold text-primary">
-          Create Match
+          {t("match_form.create_title")}
         </h1>
 
         <p className="text-base-content/70 mt-2">
-          Register a new football match and prepare feedback for the player.
+          {t("match_form.create_subtitle")}
         </p>
       </div>
 
@@ -60,62 +62,62 @@ export default function NewMatchPage() {
         {/* Match details */}
         <div className="card bg-base-100 shadow-md border border-base-200">
           <div className="card-body">
-            <h2 className="card-title">Match Details</h2>
+            <h2 className="card-title">{t("match_form.basic_info")}</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <input
-                placeholder="Match name"
+                placeholder={t("match_form.match_name")}
                 className="input input-bordered w-full"
                 name="name"
               />
 
               <input
-                placeholder="Opponent"
+                placeholder={t("common.opponent")}
                 className="input input-bordered w-full"
                 name="opponent"
               />
 
               <input
-                placeholder="Location"
+                placeholder={t("common.location")}
                 className="input input-bordered w-full"
                 name="location"
               />
 
               <input
-                placeholder="Match type"
+                placeholder={t("match_form.match_type")}
                 className="input input-bordered w-full"
                 name="matchType"
               />
 
               <input
-                placeholder="Status"
+                placeholder={t("common.status")}
                 className="input input-bordered w-full"
                 name="status"
               />
 
               <input
-                placeholder="Date"
+                placeholder={t("common.date")}
                 type="date"
                 className="input input-bordered w-full"
                 name="date"
               />
 
               <input
-                placeholder="Start time"
+                placeholder={t("match_form.start_time")}
                 type="time"
                 className="input input-bordered w-full"
                 name="startTime"
               />
 
               <input
-                placeholder="End time"
+                placeholder={t("match_form.end_time")}
                 type="time"
                 className="input input-bordered w-full"
                 name="endTime"
               />
 
               <textarea
-                placeholder="Description"
+                placeholder={t("match_form.description")}
                 className="textarea textarea-bordered w-full md:col-span-2"
                 name="description"
               />
@@ -126,7 +128,7 @@ export default function NewMatchPage() {
         {/* People */}
         <div className="card bg-base-100 shadow-md border border-base-200">
           <div className="card-body">
-            <h2 className="card-title">People & Team</h2>
+            <h2 className="card-title">{t("match_form.player")} & {t("match_form.trainer")}</h2>
 
             <div className={`grid grid-cols-1 ${user.role === "PLAYER" ? "md:grid-cols-1" : "md:grid-cols-3"} gap-4`}>
               {user.role === "PLAYER" ? (
@@ -138,13 +140,13 @@ export default function NewMatchPage() {
               ) : (
                 <>
                   <input
-                    placeholder="Player"
+                    placeholder={t("match_form.player")}
                     className="input input-bordered w-full"
                     name="playerId"
                   />
 
                   <input
-                    placeholder="Trainer"
+                    placeholder={t("match_form.trainer")}
                     className="input input-bordered w-full"
                     name="trainerId"
                   />
@@ -152,7 +154,7 @@ export default function NewMatchPage() {
               )}
 
               <input
-                placeholder="Team"
+                placeholder={t("match_details.team_id")}
                 className="input input-bordered w-full"
                 name="teamId"
               />
@@ -163,47 +165,47 @@ export default function NewMatchPage() {
         {/* Performance */}
         <div className="card bg-base-100 shadow-md border border-base-200">
           <div className="card-body">
-            <h2 className="card-title">Performance</h2>
+            <h2 className="card-title">{t("match_details.perf_title")}</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <input
-                placeholder="Mark"
+                placeholder={t("common.mark")}
                 className="input input-bordered w-full"
                 name="mark"
               />
 
               <input
-                placeholder="Intensity"
+                placeholder={t("common.intensity")}
                 className="input input-bordered w-full"
                 name="intensity"
               />
 
               <input
-                placeholder="Attitude"
+                placeholder={t("common.attitude")}
                 className="input input-bordered w-full"
                 name="attitude"
               />
 
               <input
-                placeholder="Performance"
+                placeholder={t("common.performance")}
                 className="input input-bordered w-full"
                 name="performance"
               />
 
               <input
-                placeholder="Goals"
+                placeholder={t("common.goals")}
                 className="input input-bordered w-full"
                 name="goals"
               />
 
               <input
-                placeholder="Assists"
+                placeholder={t("common.assists")}
                 className="input input-bordered w-full"
                 name="assists"
               />
 
               <input
-                placeholder="Minutes played"
+                placeholder={t("common.minutes")}
                 className="input input-bordered w-full"
                 name="minutesPlayed"
               />
@@ -214,41 +216,41 @@ export default function NewMatchPage() {
         {/* Feedback */}
         <div className="card bg-base-100 shadow-md border border-base-200">
           <div className="card-body">
-            <h2 className="card-title">Feedback</h2>
+            <h2 className="card-title">{t("match_details.feedback_title")}</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <textarea
-                placeholder="Comment"
+                placeholder={t("match_details.comment_label")}
                 className="textarea textarea-bordered w-full"
                 name="comment"
               />
 
               <textarea
-                placeholder="Trainer feedback"
+                placeholder={t("match_details.trainer_feedback_label")}
                 className="textarea textarea-bordered w-full"
                 name="trainerFeedback"
               />
 
               <textarea
-                placeholder="Player reflection"
+                placeholder={t("match_details.player_reflection_label")}
                 className="textarea textarea-bordered w-full"
                 name="playerReflection"
               />
 
               <textarea
-                placeholder="Strengths"
+                placeholder={t("match_form.strengths")}
                 className="textarea textarea-bordered w-full"
                 name="strengths"
               />
 
               <textarea
-                placeholder="Weaknesses"
+                placeholder={t("match_form.weaknesses")}
                 className="textarea textarea-bordered w-full"
                 name="weaknesses"
               />
 
               <textarea
-                placeholder="Improvement areas"
+                placeholder={t("match_form.improvement")}
                 className="textarea textarea-bordered w-full"
                 name="improvementAreas"
               />
@@ -259,7 +261,7 @@ export default function NewMatchPage() {
         {/* Review */}
         <div className="card bg-base-100 shadow-md border border-base-200">
           <div className="card-body">
-            <h2 className="card-title">Review Status</h2>
+            <h2 className="card-title">{t("match_form.review_status_label")}</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
               <label className="label cursor-pointer justify-start gap-3">
@@ -268,11 +270,11 @@ export default function NewMatchPage() {
                   type="checkbox"
                   className="checkbox checkbox-primary"
                 />
-                <span className="label-text">Reviewed</span>
+                <span className="label-text">{t("match_details.reviewed_badge")}</span>
               </label>
 
               <input
-                placeholder="Reviewed at"
+                placeholder={t("match_details.reviewed_at_label")}
                 name="reviewedAt"
                 type="datetime-local"
                 className="input input-bordered w-full"
@@ -289,7 +291,7 @@ export default function NewMatchPage() {
 
         <div className="flex justify-end gap-3">
           <Link href="/dashboard" className="btn btn-ghost">
-            Cancel
+            {t("common.cancel")}
           </Link>
 
           <button
@@ -297,10 +299,10 @@ export default function NewMatchPage() {
             className="btn btn-primary"
             type="submit"
           >
-            {pending ? "Creating..." : "Create Match"}
+            {pending ? t("match_form.submitting") : t("match_form.create_btn")}
           </button>
         </div>
       </form>
     </section>
   )
-}
+}

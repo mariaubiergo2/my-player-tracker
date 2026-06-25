@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { getAllPlayersWithMatchCount, assignPlayerToTrainer } from "@/actions/trainer";
+import { useTranslation } from "@/components/LanguageProvider";
 
 interface PlayerListItem {
   id: string;
@@ -19,6 +20,7 @@ interface PlayerListItem {
 export default function TrainerPlayersPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
+  const { t } = useTranslation();
   
   const [players, setPlayers] = useState<PlayerListItem[]>([]);
   const [loadingPlayers, setLoadingPlayers] = useState(true);
@@ -47,11 +49,11 @@ export default function TrainerPlayersPage() {
       if (res.success && res.players) {
         setPlayers(res.players);
       } else {
-        setErrorMessage(res.error || "Failed to load players.");
+        setErrorMessage(res.error || t("common.error"));
       }
     } catch (err) {
       console.error(err);
-      setErrorMessage("An unexpected error occurred while fetching players.");
+      setErrorMessage(t("common.error"));
     } finally {
       setLoadingPlayers(false);
     }
@@ -64,18 +66,18 @@ export default function TrainerPlayersPage() {
     try {
       const res = await assignPlayerToTrainer(playerId);
       if (res.success) {
-        setSuccessMessage("Player successfully assigned to you!");
+        setSuccessMessage(t("trainer_players.success_assign"));
         // Update local state to reflect assignment
         setPlayers((prev) =>
           prev.map((p) => (p.id === playerId ? { ...p, trainerId: user?.id || "" } : p))
         );
         setTimeout(() => setSuccessMessage(""), 5000);
       } else {
-        setErrorMessage(res.error || "Failed to assign player.");
+        setErrorMessage(res.error || t("common.error"));
       }
     } catch (err) {
       console.error(err);
-      setErrorMessage("An unexpected error occurred.");
+      setErrorMessage(t("common.error"));
     } finally {
       setAssigningId(null);
     }
@@ -93,7 +95,7 @@ export default function TrainerPlayersPage() {
       <div className="flex justify-center items-center min-h-[50vh]">
         <div className="flex flex-col items-center gap-4">
           <span className="loading loading-spinner loading-lg text-primary"></span>
-          <p className="text-base-content/60 font-medium">Loading players list...</p>
+          <p className="text-base-content/60 font-medium">{t("common.loading")}</p>
         </div>
       </div>
     );
@@ -125,10 +127,10 @@ export default function TrainerPlayersPage() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            All Players Directory
+            {t("trainer_players.title")}
           </h1>
           <p className="text-base-content/70 mt-2">
-            View all players in the system and assign them to your roster for match tracking.
+            {t("trainer_players.subtitle")}
           </p>
         </div>
       </div>
@@ -140,7 +142,7 @@ export default function TrainerPlayersPage() {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search players by name or email..."
+                placeholder={t("trainer_players.search_placeholder")}
                 className="input input-bordered w-full pl-10"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -156,9 +158,9 @@ export default function TrainerPlayersPage() {
         <div className="hero bg-base-200 rounded-2xl p-10 text-center border border-base-content/5">
           <div className="max-w-md">
             <span className="text-5xl">⚽</span>
-            <h3 className="text-2xl font-bold mt-4">No players found</h3>
+            <h3 className="text-2xl font-bold mt-4">{t("trainer_players.no_players")}</h3>
             <p className="py-2 text-base-content/60">
-              Try adjusting your search criteria.
+              {t("trainer_players.adjust_search")}
             </p>
           </div>
         </div>
@@ -167,12 +169,12 @@ export default function TrainerPlayersPage() {
           <table className="table table-zebra w-full">
             <thead>
               <tr className="bg-base-200/50">
-                <th>Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Birth Date</th>
-                <th className="text-center">Matches Played</th>
-                <th className="text-right">Actions</th>
+                <th>{t("trainer_players.table_name")}</th>
+                <th>{t("trainer_players.table_email")}</th>
+                <th>{t("trainer_players.table_phone")}</th>
+                <th>{t("trainer_players.table_birth")}</th>
+                <th className="text-center">{t("trainer_players.table_matches")}</th>
+                <th className="text-right">{t("trainer_players.table_actions")}</th>
               </tr>
             </thead>
             <tbody>
@@ -201,10 +203,10 @@ export default function TrainerPlayersPage() {
                       <span className="text-sm font-medium text-base-content/85">{p.email}</span>
                     </td>
                     <td>
-                      {p.phone || <span className="text-base-content/30 italic">Not set</span>}
+                      {p.phone || <span className="text-base-content/30 italic">{t("common.not_specified")}</span>}
                     </td>
                     <td>
-                      {p.birthDate || <span className="text-base-content/30 italic">Not set</span>}
+                      {p.birthDate || <span className="text-base-content/30 italic">{t("common.not_specified")}</span>}
                     </td>
                     <td className="text-center">
                       <span className="badge badge-neutral font-semibold">{p.matchCount}</span>
@@ -212,12 +214,12 @@ export default function TrainerPlayersPage() {
                     <td className="text-right">
                       {isAssignedToMe ? (
                         <span className="badge badge-success font-semibold text-white py-3 px-4">
-                          ✓ Assigned to You
+                          {t("trainer_players.assigned_to_you")}
                         </span>
                       ) : isAssignedToOther ? (
                         <div className="flex justify-end items-center gap-2">
                           <span className="badge badge-ghost text-base-content/50 italic mr-2">
-                            Assigned to other
+                            {t("trainer_players.assigned_to_other")}
                           </span>
                           <button
                             onClick={() => handleAssign(p.id)}
@@ -227,7 +229,7 @@ export default function TrainerPlayersPage() {
                             {assigningId === p.id ? (
                               <span className="loading loading-spinner loading-xs"></span>
                             ) : (
-                              "Reassign to Me"
+                              t("trainer_players.reassign_to_me")
                             )}
                           </button>
                         </div>
@@ -240,7 +242,7 @@ export default function TrainerPlayersPage() {
                           {assigningId === p.id ? (
                             <span className="loading loading-spinner loading-xs"></span>
                           ) : (
-                            "Assign to Me"
+                            t("trainer_players.assign_to_me")
                           )}
                         </button>
                       )}
@@ -255,3 +257,4 @@ export default function TrainerPlayersPage() {
     </section>
   );
 }
+

@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { getProfile, updateProfile } from "@/actions/users";
+import { useTranslation } from "@/components/LanguageProvider";
 
 export default function ProfilePage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading, checkAuth } = useAuth();
+  const { t } = useTranslation();
 
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
@@ -28,8 +30,8 @@ export default function ProfilePage() {
 
   // Set page title for SEO
   useEffect(() => {
-    document.title = "Edit Profile | Agent Matches";
-  }, []);
+    document.title = `${t("profile_page.title")} | Agent Matches`;
+  }, [t]);
 
   // Client-side authentication check
   useEffect(() => {
@@ -59,11 +61,11 @@ export default function ProfilePage() {
           confirmPassword: "",
         });
       } else {
-        setErrorMessage(res.error || "Failed to load profile details.");
+        setErrorMessage(res.error || t("profile_page.loading_profile"));
       }
     } catch (err) {
       console.error(err);
-      setErrorMessage("An unexpected error occurred while loading profile.");
+      setErrorMessage(t("profile_page.loading_profile"));
     } finally {
       setLoadingProfile(false);
     }
@@ -83,17 +85,17 @@ export default function ProfilePage() {
     // Validate passwords if user wants to change password
     if (formData.newPassword) {
       if (!formData.currentPassword) {
-        setErrorMessage("You must enter your current password to set a new password.");
+        setErrorMessage(t("profile_page.error_current_password"));
         setSaveLoading(false);
         return;
       }
       if (formData.newPassword.length < 6) {
-        setErrorMessage("New password must be at least 6 characters.");
+        setErrorMessage(t("profile_page.error_length"));
         setSaveLoading(false);
         return;
       }
       if (formData.newPassword !== formData.confirmPassword) {
-        setErrorMessage("New password and confirmation password do not match.");
+        setErrorMessage(t("profile_page.error_match"));
         setSaveLoading(false);
         return;
       }
@@ -112,7 +114,7 @@ export default function ProfilePage() {
       });
 
       if (res.success) {
-        setSuccessMessage("Profile updated successfully!");
+        setSuccessMessage(t("profile_page.success_update"));
         // Clear password fields
         setFormData((prev) => ({
           ...prev,
@@ -123,11 +125,11 @@ export default function ProfilePage() {
         // Refresh auth state context to update Header immediately
         await checkAuth();
       } else {
-        setErrorMessage(res.error || "Failed to update profile.");
+        setErrorMessage(res.error || t("common.error"));
       }
     } catch (err) {
       console.error(err);
-      setErrorMessage("An unexpected error occurred during profile save.");
+      setErrorMessage(t("common.error"));
     } finally {
       setSaveLoading(false);
     }
@@ -138,7 +140,7 @@ export default function ProfilePage() {
       <div className="flex justify-center items-center min-h-[50vh]">
         <div className="flex flex-col items-center gap-4">
           <span className="loading loading-spinner loading-lg text-primary"></span>
-          <p className="text-base-content/60 font-medium">Loading profile...</p>
+          <p className="text-base-content/60 font-medium">{t("profile_page.loading_profile")}</p>
         </div>
       </div>
     );
@@ -153,10 +155,10 @@ export default function ProfilePage() {
       {/* Title */}
       <div className="mb-10">
         <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-          Edit Profile
+          {t("profile_page.title")}
         </h1>
         <p className="text-base-content/70 mt-2">
-          Manage your personal details, avatar, and security preferences.
+          {t("profile_page.subtitle")}
         </p>
       </div>
 
@@ -183,7 +185,7 @@ export default function ProfilePage() {
           {/* Left Column: Avatar Preview & Role */}
           <div className="card bg-base-100 shadow-xl border border-base-200 lg:col-span-1">
             <div className="card-body items-center text-center">
-              <h3 className="card-title text-lg font-bold text-base-content/80 mb-2">Your Photo</h3>
+              <h3 className="card-title text-lg font-bold text-base-content/80 mb-2">{t("profile_page.photo_title")}</h3>
               
               {/* Avatar Image Frame */}
               <div className="avatar placeholder mb-4">
@@ -208,10 +210,10 @@ export default function ProfilePage() {
 
               {/* Readonly Role */}
               <div className="badge badge-lg bg-base-200 text-base-content font-bold border border-base-300 px-4 py-3">
-                Role: {user?.role}
+                {t("profile_page.role_label")}: {user?.role}
               </div>
               <p className="text-xs text-base-content/50 mt-3 max-w-xs leading-relaxed">
-                Roles are configured by system administrators and cannot be self-modified.
+                {t("profile_page.role_note")}
               </p>
             </div>
           </div>
@@ -220,14 +222,14 @@ export default function ProfilePage() {
           <div className="card bg-base-100 shadow-xl border border-base-200 lg:col-span-2">
             <div className="card-body">
               <h3 className="card-title text-xl font-bold text-primary mb-4 border-b border-base-200 pb-2">
-                Personal Details
+                {t("profile_page.details_title")}
               </h3>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* First Name */}
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-semibold">First Name *</span>
+                    <span className="label-text font-semibold">{t("profile_page.first_name")}</span>
                   </label>
                   <input
                     type="text"
@@ -244,7 +246,7 @@ export default function ProfilePage() {
                 {/* Surname */}
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-semibold">Surname *</span>
+                    <span className="label-text font-semibold">{t("profile_page.surname")}</span>
                   </label>
                   <input
                     type="text"
@@ -262,7 +264,7 @@ export default function ProfilePage() {
               {/* Email Address */}
               <div className="form-control mt-4">
                 <label className="label">
-                  <span className="label-text font-semibold">Email Address *</span>
+                  <span className="label-text font-semibold">{t("profile_page.email")}</span>
                 </label>
                 <input
                   type="email"
@@ -279,7 +281,7 @@ export default function ProfilePage() {
               {/* Avatar URL */}
               <div className="form-control mt-4">
                 <label className="label">
-                  <span className="label-text font-semibold">Avatar Image URL</span>
+                  <span className="label-text font-semibold">{t("profile_page.avatar_url")}</span>
                 </label>
                 <input
                   type="url"
@@ -291,7 +293,7 @@ export default function ProfilePage() {
                   onChange={handleInputChange}
                 />
                 <span className="label-text-alt text-base-content/50 mt-1">
-                  Enter a direct image link. It will update the preview avatar on the left immediately.
+                  {t("profile_page.avatar_help")}
                 </span>
               </div>
 
@@ -299,7 +301,7 @@ export default function ProfilePage() {
                 {/* Phone */}
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-semibold">Phone</span>
+                    <span className="label-text font-semibold">{t("profile_page.phone")}</span>
                   </label>
                   <input
                     type="text"
@@ -315,7 +317,7 @@ export default function ProfilePage() {
                 {/* Birth Date */}
                 <div className="form-control">
                   <label className="label">
-                    <span className="label-text font-semibold">Birth Date</span>
+                    <span className="label-text font-semibold">{t("profile_page.birth_date")}</span>
                   </label>
                   <input
                     type="date"
@@ -335,17 +337,17 @@ export default function ProfilePage() {
         <div className="card bg-base-100 shadow-xl border border-base-200">
           <div className="card-body">
             <h3 className="card-title text-xl font-bold text-primary mb-4 border-b border-base-200 pb-2">
-              Security & Password
+              {t("profile_page.security_title")}
             </h3>
             <p className="text-sm text-base-content/60 mb-4">
-              Leave these fields blank if you do not wish to change your password.
+              {t("profile_page.security_note")}
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Current Password */}
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text font-semibold">Current Password</span>
+                  <span className="label-text font-semibold">{t("profile_page.current_password")}</span>
                 </label>
                 <input
                   type="password"
@@ -361,7 +363,7 @@ export default function ProfilePage() {
               {/* New Password */}
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text font-semibold">New Password</span>
+                  <span className="label-text font-semibold">{t("profile_page.new_password")}</span>
                 </label>
                 <input
                   type="password"
@@ -377,7 +379,7 @@ export default function ProfilePage() {
               {/* Confirm New Password */}
               <div className="form-control">
                 <label className="label">
-                  <span className="label-text font-semibold">Confirm New Password</span>
+                  <span className="label-text font-semibold">{t("profile_page.confirm_new_password")}</span>
                 </label>
                 <input
                   type="password"
@@ -402,7 +404,7 @@ export default function ProfilePage() {
             className="btn btn-ghost"
             disabled={saveLoading}
           >
-            Cancel
+            {t("profile_page.cancel_btn")}
           </button>
           <button
             type="submit"
@@ -413,7 +415,7 @@ export default function ProfilePage() {
             {saveLoading ? (
               <span className="loading loading-spinner loading-sm"></span>
             ) : (
-              "Save Profile Changes"
+              t("profile_page.save_btn")
             )}
           </button>
         </div>
@@ -421,3 +423,4 @@ export default function ProfilePage() {
     </section>
   );
 }
+
