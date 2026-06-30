@@ -440,5 +440,17 @@
     "success_delete": "Compte d'usuari i partits associats eliminats.",
     "success_role": "S'ha actualitzat el rol de {name} a {role}",
     "loading_users": "Carregant base de dades d'usuaris..."
+  },
+  "video": {
+    "upload_title": "Vídeo del Partit",
+    "upload_button": "Penjar Vídeo",
+    "uploading_state": "Penjant vídeo... {progress}%",
+    "processing_state": "Processant vídeo a Mux... Si us plau, espera.",
+    "ready_state": "El vídeo està a punt!",
+    "error_state": "Error en penjar el vídeo. Si us plau, torna-ho a provar.",
+    "delete_button": "Eliminar Vídeo",
+    "delete_confirm": "Estàs segur que vols eliminar aquest vídeo?",
+    "not_ready": "El vídeo encara s'està processant. Torna a comprovar-ho en uns moments.",
+    "fallback_text": "Processant el fitxer de vídeo del partit..."
   }
 }

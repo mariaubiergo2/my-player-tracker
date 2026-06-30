@@ -43,6 +43,8 @@ export interface Match {
   isReviewed: boolean;
   reviewedAt?: string;
 
+  video?: any;
+
   createdAt: string;
   updatedAt: string;
 }

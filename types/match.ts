@@ -40,4 +40,18 @@ export interface CompleteMatch {
   reviewedAt?: Date | null
   createdAt?: Date
   updatedAt?: Date
+  video?: VideoType | null
+}
+
+export interface VideoType {
+  id: string
+  matchId: string
+  muxAssetId?: string | null
+  muxPlaybackId?: string | null
+  muxUploadId?: string | null
+  status: string
+  duration?: number | null
+  title?: string | null
+  createdAt: Date
+  updatedAt: Date
 }

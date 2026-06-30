@@ -121,6 +121,18 @@ export default function NewMatchPage() {
                 className="textarea textarea-bordered w-full md:col-span-2"
                 name="description"
               />
+
+              <div className="md:col-span-2">
+                <label className="label">
+                  <span className="label-text font-semibold">{t("video.upload_title")}</span>
+                </label>
+                <input
+                  type="file"
+                  name="videoFile"
+                  accept="video/*"
+                  className="file-input file-input-bordered w-full"
+                />
+              </div>
             </div>
           </div>
         </div>

@@ -92,8 +92,26 @@ model Match {
   isReviewed Boolean   @default(false) @map("is_reviewed")
   reviewedAt DateTime? @map("reviewed_at")
 
+  video Video?
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("matches")
+}
+
+model Video {
+  id            String   @id @default(cuid())
+  matchId       String   @unique @map("match_id")
+  match         Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  muxAssetId    String?  @map("mux_asset_id")
+  muxPlaybackId String?  @map("mux_playback_id")
+  muxUploadId   String?  @map("mux_upload_id")
+  status        String   @default("uploading") // uploading, processing, ready, errored
+  duration      Float?
+  title         String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  @@map("videos")
 }

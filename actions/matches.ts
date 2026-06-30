@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { MatchStatus, MatchType } from "@prisma/client";
 import { cookies } from "next/headers";
 import { getCurrentUser } from "@/lib/auth";
+import Mux from "@mux/mux-node";
 
 
 // 1. GET ALL MATCHES of a trainer
@@ -27,6 +28,9 @@ export async function getMatchById(matchId: string) {
   try {
     return await prisma.match.findUnique({
       where: { id: matchId },
+      include: {
+        video: true,
+      },
     });
   } catch (error) {
     console.error("Get match by id error:", error);
@@ -133,7 +137,7 @@ export async function createMatch(prevState: any, formData: FormData) {
     const parsedReviewedAt = reviewedAt ? new Date(reviewedAt as string) : null;
 
     // 6. Create the record
-    await prisma.match.create({
+    const createdMatch = await prisma.match.create({
       data: {
         name: name as string,
         description: description ? String(description) : null,
@@ -164,6 +168,87 @@ export async function createMatch(prevState: any, formData: FormData) {
         reviewedAt: parsedReviewedAt,
       },
     });
+
+    // 7. Check for uploaded video file
+    const videoFile = formData.get("videoFile") as File | null;
+    if (videoFile && videoFile.size > 0) {
+      if (process.env.MUX_TOKEN_ID && process.env.MUX_TOKEN_SECRET) {
+        try {
+          const muxClient = new Mux({
+            tokenId: process.env.MUX_TOKEN_ID,
+            tokenSecret: process.env.MUX_TOKEN_SECRET,
+          });
+
+          // Create Mux Direct Upload
+          const upload = await muxClient.video.uploads.create({
+            new_asset_settings: {
+              playback_policy: ["public"],
+              passthrough: createdMatch.id,
+            },
+            cors_origin: "*",
+          });
+
+          // Upload the file bytes directly to Mux
+          if (!upload.url) {
+            throw new Error("Mux did not return an upload URL");
+          }
+          const fileBuffer = Buffer.from(await videoFile.arrayBuffer());
+          await fetch(upload.url, {
+            method: "PUT",
+            body: fileBuffer,
+            headers: {
+              "Content-Type": videoFile.type || "application/octet-stream",
+            },
+          });
+
+          // Create the Video database record
+          await prisma.video.create({
+            data: {
+              matchId: createdMatch.id,
+              muxUploadId: upload.id,
+              status: "uploading",
+              title: videoFile.name || `Video for Match: ${createdMatch.name}`,
+            },
+          });
+        } catch (uploadError) {
+          console.error("Mux Video upload failed in createMatch Action:", uploadError);
+        }
+      } else {
+        // Mux credentials not configured. Save video file locally to public/uploads!
+        console.warn("Mux credentials not configured. Saving video file locally.");
+        try {
+          const fs = require("fs");
+          const path = require("path");
+
+          const uploadDir = path.join(process.cwd(), "public", "uploads");
+          if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+          }
+
+          const fileName = `match_${createdMatch.id}_video.mp4`;
+          const filePath = path.join(uploadDir, fileName);
+          const fileBuffer = Buffer.from(await videoFile.arrayBuffer());
+          fs.writeFileSync(filePath, fileBuffer);
+
+          const localVideoUrl = `/uploads/${fileName}`;
+          const mockUploadId = `mock_upload_${Date.now()}`;
+
+          await prisma.video.create({
+            data: {
+              matchId: createdMatch.id,
+              muxUploadId: mockUploadId,
+              muxAssetId: `local_asset_${Date.now()}`,
+              muxPlaybackId: localVideoUrl,
+              status: "ready", // immediately ready!
+              duration: 0,
+              title: videoFile.name || `Local: ${videoFile.name}`,
+            },
+          });
+        } catch (localErr) {
+          console.error("Failed to save local video during match creation:", localErr);
+        }
+      }
+    }
 
     // Determine where to redirect based on auth token cookie presence
     const cookieStore = await cookies();

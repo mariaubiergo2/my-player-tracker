@@ -440,5 +440,17 @@
     "success_delete": "User account and all associated matches deleted.",
     "success_role": "Updated role of {name} to {role}",
     "loading_users": "Loading user database..."
+  },
+  "video": {
+    "upload_title": "Match Video",
+    "upload_button": "Upload Video",
+    "uploading_state": "Uploading video... {progress}%",
+    "processing_state": "Processing video in Mux... Please wait.",
+    "ready_state": "Video is ready!",
+    "error_state": "Error uploading video. Please try again.",
+    "delete_button": "Delete Video",
+    "delete_confirm": "Are you sure you want to delete this video?",
+    "not_ready": "Video is still processing. Please check back in a moment.",
+    "fallback_text": "Processing match video asset..."
   }
 }

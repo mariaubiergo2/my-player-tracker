@@ -2,6 +2,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { cookies } from "next/headers"
 import { getTranslationsServer } from "@/lib/i18n-server"
+import MatchVideoContainer from "@/components/matches/MatchVideoContainer"
 
 export default async function MatchPage({
   params,
@@ -94,6 +95,8 @@ export default async function MatchPage({
               </div>
             </div>
           </div>
+
+          <MatchVideoContainer matchId={match.id} initialVideo={match.video} />
 
           <div className="card bg-base-100 shadow-md border border-base-200">
             <div className="card-body">

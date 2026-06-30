@@ -440,5 +440,17 @@
     "success_delete": "Cuenta de usuario y partidos asociados eliminados.",
     "success_role": "Se ha actualizado el rol de {name} a {role}",
     "loading_users": "Cargando base de datos de usuarios..."
+  },
+  "video": {
+    "upload_title": "Video del Partido",
+    "upload_button": "Subir Video",
+    "uploading_state": "Subiendo video... {progress}%",
+    "processing_state": "Procesando video en Mux... Por favor, espera.",
+    "ready_state": "¡El video está listo!",
+    "error_state": "Error al subir el video. Por favor, inténtalo de nuevo.",
+    "delete_button": "Eliminar Video",
+    "delete_confirm": "¿Estás seguro de que quieres eliminar este video?",
+    "not_ready": "El video aún se está procesando. Vuelve a comprobarlo en un momento.",
+    "fallback_text": "Procesando el archivo de video del partido..."
   }
 }
