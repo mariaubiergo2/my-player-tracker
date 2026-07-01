@@ -5,7 +5,7 @@
     "users": "Users",
     "all_players": "All Players",
     "my_players": "My Players",
-    "dashboard": "Dashboard",
+    "dashboard": "Video Analysis",
     "create_match": "Create Match",
     "edit_profile": "Edit Profile",
     "logout": "Logout",
@@ -56,7 +56,7 @@
     "badge": "⚽ Player Performance Tracking",
     "title": "Track Matches. Share Feedback. Elevate Player Performance.",
     "subtitle": "The professional player tracker portal designed to record pitch minutes, log goals and assists, evaluate tactical ratings, and share trainer reflections.",
-    "btn_dashboard": "Go to Dashboard",
+    "btn_dashboard": "Go to Video Analysis",
     "btn_about": "How it Works",
     "stats": {
       "perf_title": "Performance Centric",
@@ -101,7 +101,7 @@
     "badge": "⚡ Next-Gen Sports Analytics",
     "title": "Agent Matches Hub",
     "subtitle": "Welcome to the ultimate player tracker application. Designed for teams, trainers, and aspiring athletes, Agent Matches bridges quantitative statistics with qualitative feedback to elevate player development.",
-    "btn_dashboard": "Go to Dashboard",
+    "btn_dashboard": "Go to Video Analysis",
     "btn_explore": "Explore Features",
     "stats": {
       "log": "Log Matches",
@@ -241,7 +241,7 @@
     "error_length": "Password must be at least 6 characters"
   },
   "dashboard_page": {
-    "title": "Dashboard",
+    "title": "Video Analysis",
     "welcome": "Welcome back, {name}!",
     "create_btn": "Create Match",
     "stats_total": "Total Matches",
@@ -262,7 +262,7 @@
     "subtitle": "View, manage and review your feedback sessions."
   },
   "match_details": {
-    "back_dashboard": "← Back to Dashboard",
+    "back_dashboard": "← Back to Video Analysis",
     "description_placeholder": "No description available.",
     "info_title": "Match Information",
     "perf_title": "Player Performance",

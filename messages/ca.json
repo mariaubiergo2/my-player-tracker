@@ -5,7 +5,7 @@
     "users": "Usuaris",
     "all_players": "Tots els jugadors",
     "my_players": "Els meus jugadors",
-    "dashboard": "Tauler de control",
+    "dashboard": "Anàlisi de vídeo",
     "create_match": "Crear partit",
     "edit_profile": "Editar perfil",
     "logout": "Tancar sessió",
@@ -56,7 +56,7 @@
     "badge": "⚽ Seguiment del rendiment del jugador",
     "title": "Registra partits. Comparteix valoracions. Eleva el rendiment.",
     "subtitle": "El portal professional per a jugadors dissenyat per registrar minuts al camp, gols, assistències, avaluar qualificacions tàctiques i compartir reflexions de l'entrenador.",
-    "btn_dashboard": "Anar al tauler",
+    "btn_dashboard": "Anàlisi de vídeo",
     "btn_about": "Com funciona",
     "stats": {
       "perf_title": "Centrat en el rendiment",
@@ -101,7 +101,7 @@
     "badge": "⚡ Analítica esportiva de nova generació",
     "title": "Agent Matches Hub",
     "subtitle": "Benvingut a l'aplicació definitiva de seguiment de jugadors. Dissenyada per a equips, entrenadors i atletes, connecta estadístiques quantitatives amb comentaris qualitatius.",
-    "btn_dashboard": "Anar al tauler",
+    "btn_dashboard": "Anar a l'anàlisi de vídeo",
     "btn_explore": "Explorar funcions",
     "stats": {
       "log": "Registrar partits",
@@ -241,7 +241,7 @@
     "error_length": "La contrasenya ha de tenir com a mínim 6 caràcters"
   },
   "dashboard_page": {
-    "title": "Tauler de control",
+    "title": "Anàlisi de vídeo",
     "welcome": "Benvingut de nou, {name}!",
     "create_btn": "Crear partit",
     "stats_total": "Total partits",
@@ -262,7 +262,7 @@
     "subtitle": "Consulta, gestiona i revisa les teves sessions de feedback."
   },
   "match_details": {
-    "back_dashboard": "← Tornar al tauler de control",
+    "back_dashboard": "← Tornar a l'anàlisis de vídeo",
     "description_placeholder": "Sense descripció disponible.",
     "info_title": "Informació del partit",
     "perf_title": "Rendiment del jugador",

@@ -5,7 +5,7 @@
     "users": "Usuarios",
     "all_players": "Todos los jugadores",
     "my_players": "Mis jugadores",
-    "dashboard": "Tablero",
+    "dashboard": "Análisis de vídeo",
     "create_match": "Crear partido",
     "edit_profile": "Editar perfil",
     "logout": "Cerrar sesión",
@@ -56,7 +56,7 @@
     "badge": "⚽ Seguimiento del rendimiento del jugador",
     "title": "Registra partidos. Comparte valoraciones. Eleva el rendimiento.",
     "subtitle": "El portal profesional para jugadores diseñado para registrar minutos en el campo, goles, asistencias, evaluar calificaciones tácticas y compartir reflexiones del entrenador.",
-    "btn_dashboard": "Ir al tablero",
+    "btn_dashboard": "Ir al análisis de vídeo",
     "btn_about": "Cómo funciona",
     "stats": {
       "perf_title": "Centrado en el rendimiento",
@@ -101,7 +101,7 @@
     "badge": "⚡ Analítica deportiva de nueva generación",
     "title": "Agent Matches Hub",
     "subtitle": "Bienvenido a la aplicación definitiva de seguimiento de jugadores. Diseñada para equipos, entrenadores y atletas, conecta estadísticas cuantitativas con comentarios cualitativos.",
-    "btn_dashboard": "Ir al tablero",
+    "btn_dashboard": "Ir al análisis de vídeo",
     "btn_explore": "Explorar funciones",
     "stats": {
       "log": "Registrar partidos",
@@ -241,7 +241,7 @@
     "error_length": "La contraseña debe tener al menos 6 caracteres"
   },
   "dashboard_page": {
-    "title": "Tablero",
+    "title": "Análisis de vídeo",
     "welcome": "¡Bienvenido de nuevo, {name}!",
     "create_btn": "Crear partido",
     "stats_total": "Total partidos",
@@ -262,7 +262,7 @@
     "subtitle": "Consulta, gestiona y revisa tus sesiones de feedback."
   },
   "match_details": {
-    "back_dashboard": "← Volver al tablero",
+    "back_dashboard": "← Volver al análisis de vídeo",
     "description_placeholder": "Sin descripción disponible.",
     "info_title": "Información del partido",
     "perf_title": "Rendimiento del jugador",
