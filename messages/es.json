@@ -262,7 +262,12 @@
     "confirm_delete": "¿Estás seguro de que deseas eliminar este partido?",
     "delete_error": "No se pudo eliminar el partido",
     "edit_btn": "Editar",
-    "delete_btn": "Eliminar"
+    "delete_btn": "Eliminar",
+    "calendar_title": "Calendario de Partidos",
+    "prev_month": "Mes Anterior",
+    "next_month": "Mes Siguiente",
+    "show_calendar": "Mostrar Calendario",
+    "hide_calendar": "Ocultar Calendario"
   },
   "matches_list": {
     "title": "Partidos",

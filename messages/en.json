@@ -262,7 +262,12 @@
     "confirm_delete": "Are you sure you want to delete this match?",
     "delete_error": "Failed to delete match",
     "edit_btn": "Edit",
-    "delete_btn": "Delete"
+    "delete_btn": "Delete",
+    "calendar_title": "Match Calendar",
+    "prev_month": "Previous Month",
+    "next_month": "Next Month",
+    "show_calendar": "Show Calendar",
+    "hide_calendar": "Hide Calendar"
   },
   "matches_list": {
     "title": "Matches",
