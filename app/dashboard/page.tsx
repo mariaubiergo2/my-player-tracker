@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { deleteMatch } from "@/actions/matches";
 import { useTranslation } from "@/components/LanguageProvider";
-import type { SimpleMatch } from "@/types/match";
+import type { CompleteMatch } from "@/types/match";
+import MatchCard from "@/components/matches/MatchCard";
 
 /**
  * Dashboard Page - Client Component with httpOnly Cookie Auth
@@ -16,9 +17,14 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
   const { t } = useTranslation();
-  const [matches, setMatches] = useState<SimpleMatch[]>([]);
+  const [matches, setMatches] = useState<CompleteMatch[]>([]);
   const [loadingMatches, setLoadingMatches] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
+
+  const toggleMatchExpansion = (matchId: string) => {
+    setExpandedMatchId((prev) => (prev === matchId ? null : matchId));
+  };
 
   useEffect(() => {
     if (!isLoading) {
@@ -157,66 +163,15 @@ export default function DashboardPage() {
       ) : (
         <div className="grid gap-4">
           {matches.map((match) => (
-            <div
+            <MatchCard
               key={match.id}
-              className="card bg-base-100 shadow-md hover:shadow-xl transition-all duration-200 border border-base-200"
-            >
-              <div className="card-body">
-                <div className="flex justify-between items-start">
-                  <Link href={`/matches/${match.id}`} className="flex-1">
-                    <h2 className="card-title text-xl hover:text-primary transition-colors">
-                      {match.name}
-                    </h2>
-
-                    {match.description && (
-                      <p className="text-base-content/70 mt-1">
-                        {match.description}
-                      </p>
-                    )}
-                  </Link>
-
-                  {match.mark != null && (
-                    <div className="badge badge-primary badge-lg">
-                      {match.mark}/10
-                    </div>
-                  )}
-                </div>
-
-                <div className="divider my-2"></div>
-
-                <div className="flex flex-wrap items-center justify-between gap-4">
-                  <div className="flex flex-wrap gap-4 text-sm text-base-content/70">
-                    {match.location && <span>📍 {match.location}</span>}
-
-                    {match.updatedAt && (
-                      <span>
-                        🗓️ {new Date(match.updatedAt).toLocaleDateString()}
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="card-actions justify-end">
-                    <Link
-                      href={`/matches/${match.id}/edit`}
-                      className="btn btn-ghost btn-sm"
-                    >
-                      {t("dashboard_page.edit_btn")}
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(match.id)}
-                      className="btn btn-error btn-sm btn-outline"
-                      disabled={deletingId === match.id}
-                    >
-                      {deletingId === match.id ? (
-                        <span className="loading loading-spinner loading-xs"></span>
-                      ) : (
-                        t("dashboard_page.delete_btn")
-                      )}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
+              match={match as any}
+              role="PLAYER"
+              isExpanded={expandedMatchId === match.id}
+              onToggleExpand={() => toggleMatchExpansion(match.id)}
+              onDelete={handleDelete}
+              isDeleting={deletingId === match.id}
+            />
           ))}
         </div>
       )}

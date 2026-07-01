@@ -199,9 +199,9 @@ export default async function MatchPage({
             </div>
           </div>
 
-          <ListCard title={t("common.strengths")} items={match.strengths} fallback={t("match_details.no_items")} />
-          <ListCard title={t("common.weaknesses")} items={match.weaknesses} fallback={t("match_details.no_items")} />
-          <ListCard title={t("common.improvement_areas")} items={match.improvementAreas} fallback={t("match_details.no_items")} />
+          <ListCard title={t("match_form.strengths")} items={match.strengths} fallback={t("match_details.no_items")} />
+          <ListCard title={t("match_form.weaknesses")} items={match.weaknesses} fallback={t("match_details.no_items")} />
+          <ListCard title={t("match_form.improvement")} items={match.improvementAreas} fallback={t("match_details.no_items")} />
 
           <div className="card bg-base-100 shadow-md border border-base-200">
             <div className="card-body">
@@ -319,4 +319,4 @@ function ListCard({
       </div>
     </div>
   )
-}
+}

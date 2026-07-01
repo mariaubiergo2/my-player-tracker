@@ -20,21 +20,6 @@ export async function GET(request: NextRequest) {
         OR: [{ playerId: payload.userId }, { trainerId: payload.userId }],
       },
       orderBy: { date: "desc" },
-      select: {
-        id: true,
-        name: true,
-        opponent: true,
-        location: true,
-        date: true,
-        startTime: true,
-        endTime: true,
-        matchType: true,
-        status: true,
-        isReviewed: true,
-        playerId: true,
-        trainerId: true,
-        createdAt: true,
-      },
     });
 
     return NextResponse.json({ matches });
