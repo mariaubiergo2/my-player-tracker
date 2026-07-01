@@ -44,7 +44,11 @@ export default function Header() {
                   </>
                 )}
                 {user?.role === "PLAYER" && (
-                  <li><Link href="/dashboard">{t("header.dashboard")}</Link></li>
+                  <>
+                    <li><Link href="/dashboard">{t("header.dashboard")}</Link></li>
+                    <li><Link href="/dashboard/physical">{t("header.physical_prep")}</Link></li>
+                    <li><Link href="/dashboard/nutrition">{t("header.nutrition")}</Link></li>
+                  </>
                 )}
               </>
             )}
@@ -68,7 +72,11 @@ export default function Header() {
                 </>
               )}
               {user?.role === "PLAYER" && (
-                <li><Link href="/dashboard">{t("header.dashboard")}</Link></li>
+                <>
+                  <li><Link href="/dashboard">{t("header.dashboard")}</Link></li>
+                  <li><Link href="/dashboard/physical">{t("header.physical_prep")}</Link></li>
+                  <li><Link href="/dashboard/nutrition">{t("header.nutrition")}</Link></li>
+                </>
               )}
             </>
           )}
@@ -155,7 +163,11 @@ export default function Header() {
                 </>
               )}
               {user?.role === "PLAYER" && (
-                <li><Link href="/dashboard">{t("header.dashboard")}</Link></li>
+                <>
+                  <li><Link href="/dashboard">{t("header.dashboard")}</Link></li>
+                  <li><Link href="/dashboard/physical">{t("header.physical_prep")}</Link></li>
+                  <li><Link href="/dashboard/nutrition">{t("header.nutrition")}</Link></li>
+                </>
               )}
               {user?.role !== "ADMIN" && (
                 <li>
