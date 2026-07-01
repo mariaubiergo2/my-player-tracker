@@ -21,6 +21,7 @@ export default function DashboardPage() {
   const [loadingMatches, setLoadingMatches] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<string>("date_desc");
 
   const toggleMatchExpansion = (matchId: string) => {
     setExpandedMatchId((prev) => (prev === matchId ? null : matchId));
@@ -131,7 +132,23 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <h2 className="text-xl font-semibold mb-4">{t("dashboard_page.your_matches")}</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+        <h2 className="text-xl font-semibold">{t("dashboard_page.your_matches")}</h2>
+        
+        <div className="flex items-center gap-2 whitespace-nowrap">
+          <span className="text-sm text-base-content/60">{t("dashboard_page.sort_by")}:</span>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            className="select select-bordered select-sm font-medium w-auto"
+          >
+            <option value="date_desc">{t("dashboard_page.sort_date_desc")}</option>
+            <option value="date_asc">{t("dashboard_page.sort_date_asc")}</option>
+            <option value="name_asc">{t("dashboard_page.sort_name_asc")}</option>
+            <option value="name_desc">{t("dashboard_page.sort_name_desc")}</option>
+          </select>
+        </div>
+      </div>
 
       {loadingMatches ? (
         <div className="grid gap-4">
@@ -162,7 +179,21 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div className="grid gap-4">
-          {matches.map((match) => (
+          {([...matches].sort((a, b) => {
+            if (sortBy === "date_desc") {
+              return new Date(b.date).getTime() - new Date(a.date).getTime();
+            }
+            if (sortBy === "date_asc") {
+              return new Date(a.date).getTime() - new Date(b.date).getTime();
+            }
+            if (sortBy === "name_asc") {
+              return a.name.localeCompare(b.name);
+            }
+            if (sortBy === "name_desc") {
+              return b.name.localeCompare(a.name);
+            }
+            return 0;
+          })).map((match) => (
             <MatchCard
               key={match.id}
               match={match as any}
