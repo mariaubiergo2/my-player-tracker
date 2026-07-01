@@ -89,6 +89,11 @@ model Match {
   weaknesses       String[]
   improvementAreas String[] @map("improvement_areas")
 
+  offensiveActionsOwnHalf      String? @map("offensive_actions_own_half")
+  offensiveActionsOpponentHalf String? @map("offensive_actions_opponent_half")
+  defensiveActionsOwnHalf      String? @map("defensive_actions_own_half")
+  defensiveActionsOpponentHalf String? @map("defensive_actions_opponent_half")
+
   isReviewed Boolean   @default(false) @map("is_reviewed")
   reviewedAt DateTime? @map("reviewed_at")
 

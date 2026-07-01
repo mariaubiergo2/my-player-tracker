@@ -328,7 +328,12 @@
     "submitting": "Processant...",
     "error_name_date": "El nom del partit i la data són obligatoris.",
     "success_create": "Partit creat correctament!",
-    "success_update": "Partit actualitzat correctament!"
+    "success_update": "Partit actualitzat correctament!",
+    "offensive_actions_own_half": "Accions ofensives a camp propi",
+    "offensive_actions_opponent_half": "Accions ofensives a camp rival",
+    "defensive_actions_own_half": "Accions defensives a camp propi",
+    "defensive_actions_opponent_half": "Accions defensives a camp rival",
+    "tactical_actions_section": "Accions Tàctiques"
   },
   "profile_page": {
     "title": "Editar perfil",

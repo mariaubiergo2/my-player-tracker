@@ -12,7 +12,13 @@ const matchTypes = ["FRIENDLY", "LEAGUE", "CUP", "TRAINING"]
 const matchStatuses = ["SCHEDULED", "COMPLETED", "CANCELLED"]
 
 
-export default function EditMatchForm({ match }: { match: CompleteMatch }) {
+export default function EditMatchForm({ 
+  match, 
+  currentUserRole 
+}: { 
+  match: CompleteMatch
+  currentUserRole?: string 
+}) {
   const router = useRouter()
 
   const [name, setName] = useState(match.name ?? "")
@@ -43,6 +49,11 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
   const [strengths, setStrengths] = useState((match.strengths ?? []).join(", "))
   const [weaknesses, setWeaknesses] = useState((match.weaknesses ?? []).join(", "))
   const [improvementAreas, setImprovementAreas] = useState((match.improvementAreas ?? []).join(", "))
+
+  const [offensiveActionsOwnHalf, setOffensiveActionsOwnHalf] = useState(match.offensiveActionsOwnHalf ?? "")
+  const [offensiveActionsOpponentHalf, setOffensiveActionsOpponentHalf] = useState(match.offensiveActionsOpponentHalf ?? "")
+  const [defensiveActionsOwnHalf, setDefensiveActionsOwnHalf] = useState(match.defensiveActionsOwnHalf ?? "")
+  const [defensiveActionsOpponentHalf, setDefensiveActionsOpponentHalf] = useState(match.defensiveActionsOpponentHalf ?? "")
 
   const [isReviewed, setIsReviewed] = useState(!!match.isReviewed)
   const [reviewedAt, setReviewedAt] = useState(toDateTimeInput(match.reviewedAt ?? null))
@@ -97,6 +108,11 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
         strengths: toListOrEmpty(strengths),
         weaknesses: toListOrEmpty(weaknesses),
         improvementAreas: toListOrEmpty(improvementAreas),
+
+        offensiveActionsOwnHalf: offensiveActionsOwnHalf.trim() || null,
+        offensiveActionsOpponentHalf: offensiveActionsOpponentHalf.trim() || null,
+        defensiveActionsOwnHalf: defensiveActionsOwnHalf.trim() || null,
+        defensiveActionsOpponentHalf: defensiveActionsOpponentHalf.trim() || null,
 
         isReviewed,
         reviewedAt: reviewedAt ? new Date(reviewedAt).toISOString() : undefined,
@@ -358,6 +374,67 @@ export default function EditMatchForm({ match }: { match: CompleteMatch }) {
                 value={improvementAreas}
                 onChange={(e) => setImprovementAreas(e.target.value)}
               />
+            </div>
+          </div>
+        </div>
+
+        {/* Tactical Actions */}
+        <div className="card bg-base-100 shadow-md border border-base-200">
+          <div className="card-body">
+            <h2 className="card-title">Tactical Actions</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="form-control w-full">
+                <label className="label">
+                  <span className="label-text font-semibold">Offensive actions in own half</span>
+                </label>
+                <textarea
+                  placeholder="Offensive actions in own half"
+                  className="textarea textarea-bordered w-full"
+                  value={offensiveActionsOwnHalf}
+                  onChange={(e) => setOffensiveActionsOwnHalf(e.target.value)}
+                  disabled={currentUserRole === "PLAYER"}
+                />
+              </div>
+
+              <div className="form-control w-full">
+                <label className="label">
+                  <span className="label-text font-semibold">Offensive actions in opponent's half</span>
+                </label>
+                <textarea
+                  placeholder="Offensive actions in opponent's half"
+                  className="textarea textarea-bordered w-full"
+                  value={offensiveActionsOpponentHalf}
+                  onChange={(e) => setOffensiveActionsOpponentHalf(e.target.value)}
+                  disabled={currentUserRole === "PLAYER"}
+                />
+              </div>
+
+              <div className="form-control w-full">
+                <label className="label">
+                  <span className="label-text font-semibold">Defensive actions in own half</span>
+                </label>
+                <textarea
+                  placeholder="Defensive actions in own half"
+                  className="textarea textarea-bordered w-full"
+                  value={defensiveActionsOwnHalf}
+                  onChange={(e) => setDefensiveActionsOwnHalf(e.target.value)}
+                  disabled={currentUserRole === "PLAYER"}
+                />
+              </div>
+
+              <div className="form-control w-full">
+                <label className="label">
+                  <span className="label-text font-semibold">Defensive actions in opponent's half</span>
+                </label>
+                <textarea
+                  placeholder="Defensive actions in opponent's half"
+                  className="textarea textarea-bordered w-full"
+                  value={defensiveActionsOpponentHalf}
+                  onChange={(e) => setOffensiveActionsOpponentHalf(e.target.value)}
+                  disabled={currentUserRole === "PLAYER"}
+                />
+              </div>
             </div>
           </div>
         </div>

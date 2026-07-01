@@ -140,6 +140,35 @@ export default async function MatchPage({
               />
             </div>
           </div>
+
+          <div className="card bg-base-100 shadow-md border border-base-200">
+            <div className="card-body">
+              <h2 className="card-title">{t("match_form.tactical_actions_section")}</h2>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FeedbackBlock
+                  title={t("match_form.offensive_actions_own_half")}
+                  value={match.offensiveActionsOwnHalf}
+                  fallback={t("match_details.no_feedback")}
+                />
+                <FeedbackBlock
+                  title={t("match_form.offensive_actions_opponent_half")}
+                  value={match.offensiveActionsOpponentHalf}
+                  fallback={t("match_details.no_feedback")}
+                />
+                <FeedbackBlock
+                  title={t("match_form.defensive_actions_own_half")}
+                  value={match.defensiveActionsOwnHalf}
+                  fallback={t("match_details.no_feedback")}
+                />
+                <FeedbackBlock
+                  title={t("match_form.defensive_actions_opponent_half")}
+                  value={match.defensiveActionsOpponentHalf}
+                  fallback={t("match_details.no_feedback")}
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Side panel */}

@@ -270,6 +270,59 @@ export default function NewMatchPage() {
           </div>
         </div>
 
+        {/* Tactical Actions */}
+        <div className="card bg-base-100 shadow-md border border-base-200">
+          <div className="card-body">
+            <h2 className="card-title">{t("match_form.tactical_actions_section")}</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="form-control w-full">
+                <label className="label">
+                  <span className="label-text font-semibold">{t("match_form.offensive_actions_own_half")}</span>
+                </label>
+                <textarea
+                  placeholder={t("match_form.offensive_actions_own_half")}
+                  className="textarea textarea-bordered w-full"
+                  name="offensiveActionsOwnHalf"
+                />
+              </div>
+
+              <div className="form-control w-full">
+                <label className="label">
+                  <span className="label-text font-semibold">{t("match_form.offensive_actions_opponent_half")}</span>
+                </label>
+                <textarea
+                  placeholder={t("match_form.offensive_actions_opponent_half")}
+                  className="textarea textarea-bordered w-full"
+                  name="offensiveActionsOpponentHalf"
+                />
+              </div>
+
+              <div className="form-control w-full">
+                <label className="label">
+                  <span className="label-text font-semibold">{t("match_form.defensive_actions_own_half")}</span>
+                </label>
+                <textarea
+                  placeholder={t("match_form.defensive_actions_own_half")}
+                  className="textarea textarea-bordered w-full"
+                  name="defensiveActionsOwnHalf"
+                />
+              </div>
+
+              <div className="form-control w-full">
+                <label className="label">
+                  <span className="label-text font-semibold">{t("match_form.defensive_actions_opponent_half")}</span>
+                </label>
+                <textarea
+                  placeholder={t("match_form.defensive_actions_opponent_half")}
+                  className="textarea textarea-bordered w-full"
+                  name="defensiveActionsOpponentHalf"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Review */}
         <div className="card bg-base-100 shadow-md border border-base-200">
           <div className="card-body">

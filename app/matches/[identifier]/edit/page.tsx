@@ -30,5 +30,5 @@ export default async function EditMatchPage({
     redirect("/dashboard")
   }
 
-  return <EditMatchForm match={match} />
+  return <EditMatchForm match={match} currentUserRole={payload.role} />
 }

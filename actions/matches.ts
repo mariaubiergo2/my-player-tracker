@@ -65,6 +65,10 @@ export async function createMatch(prevState: any, formData: FormData) {
   const strengths = formData.get('strengths');
   const weaknesses = formData.get('weaknesses');
   const improvementAreas = formData.get('improvementAreas');
+  const offensiveActionsOwnHalf = formData.get('offensiveActionsOwnHalf');
+  const offensiveActionsOpponentHalf = formData.get('offensiveActionsOpponentHalf');
+  const defensiveActionsOwnHalf = formData.get('defensiveActionsOwnHalf');
+  const defensiveActionsOpponentHalf = formData.get('defensiveActionsOpponentHalf');
   const isReviewed = formData.get('isReviewed');
   const reviewedAt = formData.get('reviewedAt');
 
@@ -164,6 +168,10 @@ export async function createMatch(prevState: any, formData: FormData) {
         strengths: parsedStrengths,
         weaknesses: parsedWeaknesses,
         improvementAreas: parsedImprovementAreas,
+        offensiveActionsOwnHalf: offensiveActionsOwnHalf ? String(offensiveActionsOwnHalf) : null,
+        offensiveActionsOpponentHalf: offensiveActionsOpponentHalf ? String(offensiveActionsOpponentHalf) : null,
+        defensiveActionsOwnHalf: defensiveActionsOwnHalf ? String(defensiveActionsOwnHalf) : null,
+        defensiveActionsOpponentHalf: defensiveActionsOpponentHalf ? String(defensiveActionsOpponentHalf) : null,
         isReviewed: parsedIsReviewed,
         reviewedAt: parsedReviewedAt,
       },
@@ -272,7 +280,32 @@ export async function createMatch(prevState: any, formData: FormData) {
 // 4. UPDATE MATCH
 export async function updateMatch(matchId: string, updates: any) {
   try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const match = await prisma.match.findUnique({
+      where: { id: matchId },
+    });
+
+    if (!match) {
+      return { success: false, error: "Match not found" };
+    }
+
+    if (match.playerId !== currentUser.userId && match.trainerId !== currentUser.userId) {
+      return { success: false, error: "Unauthorized to edit this match" };
+    }
+
     const data: any = { ...updates };
+
+    // Block edit of tactical actions for PLAYER role
+    if (currentUser.role === "PLAYER") {
+      delete data.offensiveActionsOwnHalf;
+      delete data.offensiveActionsOpponentHalf;
+      delete data.defensiveActionsOwnHalf;
+      delete data.defensiveActionsOpponentHalf;
+    }
 
     // Parse enums
     if (data.matchType) {

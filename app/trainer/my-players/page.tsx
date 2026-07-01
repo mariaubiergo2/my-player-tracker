@@ -31,6 +31,10 @@ interface MatchItem {
   strengths: string[];
   weaknesses: string[];
   improvementAreas: string[];
+  offensiveActionsOwnHalf: string | null;
+  offensiveActionsOpponentHalf: string | null;
+  defensiveActionsOwnHalf: string | null;
+  defensiveActionsOpponentHalf: string | null;
   isReviewed: boolean;
   reviewedAt: Date | string | null;
 }
@@ -397,6 +401,29 @@ export default function MyPlayersPage() {
                                       <p className="text-sm text-base-content/85 whitespace-pre-line font-medium">
                                         {match.trainerFeedback || t("trainer_my_players.no_trainer_feedback")}
                                       </p>
+                                    </div>
+                                  </div>
+
+                                  {/* Tactical Actions Grid */}
+                                  <div className="bg-base-200/20 rounded-2xl p-4 border border-base-200">
+                                    <div className="font-bold text-sm mb-3 text-base-content/80">{t("match_form.tactical_actions_section")}</div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                      <div className="bg-base-100 p-3 rounded-lg border border-base-content/5">
+                                        <div className="text-xs text-base-content/60 font-semibold mb-1">{t("match_form.offensive_actions_own_half")}</div>
+                                        <p className="text-sm font-medium text-base-content/85">{match.offensiveActionsOwnHalf || t("match_details.no_feedback")}</p>
+                                      </div>
+                                      <div className="bg-base-100 p-3 rounded-lg border border-base-content/5">
+                                        <div className="text-xs text-base-content/60 font-semibold mb-1">{t("match_form.offensive_actions_opponent_half")}</div>
+                                        <p className="text-sm font-medium text-base-content/85">{match.offensiveActionsOpponentHalf || t("match_details.no_feedback")}</p>
+                                      </div>
+                                      <div className="bg-base-100 p-3 rounded-lg border border-base-content/5">
+                                        <div className="text-xs text-base-content/60 font-semibold mb-1">{t("match_form.defensive_actions_own_half")}</div>
+                                        <p className="text-sm font-medium text-base-content/85">{match.defensiveActionsOwnHalf || t("match_details.no_feedback")}</p>
+                                      </div>
+                                      <div className="bg-base-100 p-3 rounded-lg border border-base-content/5">
+                                        <div className="text-xs text-base-content/60 font-semibold mb-1">{t("match_form.defensive_actions_opponent_half")}</div>
+                                        <p className="text-sm font-medium text-base-content/85">{match.defensiveActionsOpponentHalf || t("match_details.no_feedback")}</p>
+                                      </div>
                                     </div>
                                   </div>
 

@@ -328,7 +328,12 @@
     "submitting": "Procesando...",
     "error_name_date": "El nombre del partido y la fecha son obligatorios.",
     "success_create": "¡Partido creado correctamente!",
-    "success_update": "¡Partido actualizado correctamente!"
+    "success_update": "¡Partido actualizado correctamente!",
+    "offensive_actions_own_half": "Acciones ofensivas en campo propio",
+    "offensive_actions_opponent_half": "Acciones ofensivas en campo rival",
+    "defensive_actions_own_half": "Acciones defensivas en campo propio",
+    "defensive_actions_opponent_half": "Acciones defensivas en campo rival",
+    "tactical_actions_section": "Acciones Tácticas"
   },
   "profile_page": {
     "title": "Editar perfil",

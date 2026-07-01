@@ -36,6 +36,10 @@ export interface CompleteMatch {
   strengths?: string[]
   weaknesses?: string[]
   improvementAreas?: string[]
+  offensiveActionsOwnHalf?: string | null
+  offensiveActionsOpponentHalf?: string | null
+  defensiveActionsOwnHalf?: string | null
+  defensiveActionsOpponentHalf?: string | null
   isReviewed?: boolean | null
   reviewedAt?: Date | null
   createdAt?: Date

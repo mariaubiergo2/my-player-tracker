@@ -328,7 +328,12 @@
     "submitting": "Submitting...",
     "error_name_date": "Match name and date are required.",
     "success_create": "Match created successfully!",
-    "success_update": "Match updated successfully!"
+    "success_update": "Match updated successfully!",
+    "offensive_actions_own_half": "Offensive actions in own half",
+    "offensive_actions_opponent_half": "Offensive actions in opponent's half",
+    "defensive_actions_own_half": "Defensive actions in own half",
+    "defensive_actions_opponent_half": "Defensive actions in opponent's half",
+    "tactical_actions_section": "Tactical Actions"
   },
   "profile_page": {
     "title": "Edit Profile",
