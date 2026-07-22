@@ -42,6 +42,7 @@ export async function POST(request: NextRequest) {
       email: user.email,
       name: user.name,
       role: user.role,
+      avatarUrl: user.avatarUrl,
     });
 
     // Create response with httpOnly cookie
@@ -53,6 +54,7 @@ export async function POST(request: NextRequest) {
         name: user.name,
         surname: user.surname,
         role: user.role,
+        avatarUrl: user.avatarUrl,
       },
     });
 

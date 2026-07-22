@@ -20,6 +20,7 @@ interface UserListItem {
   role: UserRole;
   phone: string | null;
   birthDate: string | null;
+  avatarUrl: string | null;
   createdAt: string;
 }
 
@@ -381,13 +382,15 @@ export default function AdminUsersPage() {
                 <tr key={u.id} className="hover:bg-base-200/30 transition-colors">
                   <td>
                     <div className="flex items-center gap-3">
-                      <div className="avatar placeholder">
-                        <div className="bg-neutral text-neutral-content rounded-full w-9">
+                      <div className={`avatar placeholder ${u.avatarUrl ? "" : "bg-neutral text-neutral-content"} rounded-full w-9 h-9 flex items-center justify-center overflow-hidden`}>
+                        {u.avatarUrl ? (
+                          <img src={u.avatarUrl} alt={u.name} className="w-full h-full object-cover" />
+                        ) : (
                           <span className="text-xs font-semibold">
                             {u.name.charAt(0).toUpperCase()}
                             {u.surname.charAt(0).toUpperCase()}
                           </span>
-                        </div>
+                        )}
                       </div>
                       <div>
                         <div className="font-bold text-base-content">

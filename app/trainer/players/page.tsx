@@ -14,6 +14,7 @@ interface PlayerListItem {
   phone: string | null;
   birthDate: string | null;
   trainerId: string | null;
+  avatarUrl: string | null;
   matchCount: number;
 }
 
@@ -186,13 +187,15 @@ export default function TrainerPlayersPage() {
                   <tr key={p.id} className="hover:bg-base-200/30 transition-colors">
                     <td>
                       <div className="flex items-center gap-3">
-                        <div className="avatar placeholder">
-                          <div className="bg-neutral text-neutral-content rounded-full w-9">
+                        <div className={`avatar placeholder ${p.avatarUrl ? "" : "bg-neutral text-neutral-content"} rounded-full w-9 h-9 flex items-center justify-center overflow-hidden`}>
+                          {p.avatarUrl ? (
+                            <img src={p.avatarUrl} alt={p.name} className="w-full h-full object-cover" />
+                          ) : (
                             <span className="text-xs font-semibold">
                               {p.name.charAt(0).toUpperCase()}
                               {p.surname.charAt(0).toUpperCase()}
                             </span>
-                          </div>
+                          )}
                         </div>
                         <div className="font-bold text-base-content">
                           {p.name} {p.surname}

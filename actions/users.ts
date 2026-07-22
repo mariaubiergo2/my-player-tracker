@@ -49,6 +49,7 @@ export async function getUsers() {
         role: true,
         phone: true,
         birthDate: true,
+        avatarUrl: true,
         createdAt: true,
       },
     });

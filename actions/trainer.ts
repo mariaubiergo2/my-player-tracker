@@ -50,6 +50,7 @@ export async function getAllPlayersWithMatchCount() {
         phone: true,
         birthDate: true,
         trainerId: true,
+        avatarUrl: true,
         _count: {
           select: {
             playerMatches: true,
@@ -67,6 +68,7 @@ export async function getAllPlayersWithMatchCount() {
       phone: p.phone,
       birthDate: p.birthDate ? new Date(p.birthDate).toISOString().split("T")[0] : null,
       trainerId: p.trainerId,
+      avatarUrl: p.avatarUrl,
       matchCount: p._count.playerMatches,
     }));
 

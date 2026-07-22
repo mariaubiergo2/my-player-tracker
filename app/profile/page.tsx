@@ -15,6 +15,7 @@ export default function ProfilePage() {
   const [saveLoading, setSaveLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [imageError, setImageError] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -27,6 +28,11 @@ export default function ProfilePage() {
     newPassword: "",
     confirmPassword: "",
   });
+
+  // Reset image error state when avatarUrl changes
+  useEffect(() => {
+    setImageError(false);
+  }, [formData.avatarUrl]);
 
   // Set page title for SEO
   useEffect(() => {
@@ -190,13 +196,13 @@ export default function ProfilePage() {
               {/* Avatar Image Frame */}
               <div className="avatar placeholder mb-4">
                 <div className="bg-primary text-primary-content rounded-full w-28 h-28 flex items-center justify-center border-4 border-primary/20 shadow-inner overflow-hidden">
-                  {formData.avatarUrl ? (
+                  {formData.avatarUrl && !imageError ? (
                     <img
                       src={formData.avatarUrl}
                       alt="Avatar Preview"
                       className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLElement).style.display = "none";
+                      onError={() => {
+                        setImageError(true);
                       }}
                     />
                   ) : (
