@@ -230,7 +230,13 @@ export default function AdminUsersPage() {
     try {
       const res = await updateUser(userId, { role: newRole });
       if (res.success) {
-        showSuccess(t("admin_users.success_role", { name: currentName, role: newRole }));
+        const localizedRole =
+          newRole === "PLAYER"
+            ? t("common.role_player")
+            : newRole === "TRAINER"
+            ? t("common.role_trainer")
+            : t("common.role_admin");
+        showSuccess(t("admin_users.success_role", { name: currentName, role: localizedRole }));
         // Locally update role in state to avoid full table redraws
         setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
       } else {
@@ -336,10 +342,10 @@ export default function AdminUsersPage() {
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
             >
-              <option value="ALL">{t("admin_users.all_roles")}</option>
-              <option value="ADMIN">{t("admin_users.admins")}</option>
-              <option value="TRAINER">{t("admin_users.trainers")}</option>
-              <option value="PLAYER">{t("admin_users.players")}</option>
+              <option value="ALL" className="bg-base-100 text-base-content">{t("admin_users.all_roles")}</option>
+              <option value="ADMIN" className="bg-base-100 text-base-content">{t("admin_users.admins")}</option>
+              <option value="TRAINER" className="bg-base-100 text-base-content">{t("admin_users.trainers")}</option>
+              <option value="PLAYER" className="bg-base-100 text-base-content">{t("admin_users.players")}</option>
             </select>
           </div>
         </div>
@@ -398,7 +404,11 @@ export default function AdminUsersPage() {
                   </td>
                   <td>
                     <div className="flex items-center gap-2">
-                      <span className={getRoleBadgeClass(u.role)}>{u.role}</span>
+                      <span className={getRoleBadgeClass(u.role)}>
+                        {u.role === "PLAYER" && t("common.role_player")}
+                        {u.role === "TRAINER" && t("common.role_trainer")}
+                        {u.role === "ADMIN" && t("common.role_admin")}
+                      </span>
                       <select
                         className="select select-ghost select-xs max-w-[110px] text-xs font-normal border border-base-300 rounded focus:border-primary"
                         value={u.role}
@@ -406,11 +416,17 @@ export default function AdminUsersPage() {
                           handleRoleChange(u.id, e.target.value as UserRole, u.name)
                         }
                         disabled={u.id === user.id} // cannot modify own admin role
-                        title={u.id === user.id ? "Cannot demote yourself" : "Modify user role"}
+                        title={u.id === user.id ? t("admin_users.cannot_demote_self") : t("admin_users.modify_role")}
                       >
-                        <option value="PLAYER">PLAYER</option>
-                        <option value="TRAINER">TRAINER</option>
-                        <option value="ADMIN">ADMIN</option>
+                        <option value="PLAYER" className="bg-base-100 text-base-content">
+                          {t("common.role_player")}
+                        </option>
+                        <option value="TRAINER" className="bg-base-100 text-base-content">
+                          {t("common.role_trainer")}
+                        </option>
+                        <option value="ADMIN" className="bg-base-100 text-base-content">
+                          {t("common.role_admin")}
+                        </option>
                       </select>
                     </div>
                   </td>
@@ -515,9 +531,9 @@ export default function AdminUsersPage() {
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
                   >
-                    <option value="PLAYER">PLAYER</option>
-                    <option value="TRAINER">TRAINER</option>
-                    <option value="ADMIN">ADMIN</option>
+                    <option value="PLAYER" className="bg-base-100 text-base-content">{t("common.role_player")}</option>
+                    <option value="TRAINER" className="bg-base-100 text-base-content">{t("common.role_trainer")}</option>
+                    <option value="ADMIN" className="bg-base-100 text-base-content">{t("common.role_admin")}</option>
                   </select>
                 </div>
                 <div className="form-control">
@@ -650,11 +666,11 @@ export default function AdminUsersPage() {
                     value={formData.role}
                     onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
                     disabled={selectedUser.id === user.id} // prevent demoting self
-                    title={selectedUser.id === user.id ? "Cannot demote yourself" : "Modify user role"}
+                    title={selectedUser.id === user.id ? t("admin_users.cannot_demote_self") : t("admin_users.modify_role")}
                   >
-                    <option value="PLAYER">PLAYER</option>
-                    <option value="TRAINER">TRAINER</option>
-                    <option value="ADMIN">ADMIN</option>
+                    <option value="PLAYER" className="bg-base-100 text-base-content">{t("common.role_player")}</option>
+                    <option value="TRAINER" className="bg-base-100 text-base-content">{t("common.role_trainer")}</option>
+                    <option value="ADMIN" className="bg-base-100 text-base-content">{t("common.role_admin")}</option>
                   </select>
                 </div>
                 <div className="form-control">

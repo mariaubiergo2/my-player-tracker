@@ -52,7 +52,10 @@
     "type_league": "Liga",
     "type_cup": "Copa",
     "type_friendly": "Amistoso",
-    "type_training": "Entrenamiento"
+    "type_training": "Entrenamiento",
+    "role_player": "Jugador",
+    "role_trainer": "Entrenador",
+    "role_admin": "Administrador"
   },
   "home": {
     "badge": "⚽ Seguimiento del rendimiento del jugador",
@@ -456,7 +459,9 @@
     "success_update": "¡Perfil actualizado correctamente!",
     "success_delete": "Cuenta de usuario y partidos asociados eliminados.",
     "success_role": "Se ha actualizado el rol de {name} a {role}",
-    "loading_users": "Cargando base de datos de usuarios..."
+    "loading_users": "Cargando base de datos de usuarios...",
+    "cannot_demote_self": "No puedes degradar tu propio rol",
+    "modify_role": "Modificar rol de usuario"
   },
   "video": {
     "upload_title": "Video del Partido",

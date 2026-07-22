@@ -52,7 +52,10 @@
     "type_league": "League",
     "type_cup": "Cup",
     "type_friendly": "Friendly",
-    "type_training": "Training"
+    "type_training": "Training",
+    "role_player": "Player",
+    "role_trainer": "Trainer",
+    "role_admin": "Admin"
   },
   "home": {
     "badge": "⚽ Player Performance Tracking",
@@ -456,7 +459,9 @@
     "success_update": "Successfully updated profile!",
     "success_delete": "User account and all associated matches deleted.",
     "success_role": "Updated role of {name} to {role}",
-    "loading_users": "Loading user database..."
+    "loading_users": "Loading user database...",
+    "cannot_demote_self": "Cannot demote yourself",
+    "modify_role": "Modify user role"
   },
   "video": {
     "upload_title": "Match Video",

@@ -52,7 +52,10 @@
     "type_league": "Lliga",
     "type_cup": "Copa",
     "type_friendly": "Amistós",
-    "type_training": "Entrenament"
+    "type_training": "Entrenament",
+    "role_player": "Jugador",
+    "role_trainer": "Entrenador",
+    "role_admin": "Administrador"
   },
   "home": {
     "badge": "⚽ Seguiment del rendiment del jugador",
@@ -456,7 +459,9 @@
     "success_update": "Perfil actualitzat correctament!",
     "success_delete": "Compte d'usuari i partits associats eliminats.",
     "success_role": "S'ha actualitzat el rol de {name} a {role}",
-    "loading_users": "Carregant base de dades d'usuaris..."
+    "loading_users": "Carregant base de dades d'usuaris...",
+    "cannot_demote_self": "No pots degradar el teu propi rol",
+    "modify_role": "Modificar rol d'usuari"
   },
   "video": {
     "upload_title": "Vídeo del Partit",
