@@ -83,11 +83,11 @@ export default function VideoUpload({
               display: "block",
               width: "100%",
               // Style the custom Mux web component variables
-              "--background-color": "var(--fallback-b2, #f2f2f2)",
+              "--background-color": "var(--color-base-200, var(--fallback-b2, #f2f2f2))",
               "--border-radius": "0.5rem",
-              "--button-background-color": "var(--fallback-p, #4f46e5)",
-              "--button-text-color": "#ffffff",
-              "--progress-bar-color": "var(--fallback-p, #4f46e5)",
+              "--button-background-color": "var(--color-primary, var(--fallback-p, #4f46e5))",
+              "--button-text-color": "var(--color-primary-content, #ffffff)",
+              "--progress-bar-color": "var(--color-primary, var(--fallback-p, #4f46e5))",
             } as React.CSSProperties}
           />
         </div>

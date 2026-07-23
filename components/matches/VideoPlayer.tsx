@@ -20,7 +20,7 @@ export default function VideoPlayer({
 }: VideoPlayerProps) {
   return (
     <div className="card bg-base-100 shadow-md border border-base-200 overflow-hidden">
-      <div className="p-4 flex items-center justify-between border-b border-base-200 bg-base-50/50">
+      <div className="p-4 flex items-center justify-between border-b border-base-200 bg-base-200/50">
         <h3 className="font-semibold text-base-content flex items-center gap-2">
           <span>🎥</span> {title || t("video.upload_title")}
         </h3>

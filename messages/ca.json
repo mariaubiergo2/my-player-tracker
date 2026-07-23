@@ -12,7 +12,11 @@
     "edit_profile": "Editar perfil",
     "logout": "Tancar sessió",
     "login": "Iniciar sessió",
-    "signup": "Registrar-se"
+    "signup": "Registrar-se",
+    "theme_light": "Canviar a tema clar",
+    "theme_dark": "Canviar a tema fosc",
+    "theme_light_short": "CLAR",
+    "theme_dark_short": "FOSC"
   },
   "footer": {
     "text": "Creat amb Next.js 16 + DaisyUI — Demostrant patrons SSG, SSR, ISR i CSR"

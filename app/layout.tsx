@@ -35,13 +35,36 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies();
   const locale = (cookieStore.get("locale")?.value as Locale) || defaultLocale;
+  const theme = (cookieStore.get("theme")?.value as "light" | "dark") || "light";
 
   return (
-    <html lang={locale} data-theme="dark">
+    <html lang={locale} data-theme={theme} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const cookieTheme = document.cookie.split('; ').find(row => row.startsWith('theme='))?.split('=')[1];
+                  let theme = cookieTheme;
+                  if (!theme) {
+                    theme = localStorage.getItem('theme');
+                  }
+                  if (!theme) {
+                    theme = 'light';
+                  }
+                  document.documentElement.setAttribute('data-theme', theme);
+                  document.documentElement.style.colorScheme = theme;
+                } catch (e) {}
+              })()
+            `
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
-        <Providers initialLocale={locale}>
+        <Providers initialLocale={locale} initialTheme={theme}>
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />

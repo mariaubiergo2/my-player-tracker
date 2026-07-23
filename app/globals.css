@@ -1,7 +1,19 @@
 @import "tailwindcss";
-@plugin "daisyui";
+@plugin "daisyui" {
+  themes: light --default, dark;
+}
 
 :root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+html[data-theme="dark"] {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
+html[data-theme="light"] {
   --background: #ffffff;
   --foreground: #171717;
 }
@@ -13,15 +25,27 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+/* Smooth transitions for theme toggle across key interactive/themeable elements */
+.card,
+.btn,
+.navbar,
+.footer,
+.menu,
+.dropdown-content,
+input,
+select,
+textarea,
+table,
+th,
+td,
+.badge,
+progress {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, fill 0.2s ease, stroke 0.2s ease;
 }

@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/components/LanguageProvider";
+import { useTheme } from "@/components/ThemeProvider";
 
 export default function Header() {
   const { isAuthenticated, user, logout, isLoading } = useAuth();
   const { locale, setLocale, t } = useTranslation();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <div className="navbar bg-base-200 shadow-lg">
@@ -83,6 +85,25 @@ export default function Header() {
         </ul>
       </div>
       <div className="navbar-end flex gap-2">
+        {/* Theme Toggle Button */}
+        <button
+          onClick={toggleTheme}
+          aria-label={theme === "dark" ? t("header.theme_light") : t("header.theme_dark")}
+          className="btn btn-ghost btn-sm flex items-center gap-1.5 border border-base-content/10 bg-base-100/50 hover:bg-base-200"
+        >
+          {theme === "dark" ? (
+            <>
+              <span className="text-sm">☀️</span>
+              <span className="text-xs font-bold hidden sm:inline">{t("header.theme_light_short")}</span>
+            </>
+          ) : (
+            <>
+              <span className="text-sm">🌙</span>
+              <span className="text-xs font-bold hidden sm:inline">{t("header.theme_dark_short")}</span>
+            </>
+          )}
+        </button>
+
         {/* Language Selector Dropdown */}
         <div className="dropdown dropdown-end">
           <div

@@ -12,7 +12,11 @@
     "edit_profile": "Edit Profile",
     "logout": "Logout",
     "login": "Login",
-    "signup": "Sign Up"
+    "signup": "Sign Up",
+    "theme_light": "Switch to light theme",
+    "theme_dark": "Switch to dark theme",
+    "theme_light_short": "LIGHT",
+    "theme_dark_short": "DARK"
   },
   "footer": {
     "text": "Built with Next.js 16 + DaisyUI — Demonstrating SSG, SSR, ISR, and CSR patterns"
