@@ -7,38 +7,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { getMyPlayersWithMatches } from "@/actions/trainer";
 import { useTranslation } from "@/components/LanguageProvider";
 import MatchCard from "@/components/matches/MatchCard";
+import type { Match } from "@/types/match";
 
-interface MatchItem {
-  id: string;
-  name: string;
-  description: string | null;
-  location: string | null;
-  date: Date | string;
-  startTime: string | null;
-  endTime: string | null;
-  opponent: string | null;
-  matchType: string | null;
-  status: string;
-  mark: number | null;
-  intensity: number | null;
-  attitude: number | null;
-  performance: number | null;
-  goals: number;
-  assists: number;
-  minutesPlayed: number;
-  comment: string | null;
-  trainerFeedback: string | null;
-  playerReflection: string | null;
-  strengths: string[];
-  weaknesses: string[];
-  improvementAreas: string[];
-  offensiveActionsOwnHalf: string | null;
-  offensiveActionsOpponentHalf: string | null;
-  defensiveActionsOwnHalf: string | null;
-  defensiveActionsOpponentHalf: string | null;
-  isReviewed: boolean;
-  reviewedAt: Date | string | null;
-}
+interface MatchItem extends Match {}
 
 interface PlayerWithMatches {
   id: string;

@@ -22,13 +22,23 @@ export default async function EditMatchPage({
 
   const match = await prisma.match.findUnique({
     where: { id: identifier },
+    include: {
+      player: true,
+    },
   })
 
   if (!match) notFound()
 
-  if (match.playerId !== payload.userId && match.trainerId !== payload.userId) {
+  const isPlayer = match.playerId === payload.userId
+  const isTrainer = match.trainerId === payload.userId || match.player.trainerId === payload.userId
+  const isAdmin = payload.role === "ADMIN"
+
+  if (!isPlayer && !isTrainer && !isAdmin) {
     redirect("/dashboard")
   }
 
-  return <EditMatchForm match={match} currentUserRole={payload.role} />
+  // Omit the player relation from the object passed to EditMatchForm to avoid typescript compilation issues if it expects only CompleteMatch or similar
+  const { player, ...matchData } = match
+
+  return <EditMatchForm match={matchData as any} currentUserRole={payload.role} />
 }

@@ -296,7 +296,18 @@
     "team_id": "ID de equipo",
     "updated_at": "Actualizado",
     "no_feedback": "Aún no se ha añadido ningún comentario.",
-    "no_items": "Sin elementos añadidos."
+    "no_items": "Sin elementos añadidos.",
+    "technical_file": "Ficha Técnica del Jugador",
+    "match_venue": "Lugar del partido",
+    "home_venue": "Casa (Local)",
+    "away_venue": "Fuera (Visitante)",
+    "category_label": "Categoría",
+    "league_position_label": "Posición en liga",
+    "competition_label": "Competición",
+    "kit_color_label": "Vestimenta / Color equipación",
+    "shirt_number_label": "Dorsal",
+    "position_label": "Posición en el campo",
+    "match_url_label": "Enlace al partido"
   },
   "match_form": {
     "create_title": "Crear nuevo partido",
@@ -348,7 +359,17 @@
     "offensive_actions_opponent_half": "Acciones ofensivas en campo rival",
     "defensive_actions_own_half": "Acciones defensivas en campo propio",
     "defensive_actions_opponent_half": "Acciones defensivas en campo rival",
-    "tactical_actions_section": "Acciones Tácticas"
+    "tactical_actions_section": "Acciones Tácticas",
+    "is_home_label": "¿Local (Casa)?",
+    "category": "Categoría",
+    "league_position": "Posición en la Liga",
+    "competition_type": "Tipo de Competición",
+    "technical_file": "Ficha Técnica del Jugador",
+    "kit_color": "Vestimenta (Color camiseta, etc.)",
+    "shirt_number": "Dorsal",
+    "position": "Posición/es en el partido",
+    "match_url": "Enlace/URL del partido",
+    "select_player_label": "Seleccionar Jugador *"
   },
   "profile_page": {
     "title": "Editar perfil",

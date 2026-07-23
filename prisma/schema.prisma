@@ -12,11 +12,6 @@ enum UserRole {
   ADMIN
 }
 
-enum MatchStatus {
-  SCHEDULED
-  COMPLETED
-  CANCELLED
-}
 
 enum MatchType {
   FRIENDLY
@@ -56,14 +51,26 @@ model Match {
   name        String
   description String?
   location    String?
+  isHome      Boolean? @map("is_home")
 
+  // --- Technical player file ---
+  matchUrl    String?  @map("match_url")
+  kitColor    String?  @map("kit_color")
+  shirtNumber String?  @map("shirt_number")
+  position    String?
+  minutesPlayed String? @map("minutes_played")
+
+  // --- Date and schedule ---
   date      DateTime
   startTime String?
   endTime   String?
 
-  opponent  String?
-  matchType MatchType?
-  status    MatchStatus @default(SCHEDULED)
+  // --- Competition ---
+  opponent        String?
+  category        String?
+  leaguePosition  String? @map("league_position")
+  matchType       MatchType?
+  competitionType String? @map("competition_type")
 
   playerId  String @map("player_id")
   trainerId String? @map("trainer_id")
@@ -81,9 +88,8 @@ model Match {
   attitude    Int?
   performance Int?
 
-  goals         Int @default(0)
-  assists       Int @default(0)
-  minutesPlayed Int @default(0) @map("minutes_played")
+  goals         Int? @default(0)
+  assists       Int? @default(0)
 
   strengths        String[]
   weaknesses       String[]

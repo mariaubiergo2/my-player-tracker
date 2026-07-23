@@ -296,7 +296,18 @@
     "team_id": "ID d'equip",
     "updated_at": "Actualitzat",
     "no_feedback": "Encara no s'ha afegit cap comentari.",
-    "no_items": "Sense elements afegits."
+    "no_items": "Sense elements afegits.",
+    "technical_file": "Fitxa Tècnica del Jugador",
+    "match_venue": "Lloc del partit",
+    "home_venue": "Casa (Local)",
+    "away_venue": "Fora (Visitant)",
+    "category_label": "Categoria",
+    "league_position_label": "Posició a la lliga",
+    "competition_label": "Competició",
+    "kit_color_label": "Vestimenta / Color equipació",
+    "shirt_number_label": "Dorsal",
+    "position_label": "Posició al camp",
+    "match_url_label": "Enllaç al partit"
   },
   "match_form": {
     "create_title": "Crear nou partit",
@@ -311,7 +322,7 @@
     "match_type": "Tipus de partit *",
     "status": "Estat *",
     "opponent": "Rival",
-    "location": "Ubicació / Camp",
+    "location": "Ubicació / Campo",
     "date": "Data del partit *",
     "start_time": "Hora d'inici",
     "end_time": "Hora de finalització",
@@ -348,7 +359,17 @@
     "offensive_actions_opponent_half": "Accions ofensives a camp rival",
     "defensive_actions_own_half": "Accions defensives a camp propi",
     "defensive_actions_opponent_half": "Accions defensives a camp rival",
-    "tactical_actions_section": "Accions Tàctiques"
+    "tactical_actions_section": "Accions Tàctiques",
+    "is_home_label": "¿Local (Casa)?",
+    "category": "Categoria",
+    "league_position": "Posició a la Lliga",
+    "competition_type": "Tipus de Competició",
+    "technical_file": "Fitxa Tècnica del Jugador",
+    "kit_color": "Vestimenta (Color samarreta, etc.)",
+    "shirt_number": "Dorsal",
+    "position": "Posició/ons al partit",
+    "match_url": "Enllaç/URL del partit",
+    "select_player_label": "Seleccionar Jugador *"
   },
   "profile_page": {
     "title": "Editar perfil",

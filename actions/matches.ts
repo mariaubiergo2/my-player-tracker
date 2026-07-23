@@ -4,10 +4,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { MatchStatus, MatchType } from "@prisma/client";
+import { MatchType } from "@prisma/client";
 import { cookies } from "next/headers";
 import { getCurrentUser } from "@/lib/auth";
 import Mux from "@mux/mux-node";
+import { canEditMatchField } from "@/lib/permissions";
 
 
 // 1. GET ALL MATCHES of a trainer
@@ -43,15 +44,24 @@ export async function createMatch(prevState: any, formData: FormData) {
   const name = formData.get('name');
   const description = formData.get('description');
   const location = formData.get('location');
+  const isHome = formData.get('isHome');
+  const matchUrl = formData.get('matchUrl');
+  const kitColor = formData.get('kitColor');
+  const shirtNumber = formData.get('shirtNumber');
+  const position = formData.get('position');
+  const minutesPlayed = formData.get('minutesPlayed');
   const date = formData.get('date');
   const startTime = formData.get('startTime');
   const endTime = formData.get('endTime');
   const opponent = formData.get('opponent');
+  const category = formData.get('category');
+  const leaguePosition = formData.get('leaguePosition');
   const matchType = formData.get('matchType');
-  const status = formData.get('status');
-  let playerId = formData.get('playerId') ;
+  const competitionType = formData.get('competitionType');
+  
+  let playerId = formData.get('playerId');
   let trainerId = formData.get('trainerId') as string | null;
-  const teamId = formData.get('teamId');
+  
   const comment = formData.get('comment');
   const trainerFeedback = formData.get('trainerFeedback');
   const playerReflection = formData.get('playerReflection');
@@ -61,7 +71,6 @@ export async function createMatch(prevState: any, formData: FormData) {
   const performance = formData.get('performance');
   const goals = formData.get('goals');
   const assists = formData.get('assists');
-  const minutesPlayed = formData.get('minutesPlayed');
   const strengths = formData.get('strengths');
   const weaknesses = formData.get('weaknesses');
   const improvementAreas = formData.get('improvementAreas');
@@ -72,44 +81,60 @@ export async function createMatch(prevState: any, formData: FormData) {
   const isReviewed = formData.get('isReviewed');
   const reviewedAt = formData.get('reviewedAt');
 
-  // Check if current user is a PLAYER to auto-resolve playerId and trainerId
+  // Check current user role and session
   const currentUser = await getCurrentUser();
-  const isPlayer = currentUser?.role === "PLAYER";
-  if (isPlayer && currentUser) {
-    playerId = currentUser.userId;
-    const playerUser = await prisma.user.findUnique({
-      where: { id: currentUser.userId },
-      select: { trainerId: true }
-    });
-    if (playerUser?.trainerId) {
-      trainerId = playerUser.trainerId;
-    } else {
-      trainerId = null;
-    }
+  if (!currentUser) {
+    return { message: 'Unauthorized' };
   }
 
-  if (!name || !date || !status || !playerId || (!isPlayer && !trainerId)) {
-    return { message: 'Missing required fields: name, date, status, playerId (and trainerId for non-players) are required' };
+  const isPlayer = currentUser.role === "PLAYER";
+  const isTrainer = currentUser.role === "TRAINER";
+  const isAdmin = currentUser.role === "ADMIN";
+
+  // Auto-resolve playerId
+  if (isPlayer) {
+    playerId = currentUser.userId;
+  }
+
+  if (!playerId) {
+    return { message: 'Player is required' };
+  }
+
+  // Verify player exists in PostgreSQL
+  const playerUser = await prisma.user.findUnique({
+    where: { id: playerId as string },
+    select: { trainerId: true }
+  });
+
+  if (!playerUser) {
+    return { message: `Player with ID "${playerId}" does not exist in the database.` };
+  }
+
+  // Auto-resolve trainerId
+  if (isPlayer) {
+    trainerId = playerUser.trainerId || null;
+  } else if (isTrainer) {
+    trainerId = currentUser.userId;
+  } else if (isAdmin) {
+    trainerId = playerUser.trainerId || null;
+  }
+
+  if (!name || !date) {
+    return { message: 'Missing required fields: name and date are required' };
   }
 
   let redirectTarget = '/dashboard';
 
   try {
-    // 1. Verify player and trainer exist in PostgreSQL to prevent FK constraint crashes
-    const playerExists = await prisma.user.findUnique({
-      where: { id: playerId as string },
+    // Auto-resolve teamId: query player's last match to copy teamId automatically
+    let resolvedTeamId = "team_default";
+    const lastMatch = await prisma.match.findFirst({
+      where: { playerId: playerId as string },
+      orderBy: { createdAt: "desc" },
+      select: { teamId: true }
     });
-    if (!playerExists) {
-      return { message: `Player with ID "${playerId}" does not exist in the database.` };
-    }
-
-    if (trainerId) {
-      const trainerExists = await prisma.user.findUnique({
-        where: { id: trainerId as string },
-      });
-      if (!trainerExists) {
-        // return { message: `Trainer with ID "${trainerId}" does not exist in the database.` };
-      }
+    if (lastMatch?.teamId) {
+      resolvedTeamId = lastMatch.teamId;
     }
 
     // 2. Parse enum fields
@@ -117,21 +142,15 @@ export async function createMatch(prevState: any, formData: FormData) {
       ? (String(matchType).toUpperCase() as MatchType)
       : null;
 
-    const parsedStatus = status && ["SCHEDULED", "COMPLETED", "CANCELLED"].includes(String(status).toUpperCase())
-      ? (String(status).toUpperCase() as MatchStatus)
-      : MatchStatus.SCHEDULED;
-
-    // 3. Parse numbers
+    // 3. Parse numbers & arrays
     const parsedMark = mark ? parseInt(mark as string, 10) : null;
     const parsedIntensity = intensity ? parseInt(intensity as string, 10) : null;
     const parsedAttitude = attitude ? parseInt(attitude as string, 10) : null;
     const parsedPerformance = performance ? parseInt(performance as string, 10) : null;
 
-    const parsedGoals = goals ? parseInt(goals as string, 10) : 0;
-    const parsedAssists = assists ? parseInt(assists as string, 10) : 0;
-    const parsedMinutesPlayed = minutesPlayed ? parseInt(minutesPlayed as string, 10) : 0;
+    const parsedGoals = goals ? parseInt(goals as string, 10) : null;
+    const parsedAssists = assists ? parseInt(assists as string, 10) : null;
 
-    // 4. Parse arrays of strings
     const parsedStrengths = strengths ? String(strengths).split(',').map((s) => s.trim()).filter(Boolean) : [];
     const parsedWeaknesses = weaknesses ? String(weaknesses).split(',').map((s) => s.trim()).filter(Boolean) : [];
     const parsedImprovementAreas = improvementAreas ? String(improvementAreas).split(',').map((s) => s.trim()).filter(Boolean) : [];
@@ -140,41 +159,60 @@ export async function createMatch(prevState: any, formData: FormData) {
     const parsedIsReviewed = isReviewed === "on" || isReviewed === "true";
     const parsedReviewedAt = reviewedAt ? new Date(reviewedAt as string) : null;
 
-    // 6. Create the record
+    // 6. Map and filter fields allowed for this user role
+    const rawData: any = {
+      name: name ? String(name) : undefined,
+      description: description ? String(description) : undefined,
+      location: location ? String(location) : undefined,
+      isHome: isHome === "on" || isHome === "true",
+      matchUrl: matchUrl ? String(matchUrl) : undefined,
+      kitColor: kitColor ? String(kitColor) : undefined,
+      shirtNumber: shirtNumber ? String(shirtNumber) : undefined,
+      position: position ? String(position) : undefined,
+      minutesPlayed: minutesPlayed ? String(minutesPlayed) : undefined,
+      date: date ? new Date(date as string) : undefined,
+      startTime: startTime ? String(startTime) : undefined,
+      endTime: endTime ? String(endTime) : undefined,
+      opponent: opponent ? String(opponent) : undefined,
+      category: category ? String(category) : undefined,
+      leaguePosition: leaguePosition ? String(leaguePosition) : undefined,
+      matchType: parsedMatchType,
+      competitionType: competitionType ? String(competitionType) : undefined,
+      comment: comment ? String(comment) : undefined,
+      trainerFeedback: trainerFeedback ? String(trainerFeedback) : undefined,
+      playerReflection: playerReflection ? String(playerReflection) : undefined,
+      mark: parsedMark ?? undefined,
+      intensity: parsedIntensity ?? undefined,
+      attitude: parsedAttitude ?? undefined,
+      performance: parsedPerformance ?? undefined,
+      goals: parsedGoals ?? undefined,
+      assists: parsedAssists ?? undefined,
+      strengths: parsedStrengths,
+      weaknesses: parsedWeaknesses,
+      improvementAreas: parsedImprovementAreas,
+      offensiveActionsOwnHalf: offensiveActionsOwnHalf ? String(offensiveActionsOwnHalf) : undefined,
+      offensiveActionsOpponentHalf: offensiveActionsOpponentHalf ? String(offensiveActionsOpponentHalf) : undefined,
+      defensiveActionsOwnHalf: defensiveActionsOwnHalf ? String(defensiveActionsOwnHalf) : undefined,
+      defensiveActionsOpponentHalf: defensiveActionsOpponentHalf ? String(defensiveActionsOpponentHalf) : undefined,
+      isReviewed: parsedIsReviewed,
+      reviewedAt: parsedReviewedAt ?? undefined,
+    };
+
+    const finalData: any = {};
+    for (const key of Object.keys(rawData)) {
+      if (rawData[key] !== undefined && canEditMatchField(currentUser.role, key)) {
+        finalData[key] = rawData[key];
+      }
+    }
+
+    // Enforce relationship fields
+    finalData.playerId = playerId as string;
+    finalData.trainerId = trainerId;
+    finalData.teamId = resolvedTeamId;
+
+    // Create the record in DB
     const createdMatch = await prisma.match.create({
-      data: {
-        name: name as string,
-        description: description ? String(description) : null,
-        location: location ? String(location) : null,
-        date: new Date(date as string),
-        startTime: startTime ? String(startTime) : null,
-        endTime: endTime ? String(endTime) : null,
-        opponent: opponent ? String(opponent) : null,
-        matchType: parsedMatchType,
-        status: parsedStatus,
-        playerId: playerId as string,
-        trainerId: trainerId ?? undefined,
-        teamId: teamId ? String(teamId) : null,
-        comment: comment ? String(comment) : null,
-        trainerFeedback: trainerFeedback ? String(trainerFeedback) : null,
-        playerReflection: playerReflection ? String(playerReflection) : null,
-        mark: parsedMark,
-        intensity: parsedIntensity,
-        attitude: parsedAttitude,
-        performance: parsedPerformance,
-        goals: parsedGoals,
-        assists: parsedAssists,
-        minutesPlayed: parsedMinutesPlayed,
-        strengths: parsedStrengths,
-        weaknesses: parsedWeaknesses,
-        improvementAreas: parsedImprovementAreas,
-        offensiveActionsOwnHalf: offensiveActionsOwnHalf ? String(offensiveActionsOwnHalf) : null,
-        offensiveActionsOpponentHalf: offensiveActionsOpponentHalf ? String(offensiveActionsOpponentHalf) : null,
-        defensiveActionsOwnHalf: defensiveActionsOwnHalf ? String(defensiveActionsOwnHalf) : null,
-        defensiveActionsOpponentHalf: defensiveActionsOpponentHalf ? String(defensiveActionsOpponentHalf) : null,
-        isReviewed: parsedIsReviewed,
-        reviewedAt: parsedReviewedAt,
-      },
+      data: finalData,
     });
 
     // 7. Check for uploaded video file
@@ -287,24 +325,29 @@ export async function updateMatch(matchId: string, updates: any) {
 
     const match = await prisma.match.findUnique({
       where: { id: matchId },
+      include: {
+        player: true,
+      },
     });
 
     if (!match) {
       return { success: false, error: "Match not found" };
     }
 
-    if (match.playerId !== currentUser.userId && match.trainerId !== currentUser.userId) {
+    const isPlayer = match.playerId === currentUser.userId;
+    const isTrainer = match.trainerId === currentUser.userId || match.player.trainerId === currentUser.userId;
+    const isAdmin = currentUser.role === "ADMIN";
+
+    if (!isPlayer && !isTrainer && !isAdmin) {
       return { success: false, error: "Unauthorized to edit this match" };
     }
 
-    const data: any = { ...updates };
-
-    // Block edit of tactical actions for PLAYER role
-    if (currentUser.role === "PLAYER") {
-      delete data.offensiveActionsOwnHalf;
-      delete data.offensiveActionsOpponentHalf;
-      delete data.defensiveActionsOwnHalf;
-      delete data.defensiveActionsOpponentHalf;
+    // Filter updates based on permissions
+    const data: any = {};
+    for (const key of Object.keys(updates)) {
+      if (canEditMatchField(currentUser.role, key)) {
+        data[key] = updates[key];
+      }
     }
 
     // Parse enums
@@ -313,11 +356,6 @@ export async function updateMatch(matchId: string, updates: any) {
         ? (String(data.matchType).toUpperCase() as MatchType)
         : null;
     }
-    if (data.status) {
-      data.status = ["SCHEDULED", "COMPLETED", "CANCELLED"].includes(String(data.status).toUpperCase())
-        ? (String(data.status).toUpperCase() as MatchStatus)
-        : MatchStatus.SCHEDULED;
-    }
 
     // Parse dates
     if (data.date) {
@@ -325,6 +363,30 @@ export async function updateMatch(matchId: string, updates: any) {
     }
     if (data.reviewedAt) {
       data.reviewedAt = new Date(data.reviewedAt);
+    }
+
+    // minutesPlayed is string
+    if (data.minutesPlayed !== undefined) {
+      data.minutesPlayed = data.minutesPlayed ? String(data.minutesPlayed) : null;
+    }
+
+    // goals and assists are nullable integers
+    if (data.goals !== undefined) {
+      data.goals = data.goals !== null && data.goals !== "" ? parseInt(String(data.goals), 10) : null;
+    }
+    if (data.assists !== undefined) {
+      data.assists = data.assists !== null && data.assists !== "" ? parseInt(String(data.assists), 10) : null;
+    }
+
+    // Parse arrays
+    if (data.strengths) {
+      data.strengths = Array.isArray(data.strengths) ? data.strengths : String(data.strengths).split(",").map(s => s.trim()).filter(Boolean);
+    }
+    if (data.weaknesses) {
+      data.weaknesses = Array.isArray(data.weaknesses) ? data.weaknesses : String(data.weaknesses).split(",").map(s => s.trim()).filter(Boolean);
+    }
+    if (data.improvementAreas) {
+      data.improvementAreas = Array.isArray(data.improvementAreas) ? data.improvementAreas : String(data.improvementAreas).split(",").map(s => s.trim()).filter(Boolean);
     }
 
     const updated = await prisma.match.update({
@@ -354,7 +416,10 @@ export async function deleteMatch(id: string, userId: string) {
       return { error: "Match not found" };
     }
 
-    if (match.trainerId !== userId) {
+    const isPlayer = match.playerId === userId;
+    const isTrainer = match.trainerId === userId;
+
+    if (!isPlayer && !isTrainer) {
       return { error: "Unauthorized to delete this match" };
     }
 
@@ -371,3 +436,35 @@ export async function deleteMatch(id: string, userId: string) {
     return { error: error instanceof Error ? error.message : "Failed to delete match in database" };
   }
 }
+
+// 6. GET SELECTABLE PLAYERS (for creating matches)
+export async function getSelectablePlayers() {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    if (currentUser.role === "ADMIN") {
+      const players = await prisma.user.findMany({
+        where: { role: "PLAYER" },
+        select: { id: true, name: true, surname: true, email: true },
+        orderBy: { name: "asc" },
+      });
+      return { success: true, players };
+    } else if (currentUser.role === "TRAINER") {
+      const players = await prisma.user.findMany({
+        where: { role: "PLAYER", trainerId: currentUser.userId },
+        select: { id: true, name: true, surname: true, email: true },
+        orderBy: { name: "asc" },
+      });
+      return { success: true, players };
+    }
+
+    return { success: true, players: [] };
+  } catch (error) {
+    console.error("getSelectablePlayers error:", error);
+    return { success: false, error: "Failed to get players" };
+  }
+}
+

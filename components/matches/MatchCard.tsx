@@ -2,38 +2,10 @@
 
 import Link from "next/link";
 import { useTranslation } from "@/components/LanguageProvider";
+import type { Match } from "@/types/match";
 
 interface MatchCardProps {
-  match: {
-    id: string;
-    name: string;
-    description?: string | null;
-    location?: string | null;
-    date: string | Date;
-    startTime?: string | null;
-    endTime?: string | null;
-    opponent?: string | null;
-    matchType?: string | null;
-    status: string;
-    mark?: number | null;
-    intensity?: number | null;
-    attitude?: number | null;
-    performance?: number | null;
-    goals?: number;
-    assists?: number;
-    minutesPlayed?: number;
-    comment?: string | null;
-    trainerFeedback?: string | null;
-    playerReflection?: string | null;
-    strengths?: string[];
-    weaknesses?: string[];
-    improvementAreas?: string[];
-    offensiveActionsOwnHalf?: string | null;
-    offensiveActionsOpponentHalf?: string | null;
-    defensiveActionsOwnHalf?: string | null;
-    defensiveActionsOpponentHalf?: string | null;
-    isReviewed: boolean;
-  };
+  match: Match;
   role: "PLAYER" | "TRAINER";
   isExpanded: boolean;
   onToggleExpand: () => void;
@@ -81,24 +53,7 @@ export default function MatchCard({
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusUpper = status.toUpperCase();
-    let displayStatus = status;
-    if (statusUpper === "COMPLETED") displayStatus = t("common.status_completed");
-    else if (statusUpper === "SCHEDULED") displayStatus = t("common.status_scheduled");
-    else if (statusUpper === "CANCELLED") displayStatus = t("common.status_cancelled");
 
-    switch (statusUpper) {
-      case "COMPLETED":
-        return <span className="badge badge-success badge-sm font-semibold text-white">{displayStatus}</span>;
-      case "SCHEDULED":
-        return <span className="badge badge-warning badge-sm font-semibold">{displayStatus}</span>;
-      case "CANCELLED":
-        return <span className="badge badge-error badge-sm font-semibold text-white">{displayStatus}</span>;
-      default:
-        return <span className="badge badge-ghost badge-sm">{displayStatus}</span>;
-    }
-  };
 
   return (
     <div className="card bg-base-100 shadow-md hover:shadow-lg transition-all border border-base-200 overflow-hidden">
@@ -119,7 +74,6 @@ export default function MatchCard({
                 </h4>
               )}
               {getMatchTypeBadge(match.matchType)}
-              {getStatusBadge(match.status)}
               {match.isReviewed && (
                 <span className="badge badge-success badge-sm font-semibold text-white">
                   {t("match_details.reviewed_badge")}

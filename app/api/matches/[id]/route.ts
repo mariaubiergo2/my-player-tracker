@@ -31,8 +31,12 @@ export async function GET(
       return NextResponse.json({ error: "Match not found" }, { status: 404 });
     }
 
-    // Check if user is authorized to view this match
-    if (match.playerId !== payload.userId && match.trainerId !== payload.userId) {
+    // Check if user is authorized to view this match (ADMIN can view any match)
+    if (
+      payload.role !== "ADMIN" &&
+      match.playerId !== payload.userId &&
+      match.trainerId !== payload.userId
+    ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

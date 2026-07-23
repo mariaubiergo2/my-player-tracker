@@ -2,7 +2,6 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { cookies } from "next/headers"
 import { getTranslationsServer } from "@/lib/i18n-server"
-import MatchVideoContainer from "@/components/matches/MatchVideoContainer"
 
 export default async function MatchPage({
   params,
@@ -50,39 +49,21 @@ export default async function MatchPage({
               {match.description || t("match_details.description_placeholder")}
             </p>
           </div>
-
-          <div className="flex gap-2">
-            <div className={`badge badge-primary badge-lg`}>
-              {match.status === "COMPLETED" ? t("common.status_completed") :
-               match.status === "SCHEDULED" ? t("common.status_scheduled") :
-               match.status === "CANCELLED" ? t("common.status_cancelled") :
-               match.status}
-            </div>
-
-            {match.matchType && (
-              <div className="badge badge-outline badge-lg">
-                {match.matchType === "LEAGUE" ? t("common.type_league") :
-                 match.matchType === "CUP" ? t("common.type_cup") :
-                 match.matchType === "FRIENDLY" ? t("common.type_friendly") :
-                 match.matchType === "TRAINING" ? t("common.type_training") :
-                 match.matchType}
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main info */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="card bg-base-100 shadow-md border border-base-200">
+      {/* Grid with Match Info and Side Panel */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* Match info (2/3) */}
+        <div className="lg:col-span-2">
+          <div className="card bg-base-100 shadow-md border border-base-200 h-full">
             <div className="card-body">
               <h2 className="card-title">{t("match_details.info_title")}</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Info label={t("common.opponent")} value={match.opponent} fallback={t("common.not_specified")} />
                 <Info label={t("common.location")} value={match.location} fallback={t("common.not_specified")} />
-                <Info label={t("common.date")} value={match.date} fallback={t("common.not_specified")} />
+                <Info label={t("common.date")} value={match.date ? new Date(match.date).toLocaleDateString() : undefined} fallback={t("common.not_specified")} />
                 <Info
                   label={t("common.time")}
                   value={
@@ -92,86 +73,27 @@ export default async function MatchPage({
                   }
                   fallback={t("common.not_specified")}
                 />
-              </div>
-            </div>
-          </div>
-
-          <MatchVideoContainer matchId={match.id} initialVideo={match.video} />
-
-          <div className="card bg-base-100 shadow-md border border-base-200">
-            <div className="card-body">
-              <h2 className="card-title">{t("match_details.perf_title")}</h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Stat label={t("common.goals")} value={match.goals ?? 0} />
-                <Stat label={t("common.assists")} value={match.assists ?? 0} />
-                <Stat label={t("common.minutes")} value={match.minutesPlayed ?? 0} />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-                <Score label={t("common.mark")} value={match.mark} />
-                <Score label={t("common.intensity")} value={match.intensity} />
-                <Score label={t("common.attitude")} value={match.attitude} />
-                <Score label={t("common.performance")} value={match.performance} />
-              </div>
-            </div>
-          </div>
-
-          <div className="card bg-base-100 shadow-md border border-base-200">
-            <div className="card-body">
-              <h2 className="card-title">{t("match_details.feedback_title")}</h2>
-
-              <FeedbackBlock
-                title={t("match_details.comment_label")}
-                value={match.comment}
-                fallback={t("match_details.no_feedback")}
-              />
-
-              <FeedbackBlock
-                title={t("match_details.trainer_feedback_label")}
-                value={match.trainerFeedback}
-                fallback={t("match_details.no_feedback")}
-              />
-
-              <FeedbackBlock
-                title={t("match_details.player_reflection_label")}
-                value={match.playerReflection}
-                fallback={t("match_details.no_feedback")}
-              />
-            </div>
-          </div>
-
-          <div className="card bg-base-100 shadow-md border border-base-200">
-            <div className="card-body">
-              <h2 className="card-title">{t("match_form.tactical_actions_section")}</h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FeedbackBlock
-                  title={t("match_form.offensive_actions_own_half")}
-                  value={match.offensiveActionsOwnHalf}
-                  fallback={t("match_details.no_feedback")}
-                />
-                <FeedbackBlock
-                  title={t("match_form.offensive_actions_opponent_half")}
-                  value={match.offensiveActionsOpponentHalf}
-                  fallback={t("match_details.no_feedback")}
-                />
-                <FeedbackBlock
-                  title={t("match_form.defensive_actions_own_half")}
-                  value={match.defensiveActionsOwnHalf}
-                  fallback={t("match_details.no_feedback")}
-                />
-                <FeedbackBlock
-                  title={t("match_form.defensive_actions_opponent_half")}
-                  value={match.defensiveActionsOpponentHalf}
-                  fallback={t("match_details.no_feedback")}
+                <Info label={t("match_details.match_venue")} value={match.isHome !== null && match.isHome !== undefined ? (match.isHome ? t("match_details.home_venue") : t("match_details.away_venue")) : undefined} fallback={t("common.not_specified")} />
+                <Info label={t("match_details.category_label")} value={match.category} fallback={t("common.not_specified")} />
+                <Info label={t("match_details.league_position_label")} value={match.leaguePosition} fallback={t("common.not_specified")} />
+                <Info label={t("match_details.competition_label")} value={match.competitionType} fallback={t("common.not_specified")} />
+                <Info
+                  label={t("match_form.match_type")}
+                  value={
+                    match.matchType === "LEAGUE" ? t("common.type_league") :
+                    match.matchType === "CUP" ? t("common.type_cup") :
+                    match.matchType === "FRIENDLY" ? t("common.type_friendly") :
+                    match.matchType === "TRAINING" ? t("common.type_training") :
+                    match.matchType || undefined
+                  }
+                  fallback={t("common.not_specified")}
                 />
               </div>
             </div>
           </div>
         </div>
 
-        {/* Side panel */}
+        {/* Side panel (1/3) */}
         <div className="space-y-6">
           <div className="card bg-base-100 shadow-md border border-base-200">
             <div className="card-body">
@@ -199,20 +121,166 @@ export default async function MatchPage({
             </div>
           </div>
 
-          <ListCard title={t("match_form.strengths")} items={match.strengths} fallback={t("match_details.no_items")} />
-          <ListCard title={t("match_form.weaknesses")} items={match.weaknesses} fallback={t("match_details.no_items")} />
-          <ListCard title={t("match_form.improvement")} items={match.improvementAreas} fallback={t("match_details.no_items")} />
-
           <div className="card bg-base-100 shadow-md border border-base-200">
             <div className="card-body">
               <h2 className="card-title">{t("match_details.internal_info")}</h2>
 
-              <Info label={t("match_details.player_id")} value={match.playerId} />
-              <Info label={t("match_details.trainer_id")} value={match.trainerId} />
-              <Info label={t("match_details.team_id")} value={match.teamId} />
               <Info
                 label={t("match_details.updated_at")}
                 value={new Date(match.updatedAt).toLocaleString()}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Full-width container for all other parts */}
+      <div className="space-y-6">
+        {/* Special Zone: Ficha Técnica del Jugador */}
+        <div className="card bg-base-100 shadow-md border border-base-200">
+          <div className="card-body">
+            <h2 className="card-title">{t("match_details.technical_file")}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Info label={t("match_details.kit_color_label")} value={match.kitColor} fallback={t("common.not_specified")} />
+              <Info label={t("match_details.shirt_number_label")} value={match.shirtNumber} fallback={t("common.not_specified")} />
+              <Info label={t("match_details.position_label")} value={match.position} fallback={t("common.not_specified")} />
+              <div>
+                <p className="text-sm text-base-content/60">{t("match_details.match_url_label")}</p>
+                {match.matchUrl ? (
+                  <a href={match.matchUrl} target="_blank" rel="noopener noreferrer" className="link link-primary font-medium break-all">
+                    {match.matchUrl}
+                  </a>
+                ) : (
+                  <p className="font-medium text-base-content/40">{t("common.not_specified")}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Player Performance */}
+        <div className="card bg-base-100 shadow-md border border-base-200">
+          <div className="card-body">
+            <h2 className="card-title">{t("match_details.perf_title")}</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Stat label={t("common.goals")} value={match.goals ?? 0} />
+              <Stat label={t("common.assists")} value={match.assists ?? 0} />
+              <Stat label={t("common.minutes")} value={match.minutesPlayed ?? "0"} />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+              <Score label={t("common.mark")} value={match.mark} />
+              <Score label={t("common.intensity")} value={match.intensity} />
+              <Score label={t("common.attitude")} value={match.attitude} />
+              <Score label={t("common.performance")} value={match.performance} />
+            </div>
+          </div>
+        </div>
+
+        {/* Development / Strengths etc. */}
+        <div className="card bg-base-100 shadow-md border border-base-200">
+          <div className="card-body">
+            <h2 className="card-title">{t("match_form.analysis_section")}</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <h3 className="font-semibold text-success mb-2">{t("match_form.strengths")}</h3>
+                {match.strengths && match.strengths.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {match.strengths.map((item: string) => (
+                      <span key={item} className="badge badge-success badge-outline">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-base-content/60 text-sm">{t("match_details.no_items")}</p>
+                )}
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-warning mb-2">{t("match_form.weaknesses")}</h3>
+                {match.weaknesses && match.weaknesses.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {match.weaknesses.map((item: string) => (
+                      <span key={item} className="badge badge-warning badge-outline">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-base-content/60 text-sm">{t("match_details.no_items")}</p>
+                )}
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-info mb-2">{t("match_form.improvement")}</h3>
+                {match.improvementAreas && match.improvementAreas.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {match.improvementAreas.map((item: string) => (
+                      <span key={item} className="badge badge-info badge-outline">
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-base-content/60 text-sm">{t("match_details.no_items")}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Feedback & Comments */}
+        <div className="card bg-base-100 shadow-md border border-base-200">
+          <div className="card-body">
+            <h2 className="card-title">{t("match_details.feedback_title")}</h2>
+
+            <FeedbackBlock
+              title={t("match_details.comment_label")}
+              value={match.comment}
+              fallback={t("match_details.no_feedback")}
+            />
+
+            <FeedbackBlock
+              title={t("match_details.trainer_feedback_label")}
+              value={match.trainerFeedback}
+              fallback={t("match_details.no_feedback")}
+            />
+
+            <FeedbackBlock
+              title={t("match_details.player_reflection_label")}
+              value={match.playerReflection}
+              fallback={t("match_details.no_feedback")}
+            />
+          </div>
+        </div>
+
+        {/* Tactical Actions */}
+        <div className="card bg-base-100 shadow-md border border-base-200">
+          <div className="card-body">
+            <h2 className="card-title">{t("match_form.tactical_actions_section")}</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FeedbackBlock
+                title={t("match_form.offensive_actions_own_half")}
+                value={match.offensiveActionsOwnHalf}
+                fallback={t("match_details.no_feedback")}
+              />
+              <FeedbackBlock
+                title={t("match_form.offensive_actions_opponent_half")}
+                value={match.offensiveActionsOpponentHalf}
+                fallback={t("match_details.no_feedback")}
+              />
+              <FeedbackBlock
+                title={t("match_form.defensive_actions_own_half")}
+                value={match.defensiveActionsOwnHalf}
+                fallback={t("match_details.no_feedback")}
+              />
+              <FeedbackBlock
+                title={t("match_form.defensive_actions_opponent_half")}
+                value={match.defensiveActionsOpponentHalf}
+                fallback={t("match_details.no_feedback")}
               />
             </div>
           </div>
@@ -287,36 +355,6 @@ function FeedbackBlock({
       <p className="text-base-content/70">
         {value || fallback}
       </p>
-    </div>
-  )
-}
-
-function ListCard({
-  title,
-  items,
-  fallback = "No items added.",
-}: {
-  title: string
-  items?: string[]
-  fallback?: string
-}) {
-  return (
-    <div className="card bg-base-100 shadow-md border border-base-200">
-      <div className="card-body">
-        <h2 className="card-title">{title}</h2>
-
-        {items && items.length > 0 ? (
-          <div className="flex flex-wrap gap-2">
-            {items.map((item) => (
-              <span key={item} className="badge badge-outline">
-                {item}
-              </span>
-            ))}
-          </div>
-        ) : (
-          <p className="text-base-content/60">{fallback}</p>
-        )}
-      </div>
     </div>
   )
 }

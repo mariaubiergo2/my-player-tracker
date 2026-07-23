@@ -1,50 +1,58 @@
 // MATCHES.ts
 
-export type MatchStatus = "scheduled" | "completed" | "cancelled";
-
 export type MatchType = "friendly" | "league" | "cup" | "training";
 
 export interface Match {
   id: string;
-
+  // --- Información general ---
   name: string;
   description?: string;
   location?: string;
-
+  isHome?: boolean;              // Casa/Fuera
+  // --- Ficha técnica del jugador en el partido ---
+  matchUrl?: string;             // URLPARTIDO
+  kitColor?: string;             // Vestimenta (color camiseta, etc.)
+  shirtNumber?: string;          // Número dorsal
+  position?: string;             // Posición/es
+  minutesPlayed?: string;
+  // --- Fecha y horario ---
   date: string;
   startTime?: string;
   endTime?: string;
-
+  // --- Competición ---
   opponent?: string;
-  matchType?: MatchType;
-  status: MatchStatus;
-
+  category?: string;             // Categoría
+  leaguePosition?: string;       // Posición en la liga
+  matchType?: MatchType;         // Amistoso/Liga/Entrenamiento
+  competitionType?: string;
+  // --- Relaciones ---
   playerId: string;
   trainerId?: string | null;
   teamId?: string;
-
+  // --- Feedback y evaluación ---
   comment?: string;
   trainerFeedback?: string;
   playerReflection?: string;
-
   mark?: number;
   intensity?: number;
   attitude?: number;
   performance?: number;
-
+  // --- Estadísticas ---
   goals?: number;
   assists?: number;
-  minutesPlayed?: number;
-
+  // --- Acciones tácticas ---
+  offensiveActionsOwnHalf?: string;
+  offensiveActionsOpponentHalf?: string;
+  defensiveActionsOwnHalf?: string;
+  defensiveActionsOpponentHalf?: string;
+  // --- Análisis cualitativo ---
   strengths?: string[];
   weaknesses?: string[];
   improvementAreas?: string[];
-
+  // --- Revisión ---
   isReviewed: boolean;
   reviewedAt?: string;
-
-  video?: any;
-
+  // --- Timestamps ---
   createdAt: string;
   updatedAt: string;
 }
@@ -55,14 +63,23 @@ export let MATCHES: Match[] = [
     name: "League Match vs Barcelona U18",
     description: "Regular league match with post-match player evaluation.",
     location: "Camp Municipal de Futbol",
+    isHome: true,
+
+    matchUrl: "https://www.youtube.com/watch?v=mock1",
+    kitColor: "Red/White",
+    shirtNumber: "9",
+    position: "Forward",
+    minutesPlayed: "90",
 
     date: "2026-05-30",
     startTime: "18:00",
     endTime: "19:45",
 
     opponent: "Barcelona U18",
+    category: "Juvenil A",
+    leaguePosition: "3rd",
     matchType: "league",
-    status: "scheduled",
+    competitionType: "Division de Honor",
 
     playerId: "player_001",
     trainerId: "trainer_001",
@@ -79,7 +96,6 @@ export let MATCHES: Match[] = [
 
     goals: 0,
     assists: 0,
-    minutesPlayed: 0,
 
     strengths: [],
     weaknesses: [],
@@ -94,14 +110,23 @@ export let MATCHES: Match[] = [
     name: "Friendly Match vs Girona U18",
     description: "Friendly match focused on tactical positioning and decision-making.",
     location: "Girona Training Ground",
+    isHome: false,
+
+    matchUrl: "https://www.youtube.com/watch?v=mock2",
+    kitColor: "Blue",
+    shirtNumber: "11",
+    position: "Left Winger",
+    minutesPlayed: "75",
 
     date: "2026-06-06",
     startTime: "17:30",
     endTime: "19:00",
 
     opponent: "Girona U18",
+    category: "Juvenil A",
+    leaguePosition: "3rd",
     matchType: "friendly",
-    status: "completed",
+    competitionType: "Friendly",
 
     playerId: "player_001",
     trainerId: "trainer_001",
@@ -120,7 +145,6 @@ export let MATCHES: Match[] = [
 
     goals: 1,
     assists: 0,
-    minutesPlayed: 75,
 
     strengths: ["Intensity", "Communication", "Defensive positioning"],
     weaknesses: ["First touch under pressure", "Scanning before receiving"],
@@ -142,10 +166,9 @@ export async function addMatch(match: Match){
 }
 
 export async function getMatches(){
-  // await new Promise((resolve) => setTimeout(resolve, 3000));
   return [...MATCHES];
 }
 
 export function getMatchById(matchId: string){
   return MATCHES.find((match) => match.id === matchId);
-}
+}

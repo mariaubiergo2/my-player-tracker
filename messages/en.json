@@ -296,7 +296,18 @@
     "team_id": "Team ID",
     "updated_at": "Updated",
     "no_feedback": "No feedback added yet.",
-    "no_items": "No items added."
+    "no_items": "No items added.",
+    "technical_file": "Player Technical Sheet",
+    "match_venue": "Match Venue",
+    "home_venue": "Home",
+    "away_venue": "Away",
+    "category_label": "Category",
+    "league_position_label": "League Position",
+    "competition_label": "Competition",
+    "kit_color_label": "Kit Color / Outfit",
+    "shirt_number_label": "Shirt Number",
+    "position_label": "Position on Pitch",
+    "match_url_label": "Match Link"
   },
   "match_form": {
     "create_title": "Create New Match",
@@ -348,7 +359,17 @@
     "offensive_actions_opponent_half": "Offensive actions in opponent's half",
     "defensive_actions_own_half": "Defensive actions in own half",
     "defensive_actions_opponent_half": "Defensive actions in opponent's half",
-    "tactical_actions_section": "Tactical Actions"
+    "tactical_actions_section": "Tactical Actions",
+    "is_home_label": "Home Game?",
+    "category": "Category",
+    "league_position": "League Position",
+    "competition_type": "Competition Type",
+    "technical_file": "Player Technical Sheet",
+    "kit_color": "Kit (Jersey color, etc.)",
+    "shirt_number": "Shirt Number",
+    "position": "Position(s) in Match",
+    "match_url": "Match Link/URL",
+    "select_player_label": "Select Player *"
   },
   "profile_page": {
     "title": "Edit Profile",
