@@ -556,12 +556,23 @@
     "calc_fats": "Fats"
   },
   "feedback_thread": {
-    "title": "Feedback Thread",
-    "placeholder": "Write a message here...",
-    "send": "Send",
-    "no_messages": "No messages in this thread yet.",
+    "title": "Feedback Mailbox",
+    "placeholder": "Draft your content here...",
+    "send": "Send Email",
+    "no_messages": "No emails registered in this exchange yet.",
     "role_player": "Player",
     "role_trainer": "Trainer",
-    "role_admin": "Admin"
+    "role_admin": "Administrator",
+    "disclaimer": "This channel is structured as a formal exchange of email messages. Please maintain a professional tone.",
+    "subject": "Subject",
+    "from": "From",
+    "to": "To",
+    "date": "Date",
+    "attach_image": "Attach image",
+    "image_helper": "Tip: You can drag and drop images or paste them (Ctrl+V) directly into the editor.",
+    "compose_title": "Compose new feedback email",
+    "preview": "Email Preview",
+    "attachments": "Attachments",
+    "remove_attachment": "Remove attachment"
   }
 }

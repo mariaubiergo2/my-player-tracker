@@ -15,7 +15,25 @@ export async function getFeedbackMessages(matchId: string) {
     const match = await prisma.match.findUnique({
       where: { id: matchId },
       include: {
-        player: true,
+        player: {
+          select: {
+            id: true,
+            name: true,
+            surname: true,
+            email: true,
+            avatarUrl: true,
+            trainerId: true,
+          },
+        },
+        trainer: {
+          select: {
+            id: true,
+            name: true,
+            surname: true,
+            email: true,
+            avatarUrl: true,
+          },
+        },
       },
     })
 
@@ -40,13 +58,22 @@ export async function getFeedbackMessages(matchId: string) {
           select: {
             name: true,
             surname: true,
+            email: true,
             avatarUrl: true,
           },
         },
       },
     })
 
-    return { success: true, messages }
+    return {
+      success: true,
+      messages,
+      matchName: match.name,
+      matchPlayer: match.player,
+      matchTrainer: match.trainer,
+      currentUserEmail: currentUser.email,
+      currentUserName: currentUser.name,
+    }
   } catch (error) {
     console.error("Get feedback messages error:", error)
     return { success: false, error: "Failed to load feedback messages" }

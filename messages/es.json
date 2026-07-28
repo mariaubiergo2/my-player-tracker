@@ -556,12 +556,23 @@
     "calc_fats": "Grasas"
   },
   "feedback_thread": {
-    "title": "Hilo de Feedback",
-    "placeholder": "Escribe un mensaje aquí...",
-    "send": "Enviar",
-    "no_messages": "Aún no hay mensajes en este hilo.",
+    "title": "Buzón de Feedback",
+    "placeholder": "Redacta el contenido aquí...",
+    "send": "Enviar Correo",
+    "no_messages": "Aún no hay correos registrados en este intercambio.",
     "role_player": "Jugador",
     "role_trainer": "Entrenador",
-    "role_admin": "Admin"
+    "role_admin": "Administrador",
+    "disclaimer": "Este canal está estructurado como un intercambio formal de correos electrónicos. Por favor, mantén un tono profesional.",
+    "subject": "Asunto",
+    "from": "De",
+    "to": "Para",
+    "date": "Fecha",
+    "attach_image": "Adjuntar imagen",
+    "image_helper": "Sugerencia: Puedes arrastrar y soltar imágenes o pegarlas (Ctrl+V) en el editor.",
+    "compose_title": "Redactar nuevo correo de feedback",
+    "preview": "Vista previa del correo",
+    "attachments": "Archivos adjuntos",
+    "remove_attachment": "Eliminar adjunto"
   }
 }

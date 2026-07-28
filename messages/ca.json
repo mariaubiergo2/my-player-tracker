@@ -556,12 +556,23 @@
     "calc_fats": "Grasses"
   },
   "feedback_thread": {
-    "title": "Fil de Feedback",
-    "placeholder": "Escriu un missatge aquí...",
-    "send": "Enviar",
-    "no_messages": "Encara no hi ha missatges en aquest fil.",
+    "title": "Bústia de Feedback",
+    "placeholder": "Redacta el contingut aquí...",
+    "send": "Enviar Correu",
+    "no_messages": "Encara no hi ha correus registrats en aquest intercanvi.",
     "role_player": "Jugador",
     "role_trainer": "Entrenador",
-    "role_admin": "Admin"
+    "role_admin": "Administrador",
+    "disclaimer": "Aquest canal està estructurat com un intercanvi formal de correus electrònics. Si us plau, mantén un to professional.",
+    "subject": "Assumpte",
+    "from": "De",
+    "to": "Per a",
+    "date": "Data",
+    "attach_image": "Adjuntar imatge",
+    "image_helper": "Suggeriment: Pots arrossegar i deixar anar imatges o enganxar-les (Ctrl+V) a l'editor.",
+    "compose_title": "Redactar nou correu de feedback",
+    "preview": "Vista prèvia del correu",
+    "attachments": "Arxius adjunts",
+    "remove_attachment": "Eliminar adjunt"
   }
 }
