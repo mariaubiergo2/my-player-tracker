@@ -9,15 +9,20 @@ import type { CompleteMatch } from "@/types/match"
 import { toDateInput, toDateTimeInput } from "@/lib/utils"
 import { useTranslation } from "@/components/LanguageProvider"
 import { canEditMatchField } from "@/lib/permissions"
+import MatchFeedbackThread from "@/components/matches/MatchFeedbackThread"
 
 const matchTypes = ["FRIENDLY", "LEAGUE", "CUP", "TRAINING"]
 
 export default function EditMatchForm({ 
   match, 
-  currentUserRole 
+  currentUserRole,
+  currentUserId,
+  matchTrainerId
 }: { 
   match: CompleteMatch
   currentUserRole?: string 
+  currentUserId?: string
+  matchTrainerId?: string
 }) {
   const router = useRouter()
   const { t } = useTranslation()
@@ -728,6 +733,17 @@ export default function EditMatchForm({
           </div>
         </div>
       </form>
+
+      <div className="mt-8">
+        <MatchFeedbackThread
+          matchId={match.id}
+          currentUserId={currentUserId || ""}
+          currentUserRole={currentUserRole || "PLAYER"}
+          matchPlayerId={match.playerId}
+          matchTrainerId={matchTrainerId || match.trainerId || ""}
+          readOnly={false}
+        />
+      </div>
     </section>
   )
 }

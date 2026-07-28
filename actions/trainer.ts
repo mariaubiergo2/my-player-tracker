@@ -135,6 +135,11 @@ export async function getMyPlayersWithMatches() {
       },
       include: {
         playerMatches: {
+          include: {
+            _count: {
+              select: { feedbackMessages: true },
+            },
+          },
           orderBy: { date: "desc" },
         },
       },

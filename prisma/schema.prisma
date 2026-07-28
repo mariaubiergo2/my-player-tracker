@@ -41,6 +41,7 @@ model User {
   trainerId String? @map("trainer_id")
   trainer   User?   @relation("TrainerPlayers", fields: [trainerId], references: [id])
   players   User[]  @relation("TrainerPlayers")
+  feedbackMessages MatchFeedbackMessage[]
 
   @@map("users")
 }
@@ -104,6 +105,7 @@ model Match {
   reviewedAt DateTime? @map("reviewed_at")
 
   video Video?
+  feedbackMessages MatchFeedbackMessage[]
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -125,4 +127,18 @@ model Video {
   updatedAt     DateTime @updatedAt @map("updated_at")
 
   @@map("videos")
+}
+
+model MatchFeedbackMessage {
+  id         String   @id @default(cuid())
+  matchId    String   @map("match_id")
+  authorId   String   @map("author_id")
+  authorRole String   @map("author_role")
+  content    String
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  match  Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  author User  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("match_feedback_messages")
 }

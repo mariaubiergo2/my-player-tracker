@@ -311,7 +311,10 @@
     "kit_color_label": "Vestimenta / Color equipación",
     "shirt_number_label": "Dorsal",
     "position_label": "Posición en el campo",
-    "match_url_label": "Enlace al partido"
+    "match_url_label": "Enlace al partido",
+    "feedback_messages_count_zero": "Sin mensajes de feedback",
+    "feedback_messages_count_one": "1 mensaje de feedback",
+    "feedback_messages_count_other": "{count} mensajes de feedback"
   },
   "match_form": {
     "create_title": "Crear nuevo partido",
@@ -550,5 +553,14 @@
     "calc_protein": "Proteína",
     "calc_carbs": "Carbohidratos",
     "calc_fats": "Grasas"
+  },
+  "feedback_thread": {
+    "title": "Hilo de Feedback",
+    "placeholder": "Escribe un mensaje aquí...",
+    "send": "Enviar",
+    "no_messages": "Aún no hay mensajes en este hilo.",
+    "role_player": "Jugador",
+    "role_trainer": "Entrenador",
+    "role_admin": "Admin"
   }
 }

@@ -2,6 +2,8 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { cookies } from "next/headers"
 import { getTranslationsServer } from "@/lib/i18n-server"
+import { getCurrentUser } from "@/lib/auth"
+import MatchFeedbackThread from "@/components/matches/MatchFeedbackThread"
 
 export default async function MatchPage({
   params,
@@ -12,6 +14,7 @@ export default async function MatchPage({
   const cookieStore = await cookies()
   const cookieHeader = cookieStore.toString()
   const t = await getTranslationsServer()
+  const currentUser = await getCurrentUser()
 
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_BASE_URL}/api/matches/${identifier}`,
@@ -285,6 +288,18 @@ export default async function MatchPage({
             </div>
           </div>
         </div>
+
+        {/* Threaded Feedback Section */}
+        {currentUser && (
+          <MatchFeedbackThread
+            matchId={match.id}
+            currentUserId={currentUser.userId}
+            currentUserRole={currentUser.role}
+            matchPlayerId={match.playerId}
+            matchTrainerId={match.trainerId || ""}
+            readOnly={true}
+          />
+        )}
       </div>
     </section>
   )

@@ -52,16 +52,21 @@ export default function MatchCard({
         return <span className="badge badge-ghost badge-sm">{displayType}</span>;
     }
   };
-
-
+  const feedbackCount = match._count?.feedbackMessages ?? 0;
+  let feedbackText = t("match_details.feedback_messages_count_zero");
+  if (feedbackCount === 1) {
+    feedbackText = t("match_details.feedback_messages_count_one");
+  } else if (feedbackCount > 1) {
+    feedbackText = t("match_details.feedback_messages_count_other", { count: feedbackCount });
+  }
 
   return (
-    <div className="card bg-base-100 shadow-md hover:shadow-lg transition-all border border-base-200 overflow-hidden">
+    <div className="card bg-base-100 shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 border border-base-200 overflow-hidden">
       {/* Match Header (Always visible) */}
-      <div className="card-body p-5">
+      <div className="card-body p-6 md:p-7">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex-1 cursor-pointer" onClick={onToggleExpand}>
-            <div className="flex flex-wrap items-center gap-2 mb-1">
+            <div className="flex flex-wrap items-center gap-2 mb-2.5">
               {role === "PLAYER" ? (
                 <Link href={`/matches/${match.id}`} className="flex-1 min-w-[200px]" onClick={(e) => e.stopPropagation()}>
                   <h4 className="font-extrabold text-lg hover:text-primary transition-colors inline-block">
@@ -84,6 +89,15 @@ export default function MatchCard({
               <span>📅 {matchDateFormatted} {match.startTime ? `@ ${match.startTime}` : ""}</span>
               {match.location && <span>📍 {match.location}</span>}
               {match.opponent && <span>⚔️ vs {match.opponent}</span>}
+            </div>
+            <div className="mt-3.5 flex items-center gap-2">
+              <span className={`badge badge-sm gap-1.5 py-2.5 px-3 font-semibold transition-all ${
+                feedbackCount > 0
+                  ? "badge-primary badge-outline shadow-sm"
+                  : "badge-ghost text-base-content/40"
+              }`}>
+                💬 {feedbackText}
+              </span>
             </div>
           </div>
 
@@ -118,7 +132,7 @@ export default function MatchCard({
                 </>
               ) : (
                 <Link
-                  href={`/matches/${match.id}/edit`}
+                  href={`/matches/${match.id}/edit-feedback`}
                   className="btn btn-ghost btn-sm text-primary hover:bg-primary/10 font-medium"
                 >
                   {t("trainer_my_players.edit_feedback")}

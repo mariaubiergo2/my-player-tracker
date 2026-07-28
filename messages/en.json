@@ -311,7 +311,10 @@
     "kit_color_label": "Kit Color / Outfit",
     "shirt_number_label": "Shirt Number",
     "position_label": "Position on Pitch",
-    "match_url_label": "Match Link"
+    "match_url_label": "Match Link",
+    "feedback_messages_count_zero": "No feedback messages",
+    "feedback_messages_count_one": "1 feedback message",
+    "feedback_messages_count_other": "{count} feedback messages"
   },
   "match_form": {
     "create_title": "Create New Match",
@@ -550,5 +553,14 @@
     "calc_protein": "Protein",
     "calc_carbs": "Carbohydrates",
     "calc_fats": "Fats"
+  },
+  "feedback_thread": {
+    "title": "Feedback Thread",
+    "placeholder": "Write a message here...",
+    "send": "Send",
+    "no_messages": "No messages in this thread yet.",
+    "role_player": "Player",
+    "role_trainer": "Trainer",
+    "role_admin": "Admin"
   }
 }

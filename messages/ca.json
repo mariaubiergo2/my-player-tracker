@@ -311,7 +311,10 @@
     "kit_color_label": "Vestimenta / Color equipació",
     "shirt_number_label": "Dorsal",
     "position_label": "Posició al camp",
-    "match_url_label": "Enllaç al partit"
+    "match_url_label": "Enllaç al partit",
+    "feedback_messages_count_zero": "Sense missatges de feedback",
+    "feedback_messages_count_one": "1 missatge de feedback",
+    "feedback_messages_count_other": "{count} missatges de feedback"
   },
   "match_form": {
     "create_title": "Crear nou partit",
@@ -550,5 +553,14 @@
     "calc_protein": "Proteïna",
     "calc_carbs": "Carbohidrats",
     "calc_fats": "Grasses"
+  },
+  "feedback_thread": {
+    "title": "Fil de Feedback",
+    "placeholder": "Escriu un missatge aquí...",
+    "send": "Enviar",
+    "no_messages": "Encara no hi ha missatges en aquest fil.",
+    "role_player": "Jugador",
+    "role_trainer": "Entrenador",
+    "role_admin": "Admin"
   }
 }

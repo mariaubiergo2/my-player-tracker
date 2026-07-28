@@ -53,6 +53,9 @@ export interface Match {
   // --- Timestamps ---
   createdAt: string | Date;
   updatedAt: string | Date;
+  _count?: {
+    feedbackMessages: number;
+  } | null;
 }
 
 export interface SimpleMatch {

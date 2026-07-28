@@ -19,6 +19,11 @@ export async function GET(request: NextRequest) {
       where: {
         OR: [{ playerId: payload.userId }, { trainerId: payload.userId }],
       },
+      include: {
+        _count: {
+          select: { feedbackMessages: true },
+        },
+      },
       orderBy: { date: "desc" },
     });
 

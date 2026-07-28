@@ -1,12 +1,11 @@
-// app/matches/[id]/edit/page.tsx
+// app/matches/[identifier]/edit-feedback/page.tsx
 import { cookies } from "next/headers"
-import { redirect } from "next/navigation"
-import { notFound } from "next/navigation"
+import { redirect, notFound } from "next/navigation"
 import { prisma } from "@/lib/prisma"
 import { verifyToken } from "@/lib/auth"
 import EditMatchForm from "@/matches/[identifier]/edit/EditMatchForm"
 
-export default async function EditMatchPage({
+export default async function EditFeedbackPage({
   params,
 }: {
   params: Promise<{ identifier: string }>
@@ -29,11 +28,11 @@ export default async function EditMatchPage({
 
   if (!match) notFound()
 
-  const isPlayer = match.playerId === payload.userId
+  // Only the trainer of the match, the trainer assigned to the player, or an admin can access this page
   const isTrainer = match.trainerId === payload.userId || match.player.trainerId === payload.userId
   const isAdmin = payload.role === "ADMIN"
 
-  if (!isPlayer && !isTrainer && !isAdmin) {
+  if (!isTrainer && !isAdmin) {
     redirect("/dashboard")
   }
 
