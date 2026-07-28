@@ -41,7 +41,7 @@ export async function getAllPlayersWithMatchCount() {
     await checkTrainer();
 
     const players = await prisma.user.findMany({
-      where: { role: UserRole.PLAYER },
+      where: { role: { in: [UserRole.PLAYER, UserRole.GOAL_KEEPER] } },
       select: {
         id: true,
         name: true,
@@ -99,7 +99,7 @@ export async function assignPlayerToTrainer(playerId: string) {
       return { success: false, error: "Player not found." };
     }
 
-    if (player.role !== UserRole.PLAYER) {
+    if (player.role !== UserRole.PLAYER && player.role !== UserRole.GOAL_KEEPER) {
       return { success: false, error: "User is not registered as a Player." };
     }
 
@@ -130,7 +130,7 @@ export async function getMyPlayersWithMatches() {
 
     const players = await prisma.user.findMany({
       where: {
-        role: UserRole.PLAYER,
+        role: { in: [UserRole.PLAYER, UserRole.GOAL_KEEPER] },
         trainerId: trainerId,
       },
       include: {

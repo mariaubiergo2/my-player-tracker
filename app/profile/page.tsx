@@ -260,7 +260,15 @@ export default function ProfilePage() {
 
               {/* Readonly Role */}
               <div className="badge badge-lg bg-base-200 text-base-content font-bold border border-base-300 px-4 py-3">
-                {t("profile_page.role_label")}: {user?.role}
+                {t("profile_page.role_label")}: {
+                  user?.role === "PLAYER"
+                    ? t("common.role_player")
+                    : user?.role === "GOAL_KEEPER"
+                    ? t("common.role_goal_keeper")
+                    : user?.role === "TRAINER"
+                    ? t("common.role_trainer")
+                    : t("common.role_admin")
+                }
               </div>
               <p className="text-xs text-base-content/50 mt-3 max-w-xs leading-relaxed">
                 {t("profile_page.role_note")}

@@ -45,7 +45,7 @@ export default function Header() {
                     <li><Link href="/trainer/my-players">{t("header.my_players")}</Link></li>
                   </>
                 )}
-                {user?.role === "PLAYER" && (
+                {(user?.role === "PLAYER" || user?.role === "GOAL_KEEPER") && (
                   <>
                     <li><Link href="/dashboard">{t("header.dashboard")}</Link></li>
                     <li><Link href="/dashboard/physical">{t("header.physical_prep")}</Link></li>
@@ -73,7 +73,7 @@ export default function Header() {
                   <li><Link href="/trainer/my-players">{t("header.my_players")}</Link></li>
                 </>
               )}
-              {user?.role === "PLAYER" && (
+              {(user?.role === "PLAYER" || user?.role === "GOAL_KEEPER") && (
                 <>
                   <li><Link href="/dashboard">{t("header.dashboard")}</Link></li>
                   <li><Link href="/dashboard/physical">{t("header.physical_prep")}</Link></li>
@@ -183,7 +183,7 @@ export default function Header() {
                   <li><Link href="/trainer/my-players">{t("header.my_players")}</Link></li>
                 </>
               )}
-              {user?.role === "PLAYER" && (
+              {(user?.role === "PLAYER" || user?.role === "GOAL_KEEPER") && (
                 <>
                   <li><Link href="/dashboard">{t("header.dashboard")}</Link></li>
                   <li><Link href="/dashboard/physical">{t("header.physical_prep")}</Link></li>
@@ -195,7 +195,7 @@ export default function Header() {
                   <Link href="/matches/create">{t("header.create_match")}</Link>
                 </li>
               )}
-              {(user?.role === "PLAYER" || user?.role === "TRAINER") && (
+              {(user?.role === "PLAYER" || user?.role === "GOAL_KEEPER" || user?.role === "TRAINER") && (
                 <li>
                   <Link href="/profile">{t("header.edit_profile")}</Link>
                 </li>

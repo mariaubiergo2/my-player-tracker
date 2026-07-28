@@ -8,6 +8,7 @@ generator client {
 
 enum UserRole {
   PLAYER
+  GOAL_KEEPER
   TRAINER
   ADMIN
 }

@@ -54,7 +54,7 @@ export function canEditMatchField(role: UserRole | string | undefined, field: st
     return TRAINER_EDITABLE_FIELDS.includes(field);
   }
 
-  if (roleUpper === "PLAYER") {
+  if (roleUpper === "PLAYER" || roleUpper === "GOAL_KEEPER") {
     return PLAYER_EDITABLE_FIELDS.includes(field);
   }
 

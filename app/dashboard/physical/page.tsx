@@ -206,7 +206,7 @@ export default function PhysicalPrepPage() {
     );
   }
 
-  if (!isAuthenticated || user?.role !== "PLAYER") {
+  if (!isAuthenticated || (user?.role !== "PLAYER" && user?.role !== "GOAL_KEEPER")) {
     return null;
   }
 

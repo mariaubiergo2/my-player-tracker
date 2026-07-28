@@ -87,7 +87,7 @@ export async function createMatch(prevState: any, formData: FormData) {
     return { message: 'Unauthorized' };
   }
 
-  const isPlayer = currentUser.role === "PLAYER";
+  const isPlayer = currentUser.role === "PLAYER" || currentUser.role === "GOAL_KEEPER";
   const isTrainer = currentUser.role === "TRAINER";
   const isAdmin = currentUser.role === "ADMIN";
 
@@ -355,7 +355,7 @@ export async function updateMatch(matchId: string, updates: any) {
       return { success: false, error: "Unauthorized to edit this match" };
     }
 
-    if (currentUser.role === "PLAYER") {
+    if (currentUser.role === "PLAYER" || currentUser.role === "GOAL_KEEPER") {
       const kitColor = updates.kitColor;
       const shirtNumber = updates.shirtNumber;
       const position = updates.position;
@@ -483,14 +483,14 @@ export async function getSelectablePlayers() {
 
     if (currentUser.role === "ADMIN") {
       const players = await prisma.user.findMany({
-        where: { role: "PLAYER" },
+        where: { role: { in: ["PLAYER", "GOAL_KEEPER"] } },
         select: { id: true, name: true, surname: true, email: true },
         orderBy: { name: "asc" },
       });
       return { success: true, players };
     } else if (currentUser.role === "TRAINER") {
       const players = await prisma.user.findMany({
-        where: { role: "PLAYER", trainerId: currentUser.userId },
+        where: { role: { in: ["PLAYER", "GOAL_KEEPER"] }, trainerId: currentUser.userId },
         select: { id: true, name: true, surname: true, email: true },
         orderBy: { name: "asc" },
       });

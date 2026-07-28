@@ -1,0 +1,7 @@
+-- AlterEnum
+ALTER TYPE "UserRole" ADD VALUE 'GOAL_KEEPER';
+
+-- AlterTable
+ALTER TABLE "matches" ALTER COLUMN "goals" SET DEFAULT 0,
+ALTER COLUMN "assists" SET DEFAULT 0,
+ALTER COLUMN "minutes_played" SET DATA TYPE TEXT;

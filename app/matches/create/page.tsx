@@ -65,6 +65,7 @@ export default function NewMatchPage() {
   }
 
   const role = user.role
+  const isPlayerLike = role === "PLAYER" || role === "GOAL_KEEPER"
 
   return (
     <section className="container mx-auto px-6 py-10 animate-fade-in">
@@ -88,7 +89,7 @@ export default function NewMatchPage() {
           {/* Left Column: Player Selection & Match details (2/3 width) */}
           <div className="lg:col-span-2 space-y-6">
             {/* Selected Player Dropdown / Relation Fields */}
-            {role !== "PLAYER" && (
+            {!isPlayerLike && (
               <div className="card bg-base-100 shadow-md border border-base-200">
                 <div className="card-body">
                   <h2 className="card-title">{t("match_form.player")}</h2>
@@ -114,7 +115,7 @@ export default function NewMatchPage() {
             )}
 
             {/* Hidden Input for Player Role */}
-            {role === "PLAYER" && (
+            {isPlayerLike && (
               <input type="hidden" name="playerId" value={user.id} />
             )}
 
@@ -305,7 +306,7 @@ export default function NewMatchPage() {
             </div>
 
             {/* Review Card */}
-            {role !== "PLAYER" && (
+            {!isPlayerLike && (
               <div className="card bg-base-100 shadow-md border border-base-200">
                 <div className="card-body">
                   <h2 className="card-title">{t("match_details.review_status")}</h2>
@@ -350,7 +351,7 @@ export default function NewMatchPage() {
                 <div className="form-control w-full">
                   <label className="label">
                     <span className="label-text font-semibold">
-                      {t("match_form.kit_color")} {role === "PLAYER" && " *"}
+                      {t("match_form.kit_color")} {isPlayerLike && " *"}
                     </span>
                   </label>
                   <input
@@ -358,14 +359,14 @@ export default function NewMatchPage() {
                     className="input input-bordered w-full"
                     name="kitColor"
                     disabled={!canEditMatchField(role, "kitColor")}
-                    required={role === "PLAYER"}
+                    required={isPlayerLike}
                   />
                 </div>
 
                 <div className="form-control w-full">
                   <label className="label">
                     <span className="label-text font-semibold">
-                      {t("match_form.shirt_number")} {role === "PLAYER" && " *"}
+                      {t("match_form.shirt_number")} {isPlayerLike && " *"}
                     </span>
                   </label>
                   <input
@@ -373,14 +374,14 @@ export default function NewMatchPage() {
                     className="input input-bordered w-full"
                     name="shirtNumber"
                     disabled={!canEditMatchField(role, "shirtNumber")}
-                    required={role === "PLAYER"}
+                    required={isPlayerLike}
                   />
                 </div>
 
                 <div className="form-control w-full">
                   <label className="label">
                     <span className="label-text font-semibold">
-                      {t("match_form.position")} {role === "PLAYER" && " *"}
+                      {t("match_form.position")} {isPlayerLike && " *"}
                     </span>
                   </label>
                   <input
@@ -388,14 +389,14 @@ export default function NewMatchPage() {
                     className="input input-bordered w-full"
                     name="position"
                     disabled={!canEditMatchField(role, "position")}
-                    required={role === "PLAYER"}
+                    required={isPlayerLike}
                   />
                 </div>
 
                 <div className="form-control w-full">
                   <label className="label">
                     <span className="label-text font-semibold">
-                      {t("match_form.match_url")} {role === "PLAYER" && " *"}
+                      {t("match_form.match_url")} {isPlayerLike && " *"}
                     </span>
                   </label>
                   <input
@@ -404,7 +405,7 @@ export default function NewMatchPage() {
                     className="input input-bordered w-full"
                     name="matchUrl"
                     disabled={!canEditMatchField(role, "matchUrl")}
-                    required={role === "PLAYER"}
+                    required={isPlayerLike}
                   />
                 </div>
               </div>
@@ -457,7 +458,7 @@ export default function NewMatchPage() {
                 </div>
               </div>
 
-              {role !== "PLAYER" && (
+              {!isPlayerLike && (
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
                   <div className="form-control w-full">
                     <label className="label">
@@ -516,7 +517,7 @@ export default function NewMatchPage() {
           </div>
 
           {/* Development / Strengths etc. */}
-          {role !== "PLAYER" && (
+          {!isPlayerLike && (
             <div className="card bg-base-100 shadow-md border border-base-200">
               <div className="card-body">
                 <h2 className="card-title">{t("match_form.analysis_section")}</h2>
@@ -567,7 +568,7 @@ export default function NewMatchPage() {
               <h2 className="card-title">{t("match_details.feedback_title")}</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {role !== "PLAYER" && (
+                {!isPlayerLike && (
                   <>
                     <div className="form-control w-full">
                       <label className="label">
@@ -611,7 +612,7 @@ export default function NewMatchPage() {
           </div>
 
           {/* Tactical Actions */}
-          {role !== "PLAYER" && (
+          {!isPlayerLike && (
             <div className="card bg-base-100 shadow-md border border-base-200">
               <div className="card-body">
                 <h2 className="card-title">{t("match_form.tactical_actions_section")}</h2>

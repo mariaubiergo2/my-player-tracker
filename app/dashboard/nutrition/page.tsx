@@ -250,7 +250,7 @@ export default function NutritionPage() {
     );
   }
 
-  if (!isAuthenticated || user?.role !== "PLAYER") {
+  if (!isAuthenticated || (user?.role !== "PLAYER" && user?.role !== "GOAL_KEEPER")) {
     return null;
   }
 

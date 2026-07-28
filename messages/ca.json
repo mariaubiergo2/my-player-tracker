@@ -58,6 +58,7 @@
     "type_friendly": "Amistós",
     "type_training": "Entrenament",
     "role_player": "Jugador",
+    "role_goal_keeper": "Porter",
     "role_trainer": "Entrenador",
     "role_admin": "Administrador"
   },
@@ -565,6 +566,7 @@
     "send": "Enviar Correu",
     "no_messages": "Encara no hi ha correus registrats en aquest intercanvi.",
     "role_player": "Jugador",
+    "role_goal_keeper": "Porter",
     "role_trainer": "Entrenador",
     "role_admin": "Administrador",
     "disclaimer": "Aquest canal està estructurat com un intercanvi formal de correus electrònics. Si us plau, mantén un to professional.",

@@ -58,6 +58,7 @@
     "type_friendly": "Friendly",
     "type_training": "Training",
     "role_player": "Player",
+    "role_goal_keeper": "Goal Keeper",
     "role_trainer": "Trainer",
     "role_admin": "Admin"
   },
@@ -565,6 +566,7 @@
     "send": "Send Email",
     "no_messages": "No emails registered in this exchange yet.",
     "role_player": "Player",
+    "role_goal_keeper": "Goal Keeper",
     "role_trainer": "Trainer",
     "role_admin": "Administrator",
     "disclaimer": "This channel is structured as a formal exchange of email messages. Please maintain a professional tone.",

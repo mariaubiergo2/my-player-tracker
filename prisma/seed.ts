@@ -56,9 +56,25 @@ async function main() {
       surname: "User",
       role: UserRole.PLAYER,
       phone: "+34 600 000 002",
+      trainerId: trainer.id,
     },
   });
   console.log(`Created player: ${player.email}`);
+
+  // 3.5 Create Goalkeeper
+  const goalkeeperPassword = await bcrypt.hash("goalkeeperpassword", saltRounds);
+  const goalkeeper = await prisma.user.create({
+    data: {
+      email: "goalkeeper@tracker.com",
+      password: goalkeeperPassword,
+      name: "Goal Keeper",
+      surname: "User",
+      role: UserRole.GOAL_KEEPER,
+      phone: "+34 600 000 003",
+      trainerId: trainer.id,
+    },
+  });
+  console.log(`Created goalkeeper: ${goalkeeper.email}`);
 
   // 4. Create some Matches
   console.log("Creating sample matches...");

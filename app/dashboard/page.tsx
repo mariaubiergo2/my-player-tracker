@@ -218,7 +218,7 @@ export default function DashboardPage() {
                 <MatchCard
                   key={match.id}
                   match={match as any}
-                  role="PLAYER"
+                  role={(user?.role as "PLAYER" | "GOAL_KEEPER" | "TRAINER") || "PLAYER"}
                   isExpanded={expandedMatchId === match.id}
                   onToggleExpand={() => toggleMatchExpansion(match.id)}
                   onDelete={handleDelete}

@@ -234,6 +234,8 @@ export default function AdminUsersPage() {
         const localizedRole =
           newRole === "PLAYER"
             ? t("common.role_player")
+            : newRole === "GOAL_KEEPER"
+            ? t("common.role_goal_keeper")
             : newRole === "TRAINER"
             ? t("common.role_trainer")
             : t("common.role_admin");
@@ -266,6 +268,7 @@ export default function AdminUsersPage() {
       case "TRAINER":
         return "badge badge-info gap-1 font-semibold text-white";
       case "PLAYER":
+      case "GOAL_KEEPER":
         return "badge badge-success gap-1 font-semibold text-white";
       default:
         return "badge badge-ghost";
@@ -347,6 +350,7 @@ export default function AdminUsersPage() {
               <option value="ADMIN" className="bg-base-100 text-base-content">{t("admin_users.admins")}</option>
               <option value="TRAINER" className="bg-base-100 text-base-content">{t("admin_users.trainers")}</option>
               <option value="PLAYER" className="bg-base-100 text-base-content">{t("admin_users.players")}</option>
+              <option value="GOAL_KEEPER" className="bg-base-100 text-base-content">{t("common.role_goal_keeper")}</option>
             </select>
           </div>
         </div>
@@ -409,6 +413,7 @@ export default function AdminUsersPage() {
                     <div className="flex items-center gap-2">
                       <span className={getRoleBadgeClass(u.role)}>
                         {u.role === "PLAYER" && t("common.role_player")}
+                        {u.role === "GOAL_KEEPER" && t("common.role_goal_keeper")}
                         {u.role === "TRAINER" && t("common.role_trainer")}
                         {u.role === "ADMIN" && t("common.role_admin")}
                       </span>
@@ -423,6 +428,9 @@ export default function AdminUsersPage() {
                       >
                         <option value="PLAYER" className="bg-base-100 text-base-content">
                           {t("common.role_player")}
+                        </option>
+                        <option value="GOAL_KEEPER" className="bg-base-100 text-base-content">
+                          {t("common.role_goal_keeper")}
                         </option>
                         <option value="TRAINER" className="bg-base-100 text-base-content">
                           {t("common.role_trainer")}
@@ -535,6 +543,7 @@ export default function AdminUsersPage() {
                     onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
                   >
                     <option value="PLAYER" className="bg-base-100 text-base-content">{t("common.role_player")}</option>
+                    <option value="GOAL_KEEPER" className="bg-base-100 text-base-content">{t("common.role_goal_keeper")}</option>
                     <option value="TRAINER" className="bg-base-100 text-base-content">{t("common.role_trainer")}</option>
                     <option value="ADMIN" className="bg-base-100 text-base-content">{t("common.role_admin")}</option>
                   </select>
@@ -672,6 +681,7 @@ export default function AdminUsersPage() {
                     title={selectedUser.id === user.id ? t("admin_users.cannot_demote_self") : t("admin_users.modify_role")}
                   >
                     <option value="PLAYER" className="bg-base-100 text-base-content">{t("common.role_player")}</option>
+                    <option value="GOAL_KEEPER" className="bg-base-100 text-base-content">{t("common.role_goal_keeper")}</option>
                     <option value="TRAINER" className="bg-base-100 text-base-content">{t("common.role_trainer")}</option>
                     <option value="ADMIN" className="bg-base-100 text-base-content">{t("common.role_admin")}</option>
                   </select>
