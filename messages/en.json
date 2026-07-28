@@ -318,7 +318,7 @@
   },
   "match_form": {
     "create_title": "Create New Match",
-    "create_subtitle": "Log match details and initial metrics.",
+    "create_subtitle": "Log the match or training details, include the video you want analyzed, and the initial metrics.",
     "edit_title": "Edit Match",
     "edit_subtitle": "Update details, add trainer comments, or write player reflections.",
     "basic_info": "Basic Information",
@@ -360,6 +360,7 @@
     "save_btn": "Save Changes",
     "submitting": "Submitting...",
     "error_name_date": "Match name and date are required.",
+    "error_player_fields": "Clothing, Shirt Number, Position, and Match URL are required for players.",
     "success_create": "Match created successfully!",
     "success_update": "Match updated successfully!",
     "offensive_actions_own_half": "Offensive actions in own half",

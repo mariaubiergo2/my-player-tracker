@@ -305,35 +305,37 @@ export default function NewMatchPage() {
             </div>
 
             {/* Review Card */}
-            <div className="card bg-base-100 shadow-md border border-base-200">
-              <div className="card-body">
-                <h2 className="card-title">{t("match_details.review_status")}</h2>
-                <div className="space-y-4">
-                  <label className="label cursor-pointer justify-start gap-3">
-                    <input
-                      name="isReviewed"
-                      type="checkbox"
-                      className="checkbox checkbox-primary"
-                      disabled={!canEditMatchField(role, "isReviewed")}
-                    />
-                    <span className="label-text font-semibold">{t("match_form.mark_reviewed")}</span>
-                  </label>
-
-                  <div className="form-control w-full">
-                    <label className="label">
-                      <span className="label-text font-semibold text-xs text-base-content/60">{t("match_details.reviewed_at_label")}</span>
+            {role !== "PLAYER" && (
+              <div className="card bg-base-100 shadow-md border border-base-200">
+                <div className="card-body">
+                  <h2 className="card-title">{t("match_details.review_status")}</h2>
+                  <div className="space-y-4">
+                    <label className="label cursor-pointer justify-start gap-3">
+                      <input
+                        name="isReviewed"
+                        type="checkbox"
+                        className="checkbox checkbox-primary"
+                        disabled={!canEditMatchField(role, "isReviewed")}
+                      />
+                      <span className="label-text font-semibold">{t("match_form.mark_reviewed")}</span>
                     </label>
-                    <input
-                      placeholder={t("match_details.reviewed_at_label")}
-                      name="reviewedAt"
-                      type="datetime-local"
-                      className="input input-bordered w-full"
-                      disabled={!canEditMatchField(role, "reviewedAt")}
-                    />
+
+                    <div className="form-control w-full">
+                      <label className="label">
+                        <span className="label-text font-semibold text-xs text-base-content/60">{t("match_details.reviewed_at_label")}</span>
+                      </label>
+                      <input
+                        placeholder={t("match_details.reviewed_at_label")}
+                        name="reviewedAt"
+                        type="datetime-local"
+                        className="input input-bordered w-full"
+                        disabled={!canEditMatchField(role, "reviewedAt")}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -347,43 +349,54 @@ export default function NewMatchPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="form-control w-full">
                   <label className="label">
-                    <span className="label-text font-semibold">{t("match_form.kit_color")}</span>
+                    <span className="label-text font-semibold">
+                      {t("match_form.kit_color")} {role === "PLAYER" && " *"}
+                    </span>
                   </label>
                   <input
                     placeholder="ej. Camiseta verde, medias blancas"
                     className="input input-bordered w-full"
                     name="kitColor"
                     disabled={!canEditMatchField(role, "kitColor")}
+                    required={role === "PLAYER"}
                   />
                 </div>
 
                 <div className="form-control w-full">
                   <label className="label">
-                    <span className="label-text font-semibold">{t("match_form.shirt_number")}</span>
+                    <span className="label-text font-semibold">
+                      {t("match_form.shirt_number")} {role === "PLAYER" && " *"}
+                    </span>
                   </label>
                   <input
                     placeholder="ej. 10"
                     className="input input-bordered w-full"
                     name="shirtNumber"
                     disabled={!canEditMatchField(role, "shirtNumber")}
+                    required={role === "PLAYER"}
                   />
                 </div>
 
                 <div className="form-control w-full">
                   <label className="label">
-                    <span className="label-text font-semibold">{t("match_form.position")}</span>
+                    <span className="label-text font-semibold">
+                      {t("match_form.position")} {role === "PLAYER" && " *"}
+                    </span>
                   </label>
                   <input
                     placeholder="ej. Mediocentro, Interior izquierdo"
                     className="input input-bordered w-full"
                     name="position"
                     disabled={!canEditMatchField(role, "position")}
+                    required={role === "PLAYER"}
                   />
                 </div>
 
                 <div className="form-control w-full">
                   <label className="label">
-                    <span className="label-text font-semibold">{t("match_form.match_url")}</span>
+                    <span className="label-text font-semibold">
+                      {t("match_form.match_url")} {role === "PLAYER" && " *"}
+                    </span>
                   </label>
                   <input
                     type="url"
@@ -391,6 +404,7 @@ export default function NewMatchPage() {
                     className="input input-bordered w-full"
                     name="matchUrl"
                     disabled={!canEditMatchField(role, "matchUrl")}
+                    required={role === "PLAYER"}
                   />
                 </div>
               </div>
@@ -443,105 +457,109 @@ export default function NewMatchPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">{t("common.mark")}</span>
-                  </label>
-                  <input
-                    placeholder={t("common.mark")}
-                    type="number"
-                    className="input input-bordered w-full"
-                    name="mark"
-                    disabled={!canEditMatchField(role, "mark")}
-                  />
-                </div>
+              {role !== "PLAYER" && (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold">{t("common.mark")}</span>
+                    </label>
+                    <input
+                      placeholder={t("common.mark")}
+                      type="number"
+                      className="input input-bordered w-full"
+                      name="mark"
+                      disabled={!canEditMatchField(role, "mark")}
+                    />
+                  </div>
 
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">{t("common.intensity")}</span>
-                  </label>
-                  <input
-                    placeholder={t("common.intensity")}
-                    type="number"
-                    className="input input-bordered w-full"
-                    name="intensity"
-                    disabled={!canEditMatchField(role, "intensity")}
-                  />
-                </div>
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold">{t("common.intensity")}</span>
+                    </label>
+                    <input
+                      placeholder={t("common.intensity")}
+                      type="number"
+                      className="input input-bordered w-full"
+                      name="intensity"
+                      disabled={!canEditMatchField(role, "intensity")}
+                    />
+                  </div>
 
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">{t("common.attitude")}</span>
-                  </label>
-                  <input
-                    placeholder={t("common.attitude")}
-                    type="number"
-                    className="input input-bordered w-full"
-                    name="attitude"
-                    disabled={!canEditMatchField(role, "attitude")}
-                  />
-                </div>
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold">{t("common.attitude")}</span>
+                    </label>
+                    <input
+                      placeholder={t("common.attitude")}
+                      type="number"
+                      className="input input-bordered w-full"
+                      name="attitude"
+                      disabled={!canEditMatchField(role, "attitude")}
+                    />
+                  </div>
 
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">{t("common.performance")}</span>
-                  </label>
-                  <input
-                    placeholder={t("common.performance")}
-                    type="number"
-                    className="input input-bordered w-full"
-                    name="performance"
-                    disabled={!canEditMatchField(role, "performance")}
-                  />
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold">{t("common.performance")}</span>
+                    </label>
+                    <input
+                      placeholder={t("common.performance")}
+                      type="number"
+                      className="input input-bordered w-full"
+                      name="performance"
+                      disabled={!canEditMatchField(role, "performance")}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
           {/* Development / Strengths etc. */}
-          <div className="card bg-base-100 shadow-md border border-base-200">
-            <div className="card-body">
-              <h2 className="card-title">{t("match_form.analysis_section")}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold text-success">{t("match_form.strengths")}</span>
-                  </label>
-                  <textarea
-                    placeholder={t("match_form.strengths")}
-                    className="textarea textarea-bordered w-full"
-                    name="strengths"
-                    disabled={!canEditMatchField(role, "strengths")}
-                  />
-                </div>
+          {role !== "PLAYER" && (
+            <div className="card bg-base-100 shadow-md border border-base-200">
+              <div className="card-body">
+                <h2 className="card-title">{t("match_form.analysis_section")}</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold text-success">{t("match_form.strengths")}</span>
+                    </label>
+                    <textarea
+                      placeholder={t("match_form.strengths")}
+                      className="textarea textarea-bordered w-full"
+                      name="strengths"
+                      disabled={!canEditMatchField(role, "strengths")}
+                    />
+                  </div>
 
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold text-warning">{t("match_form.weaknesses")}</span>
-                  </label>
-                  <textarea
-                    placeholder={t("match_form.weaknesses")}
-                    className="textarea textarea-bordered w-full"
-                    name="weaknesses"
-                    disabled={!canEditMatchField(role, "weaknesses")}
-                  />
-                </div>
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold text-warning">{t("match_form.weaknesses")}</span>
+                    </label>
+                    <textarea
+                      placeholder={t("match_form.weaknesses")}
+                      className="textarea textarea-bordered w-full"
+                      name="weaknesses"
+                      disabled={!canEditMatchField(role, "weaknesses")}
+                    />
+                  </div>
 
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold text-info">{t("match_form.improvement")}</span>
-                  </label>
-                  <textarea
-                    placeholder={t("match_form.improvement")}
-                    className="textarea textarea-bordered w-full"
-                    name="improvementAreas"
-                    disabled={!canEditMatchField(role, "improvementAreas")}
-                  />
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold text-info">{t("match_form.improvement")}</span>
+                    </label>
+                    <textarea
+                      placeholder={t("match_form.improvement")}
+                      className="textarea textarea-bordered w-full"
+                      name="improvementAreas"
+                      disabled={!canEditMatchField(role, "improvementAreas")}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Feedback & Comments */}
           <div className="card bg-base-100 shadow-md border border-base-200">
@@ -549,29 +567,33 @@ export default function NewMatchPage() {
               <h2 className="card-title">{t("match_details.feedback_title")}</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">{t("match_details.comment_label")}</span>
-                  </label>
-                  <textarea
-                    placeholder={t("match_details.comment_label")}
-                    className="textarea textarea-bordered w-full"
-                    name="comment"
-                    disabled={!canEditMatchField(role, "comment")}
-                  />
-                </div>
+                {role !== "PLAYER" && (
+                  <>
+                    <div className="form-control w-full">
+                      <label className="label">
+                        <span className="label-text font-semibold">{t("match_details.comment_label")}</span>
+                      </label>
+                      <textarea
+                        placeholder={t("match_details.comment_label")}
+                        className="textarea textarea-bordered w-full"
+                        name="comment"
+                        disabled={!canEditMatchField(role, "comment")}
+                      />
+                    </div>
 
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">{t("match_details.trainer_feedback_label")}</span>
-                  </label>
-                  <textarea
-                    placeholder={t("match_details.trainer_feedback_label")}
-                    className="textarea textarea-bordered w-full"
-                    name="trainerFeedback"
-                    disabled={!canEditMatchField(role, "trainerFeedback")}
-                  />
-                </div>
+                    <div className="form-control w-full">
+                      <label className="label">
+                        <span className="label-text font-semibold">{t("match_details.trainer_feedback_label")}</span>
+                      </label>
+                      <textarea
+                        placeholder={t("match_details.trainer_feedback_label")}
+                        className="textarea textarea-bordered w-full"
+                        name="trainerFeedback"
+                        disabled={!canEditMatchField(role, "trainerFeedback")}
+                      />
+                    </div>
+                  </>
+                )}
 
                 <div className="form-control w-full md:col-span-2">
                   <label className="label">
@@ -589,61 +611,63 @@ export default function NewMatchPage() {
           </div>
 
           {/* Tactical Actions */}
-          <div className="card bg-base-100 shadow-md border border-base-200">
-            <div className="card-body">
-              <h2 className="card-title">{t("match_form.tactical_actions_section")}</h2>
+          {role !== "PLAYER" && (
+            <div className="card bg-base-100 shadow-md border border-base-200">
+              <div className="card-body">
+                <h2 className="card-title">{t("match_form.tactical_actions_section")}</h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">{t("match_form.offensive_actions_own_half")}</span>
-                  </label>
-                  <textarea
-                    placeholder={t("match_form.offensive_actions_own_half")}
-                    className="textarea textarea-bordered w-full"
-                    name="offensiveActionsOwnHalf"
-                    disabled={!canEditMatchField(role, "offensiveActionsOwnHalf")}
-                  />
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold">{t("match_form.offensive_actions_own_half")}</span>
+                    </label>
+                    <textarea
+                      placeholder={t("match_form.offensive_actions_own_half")}
+                      className="textarea textarea-bordered w-full"
+                      name="offensiveActionsOwnHalf"
+                      disabled={!canEditMatchField(role, "offensiveActionsOwnHalf")}
+                    />
+                  </div>
 
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">{t("match_form.offensive_actions_opponent_half")}</span>
-                  </label>
-                  <textarea
-                    placeholder={t("match_form.offensive_actions_opponent_half")}
-                    className="textarea textarea-bordered w-full"
-                    name="offensiveActionsOpponentHalf"
-                    disabled={!canEditMatchField(role, "offensiveActionsOpponentHalf")}
-                  />
-                </div>
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold">{t("match_form.offensive_actions_opponent_half")}</span>
+                    </label>
+                    <textarea
+                      placeholder={t("match_form.offensive_actions_opponent_half")}
+                      className="textarea textarea-bordered w-full"
+                      name="offensiveActionsOpponentHalf"
+                      disabled={!canEditMatchField(role, "offensiveActionsOpponentHalf")}
+                    />
+                  </div>
 
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">{t("match_form.defensive_actions_own_half")}</span>
-                  </label>
-                  <textarea
-                    placeholder={t("match_form.defensive_actions_own_half")}
-                    className="textarea textarea-bordered w-full"
-                    name="defensiveActionsOwnHalf"
-                    disabled={!canEditMatchField(role, "defensiveActionsOwnHalf")}
-                  />
-                </div>
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold">{t("match_form.defensive_actions_own_half")}</span>
+                    </label>
+                    <textarea
+                      placeholder={t("match_form.defensive_actions_own_half")}
+                      className="textarea textarea-bordered w-full"
+                      name="defensiveActionsOwnHalf"
+                      disabled={!canEditMatchField(role, "defensiveActionsOwnHalf")}
+                    />
+                  </div>
 
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">{t("match_form.defensive_actions_opponent_half")}</span>
-                  </label>
-                  <textarea
-                    placeholder={t("match_form.defensive_actions_opponent_half")}
-                    className="textarea textarea-bordered w-full"
-                    name="defensiveActionsOpponentHalf"
-                    disabled={!canEditMatchField(role, "defensiveActionsOpponentHalf")}
-                  />
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold">{t("match_form.defensive_actions_opponent_half")}</span>
+                    </label>
+                    <textarea
+                      placeholder={t("match_form.defensive_actions_opponent_half")}
+                      className="textarea textarea-bordered w-full"
+                      name="defensiveActionsOpponentHalf"
+                      disabled={!canEditMatchField(role, "defensiveActionsOpponentHalf")}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </form>
     </section>

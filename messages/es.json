@@ -318,7 +318,7 @@
   },
   "match_form": {
     "create_title": "Crear nuevo partido",
-    "create_subtitle": "Registra los detalles del partido y las métricas iniciales.",
+    "create_subtitle": "Registra los de talles del partido o entrenamiento, incluye el vídeo que quieres que se analice y las métricas iniciales.",
     "edit_title": "Editar partido",
     "edit_subtitle": "Actualiza detalles, añade comentarios del entrenador o reflexiones del jugador.",
     "basic_info": "Información básica",
@@ -360,6 +360,7 @@
     "save_btn": "Guardar cambios",
     "submitting": "Procesando...",
     "error_name_date": "El nombre del partido y la fecha son obligatorios.",
+    "error_player_fields": "Los campos Vestimenta, Dorsal, Posición y Enlace/URL son obligatorios para los jugadores.",
     "success_create": "¡Partido creado correctamente!",
     "success_update": "¡Partido actualizado correctamente!",
     "offensive_actions_own_half": "Acciones ofensivas en campo propio",

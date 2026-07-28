@@ -89,6 +89,13 @@ export default function EditMatchForm({
       return
     }
 
+    if (currentUserRole === "PLAYER") {
+      if (!kitColor.trim() || !shirtNumber.trim() || !position.trim() || !matchUrl.trim()) {
+        setError(t("match_form.error_player_fields"))
+        return
+      }
+    }
+
     setIsSubmitting(true)
 
     try {
@@ -370,36 +377,38 @@ export default function EditMatchForm({
             </div>
 
             {/* Review Card */}
-            <div className="card bg-base-100 shadow-md border border-base-200">
-              <div className="card-body">
-                <h2 className="card-title">{t("match_details.review_status")}</h2>
-                <div className="space-y-4">
-                  <label className="label cursor-pointer justify-start gap-3">
-                    <input
-                      type="checkbox"
-                      className="checkbox checkbox-primary"
-                      checked={isReviewed}
-                      onChange={(e) => setIsReviewed(e.target.checked)}
-                      disabled={!canEditMatchField(currentUserRole, "isReviewed")}
-                    />
-                    <span className="label-text font-semibold">{t("match_form.mark_reviewed")}</span>
-                  </label>
-
-                  <div className="form-control w-full">
-                    <label className="label">
-                      <span className="label-text font-semibold text-xs text-base-content/60">{t("match_details.reviewed_at_label")}</span>
+            {currentUserRole !== "PLAYER" && (
+              <div className="card bg-base-100 shadow-md border border-base-200">
+                <div className="card-body">
+                  <h2 className="card-title">{t("match_details.review_status")}</h2>
+                  <div className="space-y-4">
+                    <label className="label cursor-pointer justify-start gap-3">
+                      <input
+                        type="checkbox"
+                        className="checkbox checkbox-primary"
+                        checked={isReviewed}
+                        onChange={(e) => setIsReviewed(e.target.checked)}
+                        disabled={!canEditMatchField(currentUserRole, "isReviewed")}
+                      />
+                      <span className="label-text font-semibold">{t("match_form.mark_reviewed")}</span>
                     </label>
-                    <input
-                      type="datetime-local"
-                      className="input input-bordered w-full"
-                      value={reviewedAt}
-                      onChange={(e) => setReviewedAt(e.target.value)}
-                      disabled={!canEditMatchField(currentUserRole, "reviewedAt")}
-                    />
+
+                    <div className="form-control w-full">
+                      <label className="label">
+                        <span className="label-text font-semibold text-xs text-base-content/60">{t("match_details.reviewed_at_label")}</span>
+                      </label>
+                      <input
+                        type="datetime-local"
+                        className="input input-bordered w-full"
+                        value={reviewedAt}
+                        onChange={(e) => setReviewedAt(e.target.value)}
+                        disabled={!canEditMatchField(currentUserRole, "reviewedAt")}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -413,7 +422,9 @@ export default function EditMatchForm({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="form-control w-full">
                   <label className="label">
-                    <span className="label-text font-semibold">{t("match_form.kit_color")}</span>
+                    <span className="label-text font-semibold">
+                      {t("match_form.kit_color")} {currentUserRole === "PLAYER" && " *"}
+                    </span>
                   </label>
                   <input
                     placeholder="ej. Camiseta verde, medias blancas"
@@ -421,12 +432,15 @@ export default function EditMatchForm({
                     value={kitColor}
                     onChange={(e) => setKitColor(e.target.value)}
                     disabled={!canEditMatchField(currentUserRole, "kitColor")}
+                    required={currentUserRole === "PLAYER"}
                   />
                 </div>
 
                 <div className="form-control w-full">
                   <label className="label">
-                    <span className="label-text font-semibold">{t("match_form.shirt_number")}</span>
+                    <span className="label-text font-semibold">
+                      {t("match_form.shirt_number")} {currentUserRole === "PLAYER" && " *"}
+                    </span>
                   </label>
                   <input
                     placeholder="ej. 10"
@@ -434,12 +448,15 @@ export default function EditMatchForm({
                     value={shirtNumber}
                     onChange={(e) => setShirtNumber(e.target.value)}
                     disabled={!canEditMatchField(currentUserRole, "shirtNumber")}
+                    required={currentUserRole === "PLAYER"}
                   />
                 </div>
 
                 <div className="form-control w-full">
                   <label className="label">
-                    <span className="label-text font-semibold">{t("match_form.position")}</span>
+                    <span className="label-text font-semibold">
+                      {t("match_form.position")} {currentUserRole === "PLAYER" && " *"}
+                    </span>
                   </label>
                   <input
                     placeholder="ej. Mediocentro, Interior izquierdo"
@@ -447,12 +464,15 @@ export default function EditMatchForm({
                     value={position}
                     onChange={(e) => setPosition(e.target.value)}
                     disabled={!canEditMatchField(currentUserRole, "position")}
+                    required={currentUserRole === "PLAYER"}
                   />
                 </div>
 
                 <div className="form-control w-full">
                   <label className="label">
-                    <span className="label-text font-semibold">{t("match_form.match_url")}</span>
+                    <span className="label-text font-semibold">
+                      {t("match_form.match_url")} {currentUserRole === "PLAYER" && " *"}
+                    </span>
                   </label>
                   <input
                     type="url"
@@ -461,6 +481,7 @@ export default function EditMatchForm({
                     value={matchUrl}
                     onChange={(e) => setMatchUrl(e.target.value)}
                     disabled={!canEditMatchField(currentUserRole, "matchUrl")}
+                    required={currentUserRole === "PLAYER"}
                   />
                 </div>
               </div>
@@ -516,112 +537,116 @@ export default function EditMatchForm({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">{t("common.mark")}</span>
-                  </label>
-                  <input
-                    placeholder={t("common.mark")}
-                    type="number"
-                    className="input input-bordered w-full"
-                    value={mark}
-                    onChange={(e) => setMark(e.target.value)}
-                    disabled={!canEditMatchField(currentUserRole, "mark")}
-                  />
-                </div>
+              {currentUserRole !== "PLAYER" && (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold">{t("common.mark")}</span>
+                    </label>
+                    <input
+                      placeholder={t("common.mark")}
+                      type="number"
+                      className="input input-bordered w-full"
+                      value={mark}
+                      onChange={(e) => setMark(e.target.value)}
+                      disabled={!canEditMatchField(currentUserRole, "mark")}
+                    />
+                  </div>
 
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">{t("common.intensity")}</span>
-                  </label>
-                  <input
-                    placeholder={t("common.intensity")}
-                    type="number"
-                    className="input input-bordered w-full"
-                    value={intensity}
-                    onChange={(e) => setIntensity(e.target.value)}
-                    disabled={!canEditMatchField(currentUserRole, "intensity")}
-                  />
-                </div>
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold">{t("common.intensity")}</span>
+                    </label>
+                    <input
+                      placeholder={t("common.intensity")}
+                      type="number"
+                      className="input input-bordered w-full"
+                      value={intensity}
+                      onChange={(e) => setIntensity(e.target.value)}
+                      disabled={!canEditMatchField(currentUserRole, "intensity")}
+                    />
+                  </div>
 
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">{t("common.attitude")}</span>
-                  </label>
-                  <input
-                    placeholder={t("common.attitude")}
-                    type="number"
-                    className="input input-bordered w-full"
-                    value={attitude}
-                    onChange={(e) => setAttitude(e.target.value)}
-                    disabled={!canEditMatchField(currentUserRole, "attitude")}
-                  />
-                </div>
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold">{t("common.attitude")}</span>
+                    </label>
+                    <input
+                      placeholder={t("common.attitude")}
+                      type="number"
+                      className="input input-bordered w-full"
+                      value={attitude}
+                      onChange={(e) => setAttitude(e.target.value)}
+                      disabled={!canEditMatchField(currentUserRole, "attitude")}
+                    />
+                  </div>
 
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">{t("common.performance")}</span>
-                  </label>
-                  <input
-                    placeholder={t("common.performance")}
-                    type="number"
-                    className="input input-bordered w-full"
-                    value={performance}
-                    onChange={(e) => setPerformance(e.target.value)}
-                    disabled={!canEditMatchField(currentUserRole, "performance")}
-                  />
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold">{t("common.performance")}</span>
+                    </label>
+                    <input
+                      placeholder={t("common.performance")}
+                      type="number"
+                      className="input input-bordered w-full"
+                      value={performance}
+                      onChange={(e) => setPerformance(e.target.value)}
+                      disabled={!canEditMatchField(currentUserRole, "performance")}
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
 
           {/* Development / Strengths etc. */}
-          <div className="card bg-base-100 shadow-md border border-base-200">
-            <div className="card-body">
-              <h2 className="card-title">{t("match_form.analysis_section")}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold text-success">{t("match_form.strengths")}</span>
-                  </label>
-                  <textarea
-                    placeholder={t("match_form.strengths")}
-                    className="textarea textarea-bordered w-full"
-                    value={strengths}
-                    onChange={(e) => setStrengths(e.target.value)}
-                    disabled={!canEditMatchField(currentUserRole, "strengths")}
-                  />
-                </div>
+          {currentUserRole !== "PLAYER" && (
+            <div className="card bg-base-100 shadow-md border border-base-200">
+              <div className="card-body">
+                <h2 className="card-title">{t("match_form.analysis_section")}</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold text-success">{t("match_form.strengths")}</span>
+                    </label>
+                    <textarea
+                      placeholder={t("match_form.strengths")}
+                      className="textarea textarea-bordered w-full"
+                      value={strengths}
+                      onChange={(e) => setStrengths(e.target.value)}
+                      disabled={!canEditMatchField(currentUserRole, "strengths")}
+                    />
+                  </div>
 
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold text-warning">{t("match_form.weaknesses")}</span>
-                  </label>
-                  <textarea
-                    placeholder={t("match_form.weaknesses")}
-                    className="textarea textarea-bordered w-full"
-                    value={weaknesses}
-                    onChange={(e) => setWeaknesses(e.target.value)}
-                    disabled={!canEditMatchField(currentUserRole, "weaknesses")}
-                  />
-                </div>
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold text-warning">{t("match_form.weaknesses")}</span>
+                    </label>
+                    <textarea
+                      placeholder={t("match_form.weaknesses")}
+                      className="textarea textarea-bordered w-full"
+                      value={weaknesses}
+                      onChange={(e) => setWeaknesses(e.target.value)}
+                      disabled={!canEditMatchField(currentUserRole, "weaknesses")}
+                    />
+                  </div>
 
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold text-info">{t("match_form.improvement")}</span>
-                  </label>
-                  <textarea
-                    placeholder={t("match_form.improvement")}
-                    className="textarea textarea-bordered w-full"
-                    value={improvementAreas}
-                    onChange={(e) => setImprovementAreas(e.target.value)}
-                    disabled={!canEditMatchField(currentUserRole, "improvementAreas")}
-                  />
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold text-info">{t("match_form.improvement")}</span>
+                    </label>
+                    <textarea
+                      placeholder={t("match_form.improvement")}
+                      className="textarea textarea-bordered w-full"
+                      value={improvementAreas}
+                      onChange={(e) => setImprovementAreas(e.target.value)}
+                      disabled={!canEditMatchField(currentUserRole, "improvementAreas")}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Feedback & Comments */}
           <div className="card bg-base-100 shadow-md border border-base-200">
@@ -629,31 +654,35 @@ export default function EditMatchForm({
               <h2 className="card-title">{t("match_details.feedback_title")}</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">{t("match_details.comment_label")}</span>
-                  </label>
-                  <textarea
-                    placeholder={t("match_details.comment_label")}
-                    className="textarea textarea-bordered w-full"
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    disabled={!canEditMatchField(currentUserRole, "comment")}
-                  />
-                </div>
+                {currentUserRole !== "PLAYER" && (
+                  <>
+                    <div className="form-control w-full">
+                      <label className="label">
+                        <span className="label-text font-semibold">{t("match_details.comment_label")}</span>
+                      </label>
+                      <textarea
+                        placeholder={t("match_details.comment_label")}
+                        className="textarea textarea-bordered w-full"
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        disabled={!canEditMatchField(currentUserRole, "comment")}
+                      />
+                    </div>
 
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">{t("match_details.trainer_feedback_label")}</span>
-                  </label>
-                  <textarea
-                    placeholder={t("match_details.trainer_feedback_label")}
-                    className="textarea textarea-bordered w-full"
-                    value={trainerFeedback}
-                    onChange={(e) => setTrainerFeedback(e.target.value)}
-                    disabled={!canEditMatchField(currentUserRole, "trainerFeedback")}
-                  />
-                </div>
+                    <div className="form-control w-full">
+                      <label className="label">
+                        <span className="label-text font-semibold">{t("match_details.trainer_feedback_label")}</span>
+                      </label>
+                      <textarea
+                        placeholder={t("match_details.trainer_feedback_label")}
+                        className="textarea textarea-bordered w-full"
+                        value={trainerFeedback}
+                        onChange={(e) => setTrainerFeedback(e.target.value)}
+                        disabled={!canEditMatchField(currentUserRole, "trainerFeedback")}
+                      />
+                    </div>
+                  </>
+                )}
 
                 <div className="form-control w-full md:col-span-2">
                   <label className="label">
@@ -672,65 +701,67 @@ export default function EditMatchForm({
           </div>
 
           {/* Tactical Actions */}
-          <div className="card bg-base-100 shadow-md border border-base-200">
-            <div className="card-body">
-              <h2 className="card-title">{t("match_form.tactical_actions_section")}</h2>
+          {currentUserRole !== "PLAYER" && (
+            <div className="card bg-base-100 shadow-md border border-base-200">
+              <div className="card-body">
+                <h2 className="card-title">{t("match_form.tactical_actions_section")}</h2>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">{t("match_form.offensive_actions_own_half")}</span>
-                  </label>
-                  <textarea
-                    placeholder={t("match_form.offensive_actions_own_half")}
-                    className="textarea textarea-bordered w-full"
-                    value={offensiveActionsOwnHalf}
-                    onChange={(e) => setOffensiveActionsOwnHalf(e.target.value)}
-                    disabled={!canEditMatchField(currentUserRole, "offensiveActionsOwnHalf")}
-                  />
-                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold">{t("match_form.offensive_actions_own_half")}</span>
+                    </label>
+                    <textarea
+                      placeholder={t("match_form.offensive_actions_own_half")}
+                      className="textarea textarea-bordered w-full"
+                      value={offensiveActionsOwnHalf}
+                      onChange={(e) => setOffensiveActionsOwnHalf(e.target.value)}
+                      disabled={!canEditMatchField(currentUserRole, "offensiveActionsOwnHalf")}
+                    />
+                  </div>
 
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">{t("match_form.offensive_actions_opponent_half")}</span>
-                  </label>
-                  <textarea
-                    placeholder={t("match_form.offensive_actions_opponent_half")}
-                    className="textarea textarea-bordered w-full"
-                    value={offensiveActionsOpponentHalf}
-                    onChange={(e) => setOffensiveActionsOpponentHalf(e.target.value)}
-                    disabled={!canEditMatchField(currentUserRole, "offensiveActionsOpponentHalf")}
-                  />
-                </div>
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold">{t("match_form.offensive_actions_opponent_half")}</span>
+                    </label>
+                    <textarea
+                      placeholder={t("match_form.offensive_actions_opponent_half")}
+                      className="textarea textarea-bordered w-full"
+                      value={offensiveActionsOpponentHalf}
+                      onChange={(e) => setOffensiveActionsOpponentHalf(e.target.value)}
+                      disabled={!canEditMatchField(currentUserRole, "offensiveActionsOpponentHalf")}
+                    />
+                  </div>
 
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">{t("match_form.defensive_actions_own_half")}</span>
-                  </label>
-                  <textarea
-                    placeholder={t("match_form.defensive_actions_own_half")}
-                    className="textarea textarea-bordered w-full"
-                    value={defensiveActionsOwnHalf}
-                    onChange={(e) => setDefensiveActionsOwnHalf(e.target.value)}
-                    disabled={!canEditMatchField(currentUserRole, "defensiveActionsOwnHalf")}
-                  />
-                </div>
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold">{t("match_form.defensive_actions_own_half")}</span>
+                    </label>
+                    <textarea
+                      placeholder={t("match_form.defensive_actions_own_half")}
+                      className="textarea textarea-bordered w-full"
+                      value={defensiveActionsOwnHalf}
+                      onChange={(e) => setDefensiveActionsOwnHalf(e.target.value)}
+                      disabled={!canEditMatchField(currentUserRole, "defensiveActionsOwnHalf")}
+                    />
+                  </div>
 
-                <div className="form-control w-full">
-                  <label className="label">
-                    <span className="label-text font-semibold">{t("match_form.defensive_actions_opponent_half")}</span>
-                  </label>
-                  <textarea
-                    placeholder={t("match_form.defensive_actions_opponent_half")}
-                    className="textarea textarea-bordered w-full"
-                    value={defensiveActionsOpponentHalf}
-                    onChange={(e) => setDefensiveActionsOpponentHalf(e.target.value)}
-                    disabled={!canEditMatchField(currentUserRole, "defensiveActionsOpponentHalf")}
-                  />
+                  <div className="form-control w-full">
+                    <label className="label">
+                      <span className="label-text font-semibold">{t("match_form.defensive_actions_opponent_half")}</span>
+                    </label>
+                    <textarea
+                      placeholder={t("match_form.defensive_actions_opponent_half")}
+                      className="textarea textarea-bordered w-full"
+                      value={defensiveActionsOpponentHalf}
+                      onChange={(e) => setDefensiveActionsOpponentHalf(e.target.value)}
+                      disabled={!canEditMatchField(currentUserRole, "defensiveActionsOpponentHalf")}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </form>
 

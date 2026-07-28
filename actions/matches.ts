@@ -123,6 +123,19 @@ export async function createMatch(prevState: any, formData: FormData) {
     return { message: 'Missing required fields: name and date are required' };
   }
 
+  if (isPlayer) {
+    if (!kitColor || !shirtNumber || !position || !matchUrl) {
+      const cookieStore = await cookies();
+      const locale = (cookieStore.get("locale")?.value || "ca") as "ca" | "es" | "en";
+      const errorsMap = {
+        es: "Los campos Vestimenta, Dorsal, Posición y Enlace/URL son obligatorios para los jugadores.",
+        ca: "Els camps Vestimenta, Dorsal, Posició i Enllaç/URL són obligatoris per als jugadors.",
+        en: "Clothing, Shirt Number, Position, and Match URL are required for players."
+      };
+      return { message: errorsMap[locale] || errorsMap.ca };
+    }
+  }
+
   let redirectTarget = '/dashboard';
 
   try {
@@ -340,6 +353,29 @@ export async function updateMatch(matchId: string, updates: any) {
 
     if (!isPlayer && !isTrainer && !isAdmin) {
       return { success: false, error: "Unauthorized to edit this match" };
+    }
+
+    if (currentUser.role === "PLAYER") {
+      const kitColor = updates.kitColor;
+      const shirtNumber = updates.shirtNumber;
+      const position = updates.position;
+      const matchUrl = updates.matchUrl;
+
+      if (
+        (kitColor !== undefined && !kitColor) ||
+        (shirtNumber !== undefined && !shirtNumber) ||
+        (position !== undefined && !position) ||
+        (matchUrl !== undefined && !matchUrl)
+      ) {
+        const cookieStore = await cookies();
+        const locale = (cookieStore.get("locale")?.value || "ca") as "ca" | "es" | "en";
+        const errorsMap = {
+          es: "Los campos Vestimenta, Dorsal, Posición y Enlace/URL son obligatorios para los jugadores.",
+          ca: "Els camps Vestimenta, Dorsal, Posició i Enllaç/URL són obligatoris per als jugadors.",
+          en: "Clothing, Shirt Number, Position, and Match URL are required for players."
+        };
+        return { success: false, error: errorsMap[locale] || errorsMap.ca };
+      }
     }
 
     // Filter updates based on permissions

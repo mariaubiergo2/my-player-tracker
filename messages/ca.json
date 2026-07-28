@@ -318,7 +318,7 @@
   },
   "match_form": {
     "create_title": "Crear nou partit",
-    "create_subtitle": "Registra els detalls del partit i les mètriques inicials.",
+    "create_subtitle": "Registra els detalls del partit o entrenament, inclou el vídeo que vols que s'analitzi i les mètriques inicials.",
     "edit_title": "Editar partit",
     "edit_subtitle": "Actualitza detalls, afegeix comentaris de l'entrenador o reflexions del jugador.",
     "basic_info": "Informació bàsica",
@@ -360,6 +360,7 @@
     "save_btn": "Desar canvis",
     "submitting": "Processant...",
     "error_name_date": "El nom del partit i la data són obligatoris.",
+    "error_player_fields": "Els camps Vestimenta, Dorsal, Posició i Enllaç/URL són obligatoris per als jugadors.",
     "success_create": "Partit creat correctament!",
     "success_update": "Partit actualitzat correctament!",
     "offensive_actions_own_half": "Accions ofensives a camp propi",
