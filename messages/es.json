@@ -404,7 +404,11 @@
     "success_update": "¡Perfil actualizado correctamente!",
     "error_current_password": "Debes introducir la contraseña actual para definir una nueva.",
     "error_length": "La nueva contraseña debe tener al menos 6 caracteres.",
-    "error_match": "La nueva contraseña y la confirmación no coinciden."
+    "error_match": "La nueva contraseña y la confirmación no coinciden.",
+    "error_name_surname_required": "El nombre y los apellidos son obligatorios.",
+    "error_invalid_phone": "Por favor, introduce un número de teléfono válido con el código de país (ej. +34 600 000 000).",
+    "error_invalid_birth_date": "Por favor, introduce una fecha de nacimiento válida (no puede ser en el futuro ni anterior a 1900).",
+    "error_email_collision": "Esta dirección de correo ya está en uso por otra cuenta."
   },
   "trainer_players": {
     "title": "Directorio de jugadores",

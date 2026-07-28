@@ -261,6 +261,7 @@ export async function updateProfile(updates: {
   avatarUrl?: string | null;
   currentPassword?: string;
   newPassword?: string;
+  confirmPassword?: string;
 }) {
   try {
     const cookieStore = await cookies();
@@ -276,36 +277,66 @@ export async function updateProfile(updates: {
 
     const userId = payload.userId;
 
+    const nameTrimmed = updates.name?.trim();
+    const surnameTrimmed = updates.surname?.trim();
+    const emailTrimmed = updates.email?.toLowerCase().trim();
+
     // Validate base inputs
-    if (!updates.name || !updates.surname || !updates.email) {
+    if (!nameTrimmed || !surnameTrimmed || !emailTrimmed) {
       return { success: false, error: "First name, surname, and email are required fields." };
     }
 
     // Check email collision
-    const emailLower = updates.email.toLowerCase().trim();
     const collision = await prisma.user.findFirst({
-      where: { email: emailLower, NOT: { id: userId } },
+      where: { email: emailTrimmed, NOT: { id: userId } },
     });
     if (collision) {
       return { success: false, error: "This email address is already in use by another account." };
     }
 
+    // Phone validation: must have code starting with + and correct digits
+    if (updates.phone) {
+      const cleanedPhone = updates.phone.replace(/[-.\s()]/g, "");
+      if (!/^\+[1-9]\d{6,14}$/.test(cleanedPhone)) {
+        return { success: false, error: "Please enter a valid phone number including country code (e.g. +34 600 000 000)." };
+      }
+    }
+
+    // Birth date validation: well written, valid date, not in the future, not before 1900
+    if (updates.birthDate) {
+      const birthDateObj = new Date(updates.birthDate);
+      if (isNaN(birthDateObj.getTime())) {
+        return { success: false, error: "Please enter a valid date of birth." };
+      }
+      const now = new Date();
+      if (birthDateObj > now) {
+        return { success: false, error: "Date of birth cannot be in the future." };
+      }
+      const minDate = new Date("1900-01-01");
+      if (birthDateObj < minDate) {
+        return { success: false, error: "Date of birth cannot be before the year 1900." };
+      }
+    }
+
     // Prepare update data
     const data: any = {
-      name: updates.name.trim(),
-      surname: updates.surname.trim(),
-      email: emailLower,
+      name: nameTrimmed,
+      surname: surnameTrimmed,
+      email: emailTrimmed,
       phone: updates.phone?.trim() || null,
       birthDate: updates.birthDate ? new Date(updates.birthDate) : null,
       avatarUrl: updates.avatarUrl?.trim() || null,
     };
 
     // Handle password update if requested
-    if (updates.newPassword) {
+    if (updates.newPassword || updates.confirmPassword) {
+      if (updates.newPassword !== updates.confirmPassword) {
+        return { success: false, error: "New passwords do not match." };
+      }
       if (!updates.currentPassword) {
         return { success: false, error: "Current password is required to set a new password." };
       }
-      if (updates.newPassword.length < 6) {
+      if (!updates.newPassword || updates.newPassword.length < 6) {
         return { success: false, error: "New password must be at least 6 characters long." };
       }
 

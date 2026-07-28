@@ -88,14 +88,55 @@ export default function ProfilePage() {
     setSuccessMessage("");
     setErrorMessage("");
 
-    // Validate passwords if user wants to change password
-    if (formData.newPassword) {
+    // 1. Validate Name and Surname (obligatory and trimmed)
+    const trimmedName = formData.name.trim();
+    const trimmedSurname = formData.surname.trim();
+    if (!trimmedName || !trimmedSurname) {
+      setErrorMessage(t("profile_page.error_name_surname_required"));
+      setSaveLoading(false);
+      return;
+    }
+
+    // 2. Phone number validation (optional but must be valid E.164 with country code if filled)
+    if (formData.phone) {
+      const cleanedPhone = formData.phone.replace(/[-.\s()]/g, "");
+      if (!/^\+[1-9]\d{6,14}$/.test(cleanedPhone)) {
+        setErrorMessage(t("profile_page.error_invalid_phone"));
+        setSaveLoading(false);
+        return;
+      }
+    }
+
+    // 3. Birth date validation (optional but must be realistic and not in future)
+    if (formData.birthDate) {
+      const birthDateObj = new Date(formData.birthDate);
+      if (isNaN(birthDateObj.getTime())) {
+        setErrorMessage(t("profile_page.error_invalid_birth_date"));
+        setSaveLoading(false);
+        return;
+      }
+      const now = new Date();
+      if (birthDateObj > now) {
+        setErrorMessage(t("profile_page.error_invalid_birth_date"));
+        setSaveLoading(false);
+        return;
+      }
+      const minDate = new Date("1900-01-01");
+      if (birthDateObj < minDate) {
+        setErrorMessage(t("profile_page.error_invalid_birth_date"));
+        setSaveLoading(false);
+        return;
+      }
+    }
+
+    // 4. Validate passwords if user wants to change password (newPassword or confirmPassword are typed)
+    if (formData.newPassword || formData.confirmPassword) {
       if (!formData.currentPassword) {
         setErrorMessage(t("profile_page.error_current_password"));
         setSaveLoading(false);
         return;
       }
-      if (formData.newPassword.length < 6) {
+      if (!formData.newPassword || formData.newPassword.length < 6) {
         setErrorMessage(t("profile_page.error_length"));
         setSaveLoading(false);
         return;
@@ -109,14 +150,15 @@ export default function ProfilePage() {
 
     try {
       const res = await updateProfile({
-        name: formData.name,
-        surname: formData.surname,
+        name: trimmedName,
+        surname: trimmedSurname,
         email: formData.email,
         phone: formData.phone || null,
         birthDate: formData.birthDate || null,
         avatarUrl: formData.avatarUrl || null,
         currentPassword: formData.newPassword ? formData.currentPassword : undefined,
         newPassword: formData.newPassword ? formData.newPassword : undefined,
+        confirmPassword: formData.confirmPassword ? formData.confirmPassword : undefined,
       });
 
       if (res.success) {
@@ -131,7 +173,24 @@ export default function ProfilePage() {
         // Refresh auth state context to update Header immediately
         await checkAuth();
       } else {
-        setErrorMessage(res.error || t("common.error"));
+        // Map and translate common server-side validation error messages
+        let errorMsg = res.error || t("common.error");
+        if (res.error?.includes("already in use") || res.error?.includes("collision")) {
+          errorMsg = t("profile_page.error_email_collision");
+        } else if (res.error?.includes("Current password is required")) {
+          errorMsg = t("profile_page.error_current_password");
+        } else if (res.error?.includes("at least 6 characters")) {
+          errorMsg = t("profile_page.error_length");
+        } else if (res.error?.includes("do not match")) {
+          errorMsg = t("profile_page.error_match");
+        } else if (res.error?.includes("phone number")) {
+          errorMsg = t("profile_page.error_invalid_phone");
+        } else if (res.error?.includes("date of birth")) {
+          errorMsg = t("profile_page.error_invalid_birth_date");
+        } else if (res.error?.includes("required fields")) {
+          errorMsg = t("profile_page.error_name_surname_required");
+        }
+        setErrorMessage(errorMsg);
       }
     } catch (err) {
       console.error(err);
@@ -168,21 +227,6 @@ export default function ProfilePage() {
         </p>
       </div>
 
-      {/* Notifications */}
-      {successMessage && (
-        <div className="alert alert-success shadow-lg mb-6 border border-success/20" id="success-notification">
-          <div>
-            <span>✅ {successMessage}</span>
-          </div>
-        </div>
-      )}
-      {errorMessage && (
-        <div className="alert alert-error shadow-lg mb-6 border border-error/20" id="error-notification">
-          <div>
-            <span>❌ {errorMessage}</span>
-          </div>
-        </div>
-      )}
 
       <form onSubmit={handleSubmit} className="space-y-8" id="profile-edit-form">
         {/* Main Grid */}
@@ -329,6 +373,7 @@ export default function ProfilePage() {
                     type="date"
                     name="birthDate"
                     id="input-birth-date"
+                    max={new Date().toISOString().split("T")[0]}
                     className="input input-bordered w-full"
                     value={formData.birthDate}
                     onChange={handleInputChange}
@@ -402,28 +447,48 @@ export default function ProfilePage() {
         </div>
 
         {/* Form Actions */}
-        <div className="flex justify-end gap-4 mt-6">
-          <button
-            type="button"
-            id="btn-cancel"
-            onClick={() => router.push("/dashboard")}
-            className="btn btn-ghost"
-            disabled={saveLoading}
-          >
-            {t("profile_page.cancel_btn")}
-          </button>
-          <button
-            type="submit"
-            id="btn-save-profile"
-            className="btn btn-primary px-8 shadow-md hover:scale-105 active:scale-95 transition-all"
-            disabled={saveLoading}
-          >
-            {saveLoading ? (
-              <span className="loading loading-spinner loading-sm"></span>
-            ) : (
-              t("profile_page.save_btn")
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-8 pt-4 border-t border-base-200">
+          <div className="flex-1 min-w-0">
+            {successMessage && (
+              <div className="alert alert-success shadow-md border border-success/20 py-2 px-4 animate-in fade-in slide-in-from-bottom-2 duration-200" id="success-notification">
+                <div className="flex items-center gap-2">
+                  <span>✅</span>
+                  <span className="text-sm font-semibold">{successMessage}</span>
+                </div>
+              </div>
             )}
-          </button>
+            {errorMessage && (
+              <div className="alert alert-error shadow-md border border-error/20 py-2 px-4 animate-in fade-in slide-in-from-bottom-2 duration-200" id="error-notification">
+                <div className="flex items-center gap-2">
+                  <span>❌</span>
+                  <span className="text-sm font-semibold">{errorMessage}</span>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="flex justify-end gap-4 shrink-0">
+            <button
+              type="button"
+              id="btn-cancel"
+              onClick={() => router.push("/dashboard")}
+              className="btn btn-ghost"
+              disabled={saveLoading}
+            >
+              {t("profile_page.cancel_btn")}
+            </button>
+            <button
+              type="submit"
+              id="btn-save-profile"
+              className="btn btn-primary px-8 shadow-md hover:scale-105 active:scale-95 transition-all"
+              disabled={saveLoading}
+            >
+              {saveLoading ? (
+                <span className="loading loading-spinner loading-sm"></span>
+              ) : (
+                t("profile_page.save_btn")
+              )}
+            </button>
+          </div>
         </div>
       </form>
     </section>

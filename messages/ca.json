@@ -404,7 +404,11 @@
     "success_update": "Perfil actualitzat correctament!",
     "error_current_password": "Has d'introduir la contrasenya actual per definir una de nova.",
     "error_length": "La nova contrasenya ha de tenir com a mínim 6 caràcters.",
-    "error_match": "La nova contrasenya i la confirmació no coincideixen."
+    "error_match": "La nova contrasenya i la confirmació no coincideixen.",
+    "error_name_surname_required": "El nom i els cognoms són obligatoris.",
+    "error_invalid_phone": "Si us plau, introdueix un número de telèfon vàlid amb el codi de país (ex. +34 600 000 000).",
+    "error_invalid_birth_date": "Si us plau, introdueix una data de naixement vàlida (no pot ser en el futur ni anterior a 1900).",
+    "error_email_collision": "Aquesta adreça de correu ja està en ús per un altre compte."
   },
   "trainer_players": {
     "title": "Directori de jugadors",
