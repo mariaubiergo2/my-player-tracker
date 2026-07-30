@@ -579,6 +579,7 @@
     "compose_title": "Compose new feedback email",
     "preview": "Email Preview",
     "attachments": "Attachments",
-    "remove_attachment": "Remove attachment"
+    "remove_attachment": "Remove attachment",
+    "spellcheck_disclaimer": "I have reviewed my message for spelling and grammar."
   }
 }

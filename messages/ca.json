@@ -579,6 +579,7 @@
     "compose_title": "Redactar nou correu de feedback",
     "preview": "Vista prèvia del correu",
     "attachments": "Arxius adjunts",
-    "remove_attachment": "Eliminar adjunt"
+    "remove_attachment": "Eliminar adjunt",
+    "spellcheck_disclaimer": "He revisat l'ortografia i la gramàtica del meu missatge."
   }
 }

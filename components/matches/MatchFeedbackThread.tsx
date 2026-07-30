@@ -46,7 +46,7 @@ export default function MatchFeedbackThread({
   matchTrainerId,
   readOnly = false,
 }: MatchFeedbackThreadProps) {
-  const { t } = useTranslation()
+  const { t, locale } = useTranslation()
   const [messages, setMessages] = useState<FeedbackMessage[]>([])
   const [newContent, setNewContent] = useState("")
   const [isLoading, setIsLoading] = useState(true)
@@ -60,6 +60,7 @@ export default function MatchFeedbackThread({
   const [currentUserEmail, setCurrentUserEmail] = useState("")
   const [currentUserName, setCurrentUserName] = useState("")
   const [attachments, setAttachments] = useState<{ id: string; name: string; dataUrl: string }[]>([])
+  const [disclaimerChecked, setDisclaimerChecked] = useState(false)
 
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -94,6 +95,7 @@ export default function MatchFeedbackThread({
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newContent.trim() && attachments.length === 0) return
+    if (!disclaimerChecked) return
 
     setIsSubmitting(true)
     setError("")
@@ -117,6 +119,7 @@ export default function MatchFeedbackThread({
         setMessages((prev) => [...prev, enrichedMessage as any])
         setNewContent("")
         setAttachments([])
+        setDisclaimerChecked(false)
       } else {
         setError(res.error || t("common.error"))
       }
@@ -457,7 +460,7 @@ export default function MatchFeedbackThread({
             <form onSubmit={handleSend} className="space-y-3">
               {/* Toolbar */}
               <div className="flex items-center justify-between bg-base-200/60 px-3 py-1.5 rounded-t-lg border-t border-x border-base-200">
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-2">
                   {/* File Upload Hidden Input */}
                   <input
                     type="file"
@@ -489,6 +492,9 @@ export default function MatchFeedbackThread({
                     </svg>
                     <span className="text-[11px] font-semibold">{t("feedback_thread.attach_image")}</span>
                   </button>
+
+                  <div className="h-4 w-[1px] bg-base-300 self-center"></div>
+
                 </div>
                 <span className="text-[10px] text-base-content/40 hidden sm:inline">
                   {t("feedback_thread.image_helper")}
@@ -506,6 +512,8 @@ export default function MatchFeedbackThread({
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
                 disabled={isSubmitting}
+                spellCheck={true}
+                lang={locale}
               />
 
               {/* Attachments List */}
@@ -567,18 +575,31 @@ export default function MatchFeedbackThread({
                 </div>
               )}
 
-              {/* Send Button */}
-              <div className="flex justify-end pt-1">
+              {/* Disclaimer + Send Button */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1">
+                <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-base-content/70">
+                  <input
+                    type="checkbox"
+                    className="checkbox checkbox-xs checkbox-secondary"
+                    checked={disclaimerChecked}
+                    onChange={(e) => setDisclaimerChecked(e.target.checked)}
+                  />
+                  <span>{t("feedback_thread.spellcheck_disclaimer")}</span>
+                </label>
+
                 <button
                   type="submit"
-                  className="btn btn-primary btn-sm px-6 font-semibold flex items-center gap-1.5 text-white"
-                  disabled={isSubmitting || (!newContent.trim() && attachments.length === 0)}
+                  className="btn btn-primary btn-sm px-6 font-semibold flex items-center gap-1.5 text-white self-end sm:self-auto"
+                  disabled={
+                    isSubmitting ||
+                    (!newContent.trim() && attachments.length === 0) ||
+                    !disclaimerChecked
+                  }
                 >
                   {isSubmitting ? (
                     <span className="loading loading-spinner loading-xs"></span>
                   ) : (
                     <>
-                      {/* Send Paperplane SVG */}
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"

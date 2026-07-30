@@ -25,7 +25,7 @@ export default function NewMatchPage() {
     initialState
   )
 
-  const [players, setPlayers] = useState<{ id: string; name: string; surname: string; email: string }[]>([])
+  const [players, setPlayers] = useState<{ id: string; name: string; surname: string; email?: string }[]>([])
   const [loadingPlayers, setLoadingPlayers] = useState(false)
 
   useEffect(() => {
@@ -104,7 +104,7 @@ export default function NewMatchPage() {
                         <option value="">{t("match_form.select_player")}</option>
                         {players.map((p) => (
                           <option key={p.id} value={p.id}>
-                            {p.name} {p.surname} ({p.email})
+                            {p.name} {p.surname}{p.email ? ` (${p.email})` : ""}
                           </option>
                         ))}
                       </select>
