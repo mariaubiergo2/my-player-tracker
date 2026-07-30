@@ -38,7 +38,10 @@ export default async function MatchPage({
   return (
     <section className="container mx-auto px-6 py-10">
       <div className="mb-10">
-        <Link href="/dashboard" className="btn btn-ghost mb-4">
+        <Link 
+          href={currentUser?.role === "TRAINER" ? "/trainer/my-players" : "/dashboard"} 
+          className="btn btn-ghost mb-4"
+        >
           {t("match_details.back_dashboard")}
         </Link>
 

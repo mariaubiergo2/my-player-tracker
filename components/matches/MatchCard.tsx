@@ -67,17 +67,11 @@ export default function MatchCard({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex-1 cursor-pointer" onClick={onToggleExpand}>
             <div className="flex flex-wrap items-center gap-2 mb-2.5">
-              {role === "PLAYER" || role === "GOAL_KEEPER" ? (
-                <Link href={`/matches/${match.id}`} className="flex-1 min-w-[200px]" onClick={(e) => e.stopPropagation()}>
-                  <h4 className="font-extrabold text-lg hover:text-primary transition-colors inline-block">
-                    {match.name}
-                  </h4>
-                </Link>
-              ) : (
-                <h4 className="font-extrabold text-lg hover:text-primary transition-colors">
+              <Link href={`/matches/${match.id}`} className="flex-1 min-w-[200px]" onClick={(e) => e.stopPropagation()}>
+                <h4 className="font-extrabold text-lg hover:underline hover:text-primary transition-colors inline-block cursor-pointer">
                   {match.name}
                 </h4>
-              )}
+              </Link>
               {getMatchTypeBadge(match.matchType)}
               {match.isReviewed && (
                 <span className="badge badge-success badge-sm font-semibold text-white">

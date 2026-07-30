@@ -24,6 +24,11 @@ export async function GET(
       where: { id },
       include: {
         video: true,
+        player: {
+          select: {
+            trainerId: true,
+          },
+        },
       },
     });
 
@@ -35,7 +40,8 @@ export async function GET(
     if (
       payload.role !== "ADMIN" &&
       match.playerId !== payload.userId &&
-      match.trainerId !== payload.userId
+      match.trainerId !== payload.userId &&
+      match.player?.trainerId !== payload.userId
     ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

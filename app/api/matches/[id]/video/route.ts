@@ -29,7 +29,14 @@ export async function GET(
 
     const match = await prisma.match.findUnique({
       where: { id },
-      include: { video: true },
+      include: {
+        video: true,
+        player: {
+          select: {
+            trainerId: true,
+          },
+        },
+      },
     });
 
     if (!match) {
@@ -37,7 +44,11 @@ export async function GET(
     }
 
     // Check if the user is authorized (assigned player or trainer)
-    if (match.playerId !== payload.userId && match.trainerId !== payload.userId) {
+    if (
+      match.playerId !== payload.userId &&
+      match.trainerId !== payload.userId &&
+      match.player?.trainerId !== payload.userId
+    ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -144,7 +155,14 @@ export async function POST(
 
     const match = await prisma.match.findUnique({
       where: { id },
-      include: { video: true },
+      include: {
+        video: true,
+        player: {
+          select: {
+            trainerId: true,
+          },
+        },
+      },
     });
 
     if (!match) {
@@ -152,7 +170,11 @@ export async function POST(
     }
 
     // Check if the user is authorized (assigned player or trainer)
-    if (match.playerId !== payload.userId && match.trainerId !== payload.userId) {
+    if (
+      match.playerId !== payload.userId &&
+      match.trainerId !== payload.userId &&
+      match.player?.trainerId !== payload.userId
+    ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -236,7 +258,14 @@ export async function DELETE(
 
     const match = await prisma.match.findUnique({
       where: { id },
-      include: { video: true },
+      include: {
+        video: true,
+        player: {
+          select: {
+            trainerId: true,
+          },
+        },
+      },
     });
 
     if (!match) {
@@ -244,7 +273,11 @@ export async function DELETE(
     }
 
     // Check if the user is authorized (assigned player or trainer)
-    if (match.playerId !== payload.userId && match.trainerId !== payload.userId) {
+    if (
+      match.playerId !== payload.userId &&
+      match.trainerId !== payload.userId &&
+      match.player?.trainerId !== payload.userId
+    ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
