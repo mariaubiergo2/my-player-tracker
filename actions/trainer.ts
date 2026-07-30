@@ -160,3 +160,37 @@ export async function getMyPlayersWithMatches() {
     };
   }
 }
+
+/**
+ * UPDATE: Unassign a player from the logged-in trainer
+ */
+export async function unassignPlayerFromTrainer(playerId: string) {
+  try {
+    const trainerId = await checkTrainer();
+
+    // Check if player exists and is currently assigned to this trainer
+    const player = await prisma.user.findFirst({
+      where: { id: playerId, trainerId },
+    });
+
+    if (!player) {
+      return { success: false, error: "Player not found or not assigned to you." };
+    }
+
+    await prisma.user.update({
+      where: { id: playerId },
+      data: { trainerId: null },
+    });
+
+    revalidatePath("/trainer/players");
+    revalidatePath("/trainer/my-players");
+
+    return { success: true };
+  } catch (error) {
+    console.error("unassignPlayerFromTrainer error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to unassign player",
+    };
+  }
+}
