@@ -282,7 +282,7 @@
     "subtitle": "Consulta, gestiona y revisa tus sesiones de feedback."
   },
   "match_details": {
-    "back_dashboard": "← Volver al análisis de vídeo",
+    "back_dashboard": "← Volver",
     "description_placeholder": "Sin descripción disponible.",
     "info_title": "Información del partido",
     "perf_title": "Rendimiento del jugador",

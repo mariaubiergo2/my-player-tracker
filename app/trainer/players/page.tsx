@@ -10,8 +10,8 @@ interface PlayerListItem {
   id: string;
   name: string;
   surname: string;
-  email: string;
-  phone: string | null;
+  email?: string;
+  phone?: string | null;
   birthDate: string | null;
   trainerId: string | null;
   avatarUrl: string | null;
@@ -86,7 +86,7 @@ export default function TrainerPlayersPage() {
 
   const filteredPlayers = players.filter((p) => {
     const fullName = `${p.name} ${p.surname}`.toLowerCase();
-    const email = p.email.toLowerCase();
+    const email = p.email ? p.email.toLowerCase() : "";
     const query = searchQuery.toLowerCase();
     return fullName.includes(query) || email.includes(query);
   });
@@ -171,8 +171,6 @@ export default function TrainerPlayersPage() {
             <thead>
               <tr className="bg-base-200/50">
                 <th>{t("trainer_players.table_name")}</th>
-                <th>{t("trainer_players.table_email")}</th>
-                <th>{t("trainer_players.table_phone")}</th>
                 <th>{t("trainer_players.table_birth")}</th>
                 <th className="text-center">{t("trainer_players.table_matches")}</th>
                 <th className="text-right">{t("trainer_players.table_actions")}</th>
@@ -201,12 +199,6 @@ export default function TrainerPlayersPage() {
                           {p.name} {p.surname}
                         </div>
                       </div>
-                    </td>
-                    <td>
-                      <span className="text-sm font-medium text-base-content/85">{p.email}</span>
-                    </td>
-                    <td>
-                      {p.phone || <span className="text-base-content/30 italic">{t("common.not_specified")}</span>}
                     </td>
                     <td>
                       {p.birthDate || <span className="text-base-content/30 italic">{t("common.not_specified")}</span>}

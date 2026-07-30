@@ -282,7 +282,7 @@
     "subtitle": "View, manage and review your feedback sessions."
   },
   "match_details": {
-    "back_dashboard": "← Back to Video Analysis",
+    "back_dashboard": "← Back",
     "description_placeholder": "No description available.",
     "info_title": "Match Information",
     "perf_title": "Player Performance",

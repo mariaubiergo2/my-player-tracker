@@ -491,7 +491,7 @@ export async function getSelectablePlayers() {
     } else if (currentUser.role === "TRAINER") {
       const players = await prisma.user.findMany({
         where: { role: { in: ["PLAYER", "GOAL_KEEPER"] }, trainerId: currentUser.userId },
-        select: { id: true, name: true, surname: true, email: true },
+        select: { id: true, name: true, surname: true },
         orderBy: { name: "asc" },
       });
       return { success: true, players };

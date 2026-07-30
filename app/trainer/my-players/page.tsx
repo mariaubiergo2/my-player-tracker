@@ -15,8 +15,8 @@ interface PlayerWithMatches {
   id: string;
   name: string;
   surname: string;
-  email: string;
-  phone: string | null;
+  email?: string;
+  phone?: string | null;
   birthDate: string | null;
   avatarUrl: string | null;
   matches: MatchItem[];
@@ -188,8 +188,6 @@ export default function MyPlayersPage() {
                         </h2>
                         
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-2 gap-x-4 text-sm text-base-content/70">
-                          <div>📧 <span className="font-semibold text-base-content/90">{selectedPlayer.email}</span></div>
-                          <div>📞 <span className="font-semibold text-base-content/90">{selectedPlayer.phone || t("common.not_specified")}</span></div>
                           <div>📅 {t("trainer_my_players.birth_label")}: <span className="font-semibold text-base-content/90">{selectedPlayer.birthDate || t("common.not_specified")}</span></div>
                         </div>
                       </div>

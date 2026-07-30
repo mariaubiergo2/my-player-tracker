@@ -65,6 +65,22 @@ export async function getFeedbackMessages(matchId: string) {
       },
     })
 
+    // Ensure trainer cannot see player's email
+    if (currentUser.role === "TRAINER") {
+      if (match.player) {
+        (match.player as any).email = "";
+      }
+      messages.forEach((msg) => {
+        if (
+          msg.author &&
+          (msg.authorRole.toLowerCase() === "player" ||
+            msg.authorRole.toLowerCase() === "goal_keeper")
+        ) {
+          (msg.author as any).email = "";
+        }
+      });
+    }
+
     return {
       success: true,
       messages,
@@ -73,7 +89,7 @@ export async function getFeedbackMessages(matchId: string) {
       matchTrainer: match.trainer,
       currentUserEmail: currentUser.email,
       currentUserName: currentUser.name,
-    }
+    };
   } catch (error) {
     console.error("Get feedback messages error:", error)
     return { success: false, error: "Failed to load feedback messages" }

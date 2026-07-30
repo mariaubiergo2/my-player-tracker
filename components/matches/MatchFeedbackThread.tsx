@@ -16,7 +16,7 @@ interface MatchFeedbackThreadProps {
 interface MessageAuthor {
   name: string
   surname: string
-  email: string
+  email?: string
   avatarUrl: string | null
 }
 
@@ -34,7 +34,7 @@ interface MatchParticipant {
   id: string
   name: string
   surname: string
-  email: string
+  email?: string
   avatarUrl: string | null
 }
 
@@ -162,13 +162,13 @@ export default function MatchFeedbackThread({
     const authorId = msg.authorId
     if (authorId === matchPlayerId) {
       if (matchTrainer) {
-        return `${matchTrainer.name} ${matchTrainer.surname} <${matchTrainer.email}>`
+        return `${matchTrainer.name} ${matchTrainer.surname}`
       }
       return t("feedback_thread.role_trainer")
     }
     if (authorId === matchTrainerId) {
       if (matchPlayer) {
-        return `${matchPlayer.name} ${matchPlayer.surname} <${matchPlayer.email}>`
+        return `${matchPlayer.name} ${matchPlayer.surname}`
       }
       return t("feedback_thread.role_player")
     }
@@ -176,12 +176,12 @@ export default function MatchFeedbackThread({
     const msgRoleLower = msg.authorRole.toLowerCase()
     if (msgRoleLower === "player" || msgRoleLower === "goal_keeper") {
       if (matchTrainer) {
-        return `${matchTrainer.name} ${matchTrainer.surname} <${matchTrainer.email}>`
+        return `${matchTrainer.name} ${matchTrainer.surname}`
       }
       return t("feedback_thread.role_trainer")
     } else {
       if (matchPlayer) {
-        return `${matchPlayer.name} ${matchPlayer.surname} <${matchPlayer.email}>`
+        return `${matchPlayer.name} ${matchPlayer.surname}`
       }
       return t("feedback_thread.role_" + msgRoleLower)
     }
@@ -300,15 +300,15 @@ export default function MatchFeedbackThread({
   const userRoleLower = currentUserRole.toLowerCase()
   if (userRoleLower === "player" || userRoleLower === "goal_keeper") {
     composeRecipientText = matchTrainer
-      ? `${matchTrainer.name} ${matchTrainer.surname} <${matchTrainer.email}>`
+      ? `${matchTrainer.name} ${matchTrainer.surname}`
       : t("feedback_thread.role_trainer")
   } else {
     composeRecipientText = matchPlayer
-      ? `${matchPlayer.name} ${matchPlayer.surname} <${matchPlayer.email}>`
+      ? `${matchPlayer.name} ${matchPlayer.surname}`
       : t("feedback_thread.role_player")
   }
 
-  const composeSenderText = `${currentUserName || t("feedback_thread.role_" + currentUserRole.toLowerCase())} <${currentUserEmail || "no-reply@myplayertracker.com"}>`
+  const composeSenderText = `${currentUserName || t("feedback_thread.role_" + currentUserRole.toLowerCase())}`
   const composeSubjectText = `Feedback ${matchName || "Partido #" + matchId}`
 
   return (
@@ -397,7 +397,7 @@ export default function MatchFeedbackThread({
                             <div>
                               <span className="font-bold text-base-content">{t("feedback_thread.from")}:</span>{" "}
                               <span className="text-base-content/90">
-                                {authorName} &lt;{msg.author.email || "no-reply@myplayertracker.com"}&gt;
+                                {authorName}
                               </span>{" "}
                               {getRoleBadge(msg.authorRole)}
                             </div>
