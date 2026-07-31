@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth"
 import { createMatch, getSelectablePlayers } from "@/actions/matches"
 import { useTranslation } from "@/components/LanguageProvider"
 import { canEditMatchField } from "@/lib/permissions"
+import PageContainer from "@/components/ui/PageContainer"
 
 const initialState = {
   message: "",
@@ -68,7 +69,7 @@ export default function NewMatchPage() {
   const isPlayerLike = role === "PLAYER" || role === "GOAL_KEEPER"
 
   return (
-    <section className="container mx-auto px-6 py-10 animate-fade-in">
+    <PageContainer className="py-10 animate-fade-in">
       <div className="mb-10">
         <Link href="/dashboard" className="btn btn-ghost mb-4">
           {t("match_details.back_dashboard")}
@@ -671,6 +672,6 @@ export default function NewMatchPage() {
           )}
         </div>
       </form>
-    </section>
+    </PageContainer>
   )
 }

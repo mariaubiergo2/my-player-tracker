@@ -9,6 +9,7 @@ import type { CompleteMatch } from "@/types/match"
 import { toDateInput, toDateTimeInput } from "@/lib/utils"
 import { useTranslation } from "@/components/LanguageProvider"
 import { canEditMatchField } from "@/lib/permissions"
+import PageContainer from "@/components/ui/PageContainer"
 
 const matchTypes = ["FRIENDLY", "LEAGUE", "CUP", "TRAINING"]
 
@@ -142,7 +143,7 @@ export default function EditMatchForm({
   }
 
   return (
-    <section className="container mx-auto px-6 py-10">
+    <PageContainer className="py-10">
       <div className="mb-10">
         <Link href="/dashboard" className="btn btn-ghost btn-sm gap-2 mb-4">
           {t("match_details.back_dashboard")}
@@ -730,6 +731,6 @@ export default function EditMatchForm({
           </div>
         </div>
       </form>
-    </section>
+    </PageContainer>
   )
 }

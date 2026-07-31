@@ -1,5 +1,7 @@
 "use client"
 
+import PageContainer from "@/components/ui/PageContainer"
+
 export default function Error({
   error,
   reset,
@@ -8,7 +10,7 @@ export default function Error({
   reset: () => void
 }) {
   return (
-    <section className="container mx-auto px-6 py-20">
+    <PageContainer className="py-20">
       <div className="max-w-xl mx-auto">
         <div className="card bg-base-100 shadow-lg border border-base-200">
           <div className="card-body items-center text-center">
@@ -37,6 +39,6 @@ export default function Error({
           </div>
         </div>
       </div>
-    </section>
+    </PageContainer>
   )
 }

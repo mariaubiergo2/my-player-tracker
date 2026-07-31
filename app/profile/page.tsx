@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { getProfile, updateProfile } from "@/actions/users";
 import { useTranslation } from "@/components/LanguageProvider";
+import PageContainer from "@/components/ui/PageContainer";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -216,7 +217,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <section className="container mx-auto px-6 py-10 max-w-4xl" id="profile-edit-section">
+    <PageContainer className="py-10" maxWidthClassName="max-w-5xl" id="profile-edit-section">
       {/* Title */}
       <div className="mb-10">
         <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -499,7 +500,7 @@ export default function ProfilePage() {
           </div>
         </div>
       </form>
-    </section>
+    </PageContainer>
   );
 }
 

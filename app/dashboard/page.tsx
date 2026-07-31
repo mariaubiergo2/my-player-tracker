@@ -9,6 +9,7 @@ import { useTranslation } from "@/components/LanguageProvider";
 import type { CompleteMatch } from "@/types/match";
 import MatchCard from "@/components/matches/MatchCard";
 import MatchCalendar from "@/components/matches/MatchCalendar";
+import PageContainer from "@/components/ui/PageContainer";
 
 /**
  * Dashboard Page - Client Component with httpOnly Cookie Auth
@@ -99,7 +100,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <section className="container mx-auto px-6 py-10">
+    <PageContainer className="py-10">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
         <div>
@@ -229,6 +230,6 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
-    </section>
+    </PageContainer>
   );
 }

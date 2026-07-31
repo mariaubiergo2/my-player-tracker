@@ -1,8 +1,9 @@
 import Link from "next/link"
+import PageContainer from "@/components/ui/PageContainer"
 
 export default function NotFound() {
   return (
-    <section className="container mx-auto px-6 py-20">
+    <PageContainer className="py-20">
       <div className="max-w-xl mx-auto">
         <div className="card bg-base-100 shadow-lg border border-base-200">
           <div className="card-body items-center text-center">
@@ -25,6 +26,6 @@ export default function NotFound() {
           </div>
         </div>
       </div>
-    </section>
+    </PageContainer>
   )
 }

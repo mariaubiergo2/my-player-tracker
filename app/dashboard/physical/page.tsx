@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/components/LanguageProvider";
+import PageContainer from "@/components/ui/PageContainer";
 
 interface WorkoutLog {
   id: string;
@@ -211,7 +212,7 @@ export default function PhysicalPrepPage() {
   }
 
   return (
-    <section className="container mx-auto px-6 py-10">
+    <PageContainer className="py-10">
       {/* Header Banner */}
       <div className="mb-10">
         <h1 className="text-4xl font-bold text-primary">
@@ -663,6 +664,6 @@ export default function PhysicalPrepPage() {
         </div>
 
       </div>
-    </section>
+    </PageContainer>
   );
 }

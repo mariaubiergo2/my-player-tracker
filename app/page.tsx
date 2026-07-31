@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getTranslationsServer } from "@/lib/i18n-server";
+import PageContainer from "@/components/ui/PageContainer";
 
 export default async function Home() {
   const t = await getTranslationsServer();
@@ -44,7 +45,7 @@ export default async function Home() {
       </section>
 
       {/* Stats Counter Bar */}
-      <section className="container mx-auto px-6 max-w-5xl mb-16">
+      <PageContainer className="mb-16" maxWidthClassName="max-w-6xl">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 p-8 bg-base-100 rounded-3xl border border-base-content/10 shadow-2xl">
           <div className="text-center space-y-2 p-4 border-b sm:border-b-0 sm:border-r border-base-content/10">
             <div className="text-4xl font-extrabold text-primary">100%</div>
@@ -62,10 +63,10 @@ export default async function Home() {
             <p className="text-xs text-base-content/60 px-4">{t("home.stats.active_desc")}</p>
           </div>
         </div>
-      </section>
+      </PageContainer>
 
       {/* Feature Cards Grid */}
-      <section className="container mx-auto px-6 max-w-6xl py-12 space-y-12">
+      <PageContainer className="py-12 space-y-12" maxWidthClassName="max-w-7xl">
         <div className="text-center space-y-2 max-w-2xl mx-auto">
           <h2 className="text-3xl sm:text-4xl font-bold">{t("home.features_title")}</h2>
           <p className="text-base-content/60">{t("home.features_subtitle")}</p>
@@ -113,10 +114,10 @@ export default async function Home() {
           </div>
 
         </div>
-      </section>
+      </PageContainer>
 
       {/* Workflow Showcase */}
-      <section className="container mx-auto px-6 max-w-5xl py-12">
+      <PageContainer className="py-12" maxWidthClassName="max-w-6xl">
         <div className="bg-base-100 rounded-3xl border border-base-content/10 shadow-2xl p-8 sm:p-12 space-y-8">
           <div className="text-center max-w-xl mx-auto space-y-2">
             <span className="badge badge-accent font-semibold">{t("home.workflow_badge")}</span>
@@ -159,10 +160,10 @@ export default async function Home() {
 
           </div>
         </div>
-      </section>
+      </PageContainer>
 
       {/* CTA section */}
-      <section className="container mx-auto px-6 max-w-4xl py-12 text-center space-y-6">
+      <PageContainer className="py-12 text-center space-y-6" maxWidthClassName="max-w-5xl">
         <h2 className="text-2xl sm:text-3xl font-bold">{t("home.cta_title")}</h2>
         <p className="text-sm sm:text-base text-base-content/70 max-w-md mx-auto">
           {t("home.cta_subtitle")}
@@ -175,7 +176,7 @@ export default async function Home() {
             {t("home.cta_read")}
           </Link>
         </div>
-      </section>
+      </PageContainer>
 
     </div>
   );

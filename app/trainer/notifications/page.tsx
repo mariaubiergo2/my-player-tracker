@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/components/LanguageProvider";
+import PageContainer from "@/components/ui/PageContainer";
 import {
   getNotifications,
   toggleNotificationReadState,
@@ -181,14 +182,14 @@ function NotificationsInboxContent() {
   }
 
   return (
-    <section className="container mx-auto px-4 py-8 max-w-4xl">
+    <PageContainer className="py-8" maxWidthClassName="max-w-5xl">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-base-content">
+          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             {t("notifications.page_title")}
           </h1>
-          <p className="text-sm text-base-content/60 mt-1">
+          <p className="text-base-content/70 mt-2">
             {t("notifications.bell_tooltip")}
           </p>
         </div>
@@ -441,7 +442,7 @@ function NotificationsInboxContent() {
           </button>
         </div>
       )}
-    </section>
+    </PageContainer>
   );
 }
 

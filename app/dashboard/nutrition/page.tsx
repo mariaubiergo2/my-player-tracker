@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/components/LanguageProvider";
+import PageContainer from "@/components/ui/PageContainer";
 
 interface SupplementItem {
   id: string;
@@ -255,7 +256,7 @@ export default function NutritionPage() {
   }
 
   return (
-    <section className="container mx-auto px-6 py-10">
+    <PageContainer className="py-10">
       {/* Header Banner */}
       <div className="mb-10">
         <h1 className="text-4xl font-bold text-primary">
@@ -496,6 +497,6 @@ export default function NutritionPage() {
         </div>
 
       </div>
-    </section>
+    </PageContainer>
   );
 }

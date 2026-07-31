@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { getAllPlayersWithMatchCount, assignPlayerToTrainer } from "@/actions/trainer";
 import { useTranslation } from "@/components/LanguageProvider";
+import PageContainer from "@/components/ui/PageContainer";
 
 interface PlayerListItem {
   id: string;
@@ -107,7 +108,7 @@ export default function TrainerPlayersPage() {
   }
 
   return (
-    <section className="container mx-auto px-6 py-10 animate-fade-in">
+    <PageContainer className="py-10 animate-fade-in">
       {/* Alert banners */}
       {successMessage && (
         <div className="alert alert-success shadow-lg mb-6 border border-success/20">
@@ -249,7 +250,7 @@ export default function TrainerPlayersPage() {
           </table>
         </div>
       )}
-    </section>
+    </PageContainer>
   );
 }
 

@@ -5,6 +5,7 @@ import { getTranslationsServer } from "@/lib/i18n-server"
 import { getCurrentUser } from "@/lib/auth"
 import MatchFeedbackThread from "@/components/matches/MatchFeedbackThread"
 import AutoMarkRead from "@/components/matches/AutoMarkRead"
+import PageContainer from "@/components/ui/PageContainer"
 
 export default async function MatchPage({
   params,
@@ -37,7 +38,7 @@ export default async function MatchPage({
   if (!match) notFound()
 
   return (
-    <section className="container mx-auto px-6 py-10">
+    <PageContainer className="py-10">
       {currentUser?.role === "TRAINER" && (
         <AutoMarkRead matchId={identifier} trainerId={currentUser.userId} />
       )}
@@ -308,7 +309,7 @@ export default async function MatchPage({
           />
         )}
       </div>
-    </section>
+    </PageContainer>
   )
 }
 

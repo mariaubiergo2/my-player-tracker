@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { prisma } from "@/lib/prisma"
 import { getTranslationsServer } from "@/lib/i18n-server"
+import PageContainer from "@/components/ui/PageContainer"
 
 export default async function MatchesPage() {
   const matches = await prisma.match.findMany({
@@ -9,7 +10,7 @@ export default async function MatchesPage() {
   const t = await getTranslationsServer()
 
   return (
-    <section className="container mx-auto px-6 py-10">
+    <PageContainer className="py-10">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-10">
         <div>
@@ -100,6 +101,6 @@ export default async function MatchesPage() {
           </div>
         </div>
       )}
-    </section>
+    </PageContainer>
   )
 }

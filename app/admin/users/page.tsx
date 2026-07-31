@@ -11,6 +11,7 @@ import {
   deleteUser,
 } from "@/actions/users";
 import { useTranslation } from "@/components/LanguageProvider";
+import PageContainer from "@/components/ui/PageContainer";
 
 interface UserListItem {
   id: string;
@@ -291,7 +292,7 @@ export default function AdminUsersPage() {
   }
 
   return (
-    <section className="container mx-auto px-6 py-10">
+    <PageContainer className="py-10">
       {/* Messages */}
       {successMessage && (
         <div className="alert alert-success shadow-lg mb-6 border border-success/20 animate-fade-in">
@@ -779,6 +780,6 @@ export default function AdminUsersPage() {
           </div>
         </div>
       )}
-    </section>
+    </PageContainer>
   );
 }

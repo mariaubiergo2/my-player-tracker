@@ -8,6 +8,7 @@ import { getMyPlayersWithMatches, unassignPlayerFromTrainer } from "@/actions/tr
 import { useTranslation } from "@/components/LanguageProvider";
 import MatchCard from "@/components/matches/MatchCard";
 import type { Match } from "@/types/match";
+import PageContainer from "@/components/ui/PageContainer";
 
 interface MatchItem extends Match {}
 
@@ -149,7 +150,7 @@ export default function MyPlayersPage() {
   }
 
   return (
-    <section className="container mx-auto px-6 py-10 animate-fade-in">
+    <PageContainer className="py-10 animate-fade-in">
       {errorMessage && (
         <div className="alert alert-error shadow-lg mb-6 border border-error/20">
           <div>
@@ -342,6 +343,6 @@ export default function MyPlayersPage() {
           </div>
         </div>
       )}
-    </section>
+    </PageContainer>
   );
 }
