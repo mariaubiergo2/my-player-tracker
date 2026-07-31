@@ -16,7 +16,8 @@
     "theme_light": "Canviar a tema clar",
     "theme_dark": "Canviar a tema fosc",
     "theme_light_short": "CLAR",
-    "theme_dark_short": "FOSC"
+    "theme_dark_short": "FOSC",
+    "notifications": "Notificacions"
   },
   "footer": {
     "text": "Creat amb Next.js 16 + DaisyUI — Demostrant patrons SSG, SSR, ISR i CSR"
@@ -585,5 +586,32 @@
     "attachments": "Arxius adjunts",
     "remove_attachment": "Eliminar adjunt",
     "spellcheck_disclaimer": "He revisat l'ortografia i la gramàtica del meu missatge."
+  },
+  "notifications": {
+    "title": "Notificacions",
+    "bell_tooltip": "Veure notificacions",
+    "mark_all_read": "Marcar totes com a llegides",
+    "empty": "No tens notificacions",
+    "match_created": "{playerName} ha creat un nou partit: {matchName}",
+    "match_updated": "{playerName} ha editat un partit: {matchName}",
+    "mark_as_read": "Marcar com a llegida",
+    "page_title": "Bústia de Notificacions",
+    "view_all": "Veure totes",
+    "filter_all": "Totes",
+    "filter_unread": "Sense llegir",
+    "filter_read": "Llegides",
+    "empty_state": "No tens notificacions en aquesta categoria.",
+    "previous": "Anterior",
+    "next": "Següent",
+    "page_info": "Pàgina {page}",
+    "mark_as_unread": "Marcar com a no llegida",
+    "filter_by_player": "Filtrar per jugador",
+    "all_players": "Tots els jugadors",
+    "sort_by": "Ordenar per",
+    "sort_newest": "Més recents primer",
+    "sort_oldest": "Més antigues primer",
+    "sort_player_az": "Per jugador (A-Z)",
+    "empty_state_player": "No hi ha notificacions de {playerName} amb aquest filtre.",
+    "filter_last_3_months": "Mostrar només últims 3 mesos"
   }
 }

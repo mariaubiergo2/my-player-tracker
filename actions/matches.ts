@@ -228,6 +228,17 @@ export async function createMatch(prevState: any, formData: FormData) {
       data: finalData,
     });
 
+    // Notify trainer if match was created by player
+    if (isPlayer && createdMatch.trainerId) {
+      await prisma.notification.create({
+        data: {
+          recipientId: createdMatch.trainerId,
+          type: "MATCH_CREATED",
+          matchId: createdMatch.id,
+        },
+      });
+    }
+
     // 7. Check for uploaded video file
     const videoFile = formData.get("videoFile") as File | null;
     if (videoFile && videoFile.size > 0) {
@@ -429,6 +440,19 @@ export async function updateMatch(matchId: string, updates: any) {
       where: { id: matchId },
       data,
     });
+
+    // Notify trainer if updated by player
+    const isEditingPlayer = currentUser.role === "PLAYER" || currentUser.role === "GOAL_KEEPER";
+    const targetTrainerId = match.trainerId || match.player.trainerId;
+    if (isEditingPlayer && targetTrainerId) {
+      await prisma.notification.create({
+        data: {
+          recipientId: targetTrainerId,
+          type: "MATCH_UPDATED",
+          matchId: match.id,
+        },
+      });
+    }
 
     revalidatePath("/dashboard");
     revalidatePath("/matches");

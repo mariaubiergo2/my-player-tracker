@@ -16,7 +16,8 @@
     "theme_light": "Cambiar a tema claro",
     "theme_dark": "Cambiar a tema oscuro",
     "theme_light_short": "CLARO",
-    "theme_dark_short": "OSCURO"
+    "theme_dark_short": "OSCURO",
+    "notifications": "Notificaciones"
   },
   "footer": {
     "text": "Creado con Next.js 16 + DaisyUI — Demostrando patrones SSG, SSR, ISR y CSR"
@@ -584,5 +585,32 @@
     "preview": "Vista previa del correo",
     "attachments": "Archivos adjuntos",
     "remove_attachment": "Eliminar adjunto"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "bell_tooltip": "Ver notificaciones",
+    "mark_all_read": "Marcar todas como leídas",
+    "empty": "No tienes notificaciones",
+    "match_created": "{playerName} ha creado un nuevo partido: {matchName}",
+    "match_updated": "{playerName} ha editado un partido: {matchName}",
+    "mark_as_read": "Marcar como leída",
+    "page_title": "Buzón de Notificaciones",
+    "view_all": "Ver todas",
+    "filter_all": "Todas",
+    "filter_unread": "No leídas",
+    "filter_read": "Leídas",
+    "empty_state": "No tienes notificaciones en esta categoría.",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page_info": "Página {page}",
+    "mark_as_unread": "Marcar como no leída",
+    "filter_by_player": "Filtrar por jugador",
+    "all_players": "Todos los jugadores",
+    "sort_by": "Ordenar por",
+    "sort_newest": "Más recientes primero",
+    "sort_oldest": "Más antiguas primero",
+    "sort_player_az": "Por jugador (A-Z)",
+    "empty_state_player": "No hay notificaciones de {playerName} con este filtro.",
+    "filter_last_3_months": "Mostrar solo últimos 3 meses"
   }
 }

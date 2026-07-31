@@ -43,6 +43,7 @@ model User {
   trainer   User?   @relation("TrainerPlayers", fields: [trainerId], references: [id])
   players   User[]  @relation("TrainerPlayers")
   feedbackMessages MatchFeedbackMessage[]
+  notifications    Notification[]         @relation("UserNotifications")
 
   @@map("users")
 }
@@ -107,6 +108,7 @@ model Match {
 
   video Video?
   feedbackMessages MatchFeedbackMessage[]
+  notifications    Notification[]         @relation("MatchNotifications")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -142,4 +144,25 @@ model MatchFeedbackMessage {
   author User  @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@map("match_feedback_messages")
+}
+
+enum NotificationType {
+  MATCH_CREATED
+  MATCH_UPDATED
+}
+
+model Notification {
+  id          String           @id @default(cuid())
+  recipientId String           @map("recipient_id")
+  type        NotificationType
+  matchId     String           @map("match_id")
+  isRead      Boolean          @default(false) @map("is_read")
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  recipient   User             @relation("UserNotifications", fields: [recipientId], references: [id], onDelete: Cascade)
+  match       Match            @relation("MatchNotifications", fields: [matchId], references: [id], onDelete: Cascade)
+
+  @@index([recipientId, isRead])
+  @@index([recipientId, createdAt(sort: Desc)])
+  @@map("notifications")
 }

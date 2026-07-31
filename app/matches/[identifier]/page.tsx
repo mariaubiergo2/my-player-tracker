@@ -4,6 +4,7 @@ import { cookies } from "next/headers"
 import { getTranslationsServer } from "@/lib/i18n-server"
 import { getCurrentUser } from "@/lib/auth"
 import MatchFeedbackThread from "@/components/matches/MatchFeedbackThread"
+import AutoMarkRead from "@/components/matches/AutoMarkRead"
 
 export default async function MatchPage({
   params,
@@ -37,6 +38,9 @@ export default async function MatchPage({
 
   return (
     <section className="container mx-auto px-6 py-10">
+      {currentUser?.role === "TRAINER" && (
+        <AutoMarkRead matchId={identifier} trainerId={currentUser.userId} />
+      )}
       <div className="mb-10">
         <Link 
           href={currentUser?.role === "TRAINER" ? "/trainer/my-players" : "/dashboard"} 

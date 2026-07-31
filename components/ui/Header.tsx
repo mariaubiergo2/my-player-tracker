@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/components/LanguageProvider";
 import { useTheme } from "@/components/ThemeProvider";
+import NotificationBell from "./NotificationBell";
 
 export default function Header() {
   const { isAuthenticated, user, logout, isLoading } = useAuth();
@@ -43,6 +44,7 @@ export default function Header() {
                   <>
                     <li><Link href="/trainer/players">{t("header.all_players")}</Link></li>
                     <li><Link href="/trainer/my-players">{t("header.my_players")}</Link></li>
+                    <li><Link href="/trainer/notifications">{t("header.notifications")}</Link></li>
                   </>
                 )}
                 {(user?.role === "PLAYER" || user?.role === "GOAL_KEEPER") && (
@@ -71,6 +73,7 @@ export default function Header() {
                 <>
                   <li><Link href="/trainer/players">{t("header.all_players")}</Link></li>
                   <li><Link href="/trainer/my-players">{t("header.my_players")}</Link></li>
+                  <li><Link href="/trainer/notifications">{t("header.notifications")}</Link></li>
                 </>
               )}
               {(user?.role === "PLAYER" || user?.role === "GOAL_KEEPER") && (
@@ -103,6 +106,9 @@ export default function Header() {
             </>
           )}
         </button>
+
+        {/* Notification Bell Dropdown */}
+        <NotificationBell />
 
         {/* Language Selector Dropdown */}
         <div className="dropdown dropdown-end">
@@ -181,6 +187,7 @@ export default function Header() {
                 <>
                   <li><Link href="/trainer/players">{t("header.all_players")}</Link></li>
                   <li><Link href="/trainer/my-players">{t("header.my_players")}</Link></li>
+                  <li><Link href="/trainer/notifications">{t("header.notifications")}</Link></li>
                 </>
               )}
               {(user?.role === "PLAYER" || user?.role === "GOAL_KEEPER") && (

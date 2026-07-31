@@ -16,7 +16,8 @@
     "theme_light": "Switch to light theme",
     "theme_dark": "Switch to dark theme",
     "theme_light_short": "LIGHT",
-    "theme_dark_short": "DARK"
+    "theme_dark_short": "DARK",
+    "notifications": "Notifications"
   },
   "footer": {
     "text": "Built with Next.js 16 + DaisyUI — Demonstrating SSG, SSR, ISR, and CSR patterns"
@@ -585,5 +586,32 @@
     "attachments": "Attachments",
     "remove_attachment": "Remove attachment",
     "spellcheck_disclaimer": "I have reviewed my message for spelling and grammar."
+  },
+  "notifications": {
+    "title": "Notifications",
+    "bell_tooltip": "View notifications",
+    "mark_all_read": "Mark all as read",
+    "empty": "You have no notifications",
+    "match_created": "{playerName} has created a new match: {matchName}",
+    "match_updated": "{playerName} has edited a match: {matchName}",
+    "mark_as_read": "Mark as read",
+    "page_title": "Notifications Inbox",
+    "view_all": "View all",
+    "filter_all": "All",
+    "filter_unread": "Unread",
+    "filter_read": "Read",
+    "empty_state": "You have no notifications in this category.",
+    "previous": "Previous",
+    "next": "Next",
+    "page_info": "Page {page}",
+    "mark_as_unread": "Mark as unread",
+    "filter_by_player": "Filter by player",
+    "all_players": "All players",
+    "sort_by": "Sort by",
+    "sort_newest": "Newest first",
+    "sort_oldest": "Oldest first",
+    "sort_player_az": "By player (A-Z)",
+    "empty_state_player": "No notifications from {playerName} with this filter.",
+    "filter_last_3_months": "Show only last 3 months"
   }
 }
