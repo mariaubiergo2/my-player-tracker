@@ -44,7 +44,7 @@ export default function Header() {
                   <>
                     <li><Link href="/trainer/players">{t("header.all_players")}</Link></li>
                     <li><Link href="/trainer/my-players">{t("header.my_players")}</Link></li>
-                    <li><Link href="/trainer/notifications">{t("header.notifications")}</Link></li>
+                    <li><Link href="/notifications">{t("header.notifications")}</Link></li>
                   </>
                 )}
                 {(user?.role === "PLAYER" || user?.role === "GOAL_KEEPER") && (
@@ -52,6 +52,7 @@ export default function Header() {
                     <li><Link href="/dashboard">{t("header.dashboard")}</Link></li>
                     <li><Link href="/dashboard/physical">{t("header.physical_prep")}</Link></li>
                     <li><Link href="/dashboard/nutrition">{t("header.nutrition")}</Link></li>
+                    <li><Link href="/notifications">{t("header.notifications")}</Link></li>
                   </>
                 )}
               </>
@@ -73,7 +74,7 @@ export default function Header() {
                 <>
                   <li><Link href="/trainer/players">{t("header.all_players")}</Link></li>
                   <li><Link href="/trainer/my-players">{t("header.my_players")}</Link></li>
-                  <li><Link href="/trainer/notifications">{t("header.notifications")}</Link></li>
+                  <li><Link href="/notifications">{t("header.notifications")}</Link></li>
                 </>
               )}
               {(user?.role === "PLAYER" || user?.role === "GOAL_KEEPER") && (
@@ -81,6 +82,7 @@ export default function Header() {
                   <li><Link href="/dashboard">{t("header.dashboard")}</Link></li>
                   <li><Link href="/dashboard/physical">{t("header.physical_prep")}</Link></li>
                   <li><Link href="/dashboard/nutrition">{t("header.nutrition")}</Link></li>
+                  <li><Link href="/notifications">{t("header.notifications")}</Link></li>
                 </>
               )}
             </>
@@ -187,7 +189,7 @@ export default function Header() {
                 <>
                   <li><Link href="/trainer/players">{t("header.all_players")}</Link></li>
                   <li><Link href="/trainer/my-players">{t("header.my_players")}</Link></li>
-                  <li><Link href="/trainer/notifications">{t("header.notifications")}</Link></li>
+                  <li><Link href="/notifications">{t("header.notifications")}</Link></li>
                 </>
               )}
               {(user?.role === "PLAYER" || user?.role === "GOAL_KEEPER") && (
@@ -195,6 +197,7 @@ export default function Header() {
                   <li><Link href="/dashboard">{t("header.dashboard")}</Link></li>
                   <li><Link href="/dashboard/physical">{t("header.physical_prep")}</Link></li>
                   <li><Link href="/dashboard/nutrition">{t("header.nutrition")}</Link></li>
+                  <li><Link href="/notifications">{t("header.notifications")}</Link></li>
                 </>
               )}
               {user?.role !== "ADMIN" && (

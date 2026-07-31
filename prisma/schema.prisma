@@ -149,6 +149,9 @@ model MatchFeedbackMessage {
 enum NotificationType {
   MATCH_CREATED
   MATCH_UPDATED
+  MATCH_UPDATED_BY_TRAINER
+  FEEDBACK_MESSAGE_FROM_PLAYER
+  FEEDBACK_MESSAGE_FROM_TRAINER
 }
 
 model Notification {

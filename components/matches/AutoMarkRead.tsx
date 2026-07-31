@@ -5,15 +5,15 @@ import { markMatchNotificationsAsRead } from "@/actions/notifications";
 
 export default function AutoMarkRead({
   matchId,
-  trainerId,
+  recipientId,
 }: {
   matchId: string;
-  trainerId: string;
+  recipientId: string;
 }) {
   useEffect(() => {
     const run = async () => {
       try {
-        const res = await markMatchNotificationsAsRead(matchId, trainerId);
+        const res = await markMatchNotificationsAsRead(matchId, recipientId);
         if (res.success) {
           window.dispatchEvent(new CustomEvent("notifications-updated"));
         }
@@ -22,7 +22,7 @@ export default function AutoMarkRead({
       }
     };
     run();
-  }, [matchId, trainerId]);
+  }, [matchId, recipientId]);
 
   return null;
 }

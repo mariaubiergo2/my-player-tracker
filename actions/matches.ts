@@ -454,6 +454,18 @@ export async function updateMatch(matchId: string, updates: any) {
       });
     }
 
+    // Notify player if updated by trainer
+    const isEditingTrainer = currentUser.role === "TRAINER";
+    if (isEditingTrainer && match.playerId) {
+      await prisma.notification.create({
+        data: {
+          recipientId: match.playerId,
+          type: "MATCH_UPDATED_BY_TRAINER",
+          matchId: match.id,
+        },
+      });
+    }
+
     revalidatePath("/dashboard");
     revalidatePath("/matches");
     revalidatePath(`/matches/${matchId}`);

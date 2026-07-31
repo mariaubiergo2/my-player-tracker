@@ -154,6 +154,34 @@ export async function createFeedbackMessage(matchId: string, content: string) {
       },
     })
 
+    // Notify recipient of new feedback message
+    const isAuthorPlayer = currentUser.role === "PLAYER" || currentUser.role === "GOAL_KEEPER";
+    const isAuthorTrainer = currentUser.role === "TRAINER";
+
+    if (isAuthorPlayer) {
+      const recipientId = match.trainerId || match.player.trainerId;
+      if (recipientId && recipientId !== currentUser.userId) {
+        await prisma.notification.create({
+          data: {
+            recipientId,
+            type: "FEEDBACK_MESSAGE_FROM_PLAYER",
+            matchId: match.id,
+          },
+        });
+      }
+    } else if (isAuthorTrainer) {
+      const recipientId = match.playerId;
+      if (recipientId && recipientId !== currentUser.userId) {
+        await prisma.notification.create({
+          data: {
+            recipientId,
+            type: "FEEDBACK_MESSAGE_FROM_TRAINER",
+            matchId: match.id,
+          },
+        });
+      }
+    }
+
     // Revalidate paths
     revalidatePath("/dashboard")
     revalidatePath(`/matches/${matchId}`)

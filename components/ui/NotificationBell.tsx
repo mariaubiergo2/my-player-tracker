@@ -16,7 +16,7 @@ import { formatRelativeTime } from "@/lib/utils/dates";
 interface NotificationItem {
   id: string;
   recipientId: string;
-  type: "MATCH_CREATED" | "MATCH_UPDATED";
+  type: "MATCH_CREATED" | "MATCH_UPDATED" | "MATCH_UPDATED_BY_TRAINER" | "FEEDBACK_MESSAGE_FROM_PLAYER" | "FEEDBACK_MESSAGE_FROM_TRAINER";
   matchId: string;
   isRead: boolean;
   createdAt: Date;
@@ -27,7 +27,20 @@ interface NotificationItem {
       id: string;
       name: string;
       surname: string;
+      avatarUrl?: string | null;
+      trainer?: {
+        id: string;
+        name: string;
+        surname: string;
+        avatarUrl?: string | null;
+      } | null;
     };
+    trainer?: {
+      id: string;
+      name: string;
+      surname: string;
+      avatarUrl?: string | null;
+    } | null;
   };
 }
 
@@ -42,7 +55,10 @@ export default function NotificationBell() {
   const [loadingList, setLoadingList] = useState(false);
   const [isPending, startTransition] = useTransition();
 
-  const isTrainer = user?.role === "TRAINER";
+  const isUserAuthorized =
+    user?.role === "TRAINER" ||
+    user?.role === "PLAYER" ||
+    user?.role === "GOAL_KEEPER";
 
   const fetchUnreadCount = async () => {
     if (!user?.id) return;
@@ -73,17 +89,17 @@ export default function NotificationBell() {
 
   // Fetch count on mount, when user changes, or when pathname changes
   useEffect(() => {
-    if (isTrainer) {
+    if (isUserAuthorized) {
       fetchUnreadCount();
       if (hasOpened) {
         fetchNotificationsList();
       }
     }
-  }, [user?.id, pathname, isTrainer, hasOpened]);
+  }, [user?.id, pathname, isUserAuthorized, hasOpened]);
 
   // Listen to custom notification update events
   useEffect(() => {
-    if (!isTrainer) return;
+    if (!isUserAuthorized) return;
     const handleUpdate = () => {
       fetchUnreadCount();
       if (hasOpened) {
@@ -94,9 +110,9 @@ export default function NotificationBell() {
     return () => {
       window.removeEventListener("notifications-updated", handleUpdate);
     };
-  }, [isTrainer, hasOpened]);
+  }, [isUserAuthorized, hasOpened]);
 
-  if (!isTrainer) return null;
+  if (!isUserAuthorized) return null;
 
   const handleToggleReadState = (id: string, isRead: boolean, e: React.MouseEvent) => {
     e.preventDefault();
@@ -208,14 +224,25 @@ export default function NotificationBell() {
           ) : (
             notifications.map((n) => {
               const playerName = `${n.match.player.name} ${n.match.player.surname}`;
+              const trainerName = n.match.trainer
+                ? `${n.match.trainer.name} ${n.match.trainer.surname}`
+                : n.match.player.trainer
+                ? `${n.match.player.trainer.name} ${n.match.player.trainer.surname}`
+                : "";
               const matchName = n.match.name;
               
-              const messageText = t(
-                n.type === "MATCH_CREATED"
-                  ? "notifications.match_created"
-                  : "notifications.match_updated",
-                { playerName, matchName }
-              );
+              let messageText = "";
+              if (n.type === "MATCH_CREATED") {
+                messageText = t("notifications.match_created", { playerName, matchName });
+              } else if (n.type === "MATCH_UPDATED") {
+                messageText = t("notifications.match_updated", { playerName, matchName });
+              } else if (n.type === "MATCH_UPDATED_BY_TRAINER") {
+                messageText = t("notifications.match_updated_by_trainer", { trainerName, matchName });
+              } else if (n.type === "FEEDBACK_MESSAGE_FROM_PLAYER") {
+                messageText = t("notifications.feedback_message_from_player", { playerName, matchName });
+              } else if (n.type === "FEEDBACK_MESSAGE_FROM_TRAINER") {
+                messageText = t("notifications.feedback_message_from_trainer", { trainerName, matchName });
+              }
 
               return (
                 <li
@@ -292,7 +319,7 @@ export default function NotificationBell() {
         {notifications.length > 0 && (
           <div className="border-t border-base-content/10 p-2 text-center">
             <Link
-              href="/trainer/notifications"
+              href="/notifications"
               onClick={closeDropdown}
               className="text-xs text-primary hover:underline font-bold"
             >

@@ -39,8 +39,8 @@ export default async function MatchPage({
 
   return (
     <PageContainer className="py-10">
-      {currentUser?.role === "TRAINER" && (
-        <AutoMarkRead matchId={identifier} trainerId={currentUser.userId} />
+      {(currentUser?.role === "TRAINER" || currentUser?.role === "PLAYER" || currentUser?.role === "GOAL_KEEPER") && (
+        <AutoMarkRead matchId={identifier} recipientId={currentUser.userId} />
       )}
       <div className="mb-10">
         <Link 

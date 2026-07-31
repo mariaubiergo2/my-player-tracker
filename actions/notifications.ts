@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 
 export async function getNotifications(
-  trainerId: string,
+  recipientId: string,
   page: number = 1,
   limit: number = 20,
   filter: "all" | "unread" | "read" = "all",
@@ -16,11 +16,11 @@ export async function getNotifications(
 ) {
   try {
     const currentUser = await getCurrentUser();
-    if (!currentUser || currentUser.userId !== trainerId) {
+    if (!currentUser || currentUser.userId !== recipientId) {
       return { success: false, error: "Unauthorized" };
     }
 
-    const whereClause: any = { recipientId: trainerId };
+    const whereClause: any = { recipientId };
     if (filter === "unread") {
       whereClause.isRead = false;
     } else if (filter === "read") {
@@ -62,6 +62,22 @@ export async function getNotifications(
           match: {
             include: {
               player: {
+                select: {
+                  id: true,
+                  name: true,
+                  surname: true,
+                  avatarUrl: true,
+                  trainer: {
+                    select: {
+                      id: true,
+                      name: true,
+                      surname: true,
+                      avatarUrl: true,
+                    },
+                  },
+                },
+              },
+              trainer: {
                 select: {
                   id: true,
                   name: true,
@@ -119,16 +135,16 @@ export async function toggleNotificationReadState(notificationId: string, isRead
   }
 }
 
-export async function markAllNotificationsAsRead(trainerId: string) {
+export async function markAllNotificationsAsRead(recipientId: string) {
   try {
     const currentUser = await getCurrentUser();
-    if (!currentUser || currentUser.userId !== trainerId) {
+    if (!currentUser || currentUser.userId !== recipientId) {
       return { success: false, error: "Unauthorized" };
     }
 
     await prisma.notification.updateMany({
       where: {
-        recipientId: trainerId,
+        recipientId,
         isRead: false,
       },
       data: { isRead: true },
@@ -144,16 +160,16 @@ export async function markAllNotificationsAsRead(trainerId: string) {
   }
 }
 
-export async function markMatchNotificationsAsRead(matchId: string, trainerId: string) {
+export async function markMatchNotificationsAsRead(matchId: string, recipientId: string) {
   try {
     const currentUser = await getCurrentUser();
-    if (!currentUser || currentUser.userId !== trainerId) {
+    if (!currentUser || currentUser.userId !== recipientId) {
       return { success: false, error: "Unauthorized" };
     }
 
     await prisma.notification.updateMany({
       where: {
-        recipientId: trainerId,
+        recipientId,
         matchId: matchId,
         isRead: false,
       },
@@ -171,16 +187,16 @@ export async function markMatchNotificationsAsRead(matchId: string, trainerId: s
   }
 }
 
-export async function getUnreadNotificationsCount(trainerId: string) {
+export async function getUnreadNotificationsCount(recipientId: string) {
   try {
     const currentUser = await getCurrentUser();
-    if (!currentUser || currentUser.userId !== trainerId) {
+    if (!currentUser || currentUser.userId !== recipientId) {
       return { success: false, error: "Unauthorized" };
     }
 
     const count = await prisma.notification.count({
       where: {
-        recipientId: trainerId,
+        recipientId,
         isRead: false,
       },
     });
@@ -192,16 +208,16 @@ export async function getUnreadNotificationsCount(trainerId: string) {
   }
 }
 
-export async function getNotificationPlayers(trainerId: string) {
+export async function getNotificationPlayers(recipientId: string) {
   try {
     const currentUser = await getCurrentUser();
-    if (!currentUser || currentUser.userId !== trainerId) {
+    if (!currentUser || currentUser.userId !== recipientId) {
       return { success: false, error: "Unauthorized" };
     }
 
     // Find all notifications for this trainer and select distinct players from matches
     const notifications = await prisma.notification.findMany({
-      where: { recipientId: trainerId },
+      where: { recipientId },
       select: {
         match: {
           select: {

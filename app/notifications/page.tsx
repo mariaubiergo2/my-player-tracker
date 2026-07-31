@@ -17,7 +17,7 @@ import { formatRelativeTime } from "@/lib/utils/dates";
 interface NotificationItem {
   id: string;
   recipientId: string;
-  type: "MATCH_CREATED" | "MATCH_UPDATED";
+  type: "MATCH_CREATED" | "MATCH_UPDATED" | "MATCH_UPDATED_BY_TRAINER" | "FEEDBACK_MESSAGE_FROM_PLAYER" | "FEEDBACK_MESSAGE_FROM_TRAINER";
   matchId: string;
   isRead: boolean;
   createdAt: string | Date;
@@ -29,7 +29,19 @@ interface NotificationItem {
       name: string;
       surname: string;
       avatarUrl: string | null;
+      trainer?: {
+        id: string;
+        name: string;
+        surname: string;
+        avatarUrl: string | null;
+      } | null;
     };
+    trainer?: {
+      id: string;
+      name: string;
+      surname: string;
+      avatarUrl: string | null;
+    } | null;
   };
 }
 
@@ -54,16 +66,21 @@ function NotificationsInboxContent() {
   const page = parseInt(searchParams.get("page") || "1", 10);
   const onlyRecent = searchParams.get("recent") !== "false";
 
+  const isUserAuthorized =
+    user?.role === "TRAINER" ||
+    user?.role === "PLAYER" ||
+    user?.role === "GOAL_KEEPER";
+
   // Route protection
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
         router.push("/login");
-      } else if (user?.role !== "TRAINER") {
+      } else if (!isUserAuthorized) {
         router.push("/dashboard");
       }
     }
-  }, [isLoading, isAuthenticated, user, router]);
+  }, [isLoading, isAuthenticated, user, router, isUserAuthorized]);
 
   // Fetch unique players who generated notifications for this trainer
   useEffect(() => {
@@ -80,14 +97,14 @@ function NotificationsInboxContent() {
 
   // Fetch notifications when search parameters or user change
   useEffect(() => {
-    if (user?.role === "TRAINER" && user?.id) {
+    if (isUserAuthorized && user?.id) {
       fetchNotifications();
     }
-  }, [user?.id, page, filter, selectedPlayerId, sortBy, onlyRecent, user?.role]);
+  }, [user?.id, page, filter, selectedPlayerId, sortBy, onlyRecent, user?.role, isUserAuthorized]);
 
   // Listen to custom notification update events
   useEffect(() => {
-    if (user?.role !== "TRAINER" || !user?.id) return;
+    if (!isUserAuthorized || !user?.id) return;
     const handleUpdate = () => {
       fetchNotifications();
     };
@@ -95,7 +112,7 @@ function NotificationsInboxContent() {
     return () => {
       window.removeEventListener("notifications-updated", handleUpdate);
     };
-  }, [user?.role, user?.id, page, filter, selectedPlayerId, sortBy, onlyRecent]);
+  }, [user?.role, user?.id, page, filter, selectedPlayerId, sortBy, onlyRecent, isUserAuthorized]);
 
   const fetchNotifications = async () => {
     if (!user?.id) return;
@@ -130,7 +147,7 @@ function NotificationsInboxContent() {
         params.set(key, String(value));
       }
     }
-    router.replace(`/trainer/notifications?${params.toString()}`);
+    router.replace(`/notifications?${params.toString()}`);
   };
 
   const handleToggleReadState = (id: string, isRead: boolean, e: React.MouseEvent) => {
@@ -163,7 +180,7 @@ function NotificationsInboxContent() {
     });
   };
 
-  if (isLoading || user?.role !== "TRAINER") {
+  if (isLoading || !isUserAuthorized) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
         <span className="loading loading-spinner loading-lg text-primary"></span>
@@ -253,21 +270,23 @@ function NotificationsInboxContent() {
             </label>
           </div>
 
-          {/* Player Select Filter */}
-          <div className="form-control w-full sm:w-44">
-            <select
-              value={selectedPlayerId}
-              onChange={(e) => updateParams({ player: e.target.value, page: 1 })}
-              className="select select-bordered select-sm w-full font-medium"
-            >
-              <option value="">{t("notifications.all_players")}</option>
-              {players.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} {p.surname}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Player Select Filter (Trainer only) */}
+          {user?.role === "TRAINER" && (
+            <div className="form-control w-full sm:w-44">
+              <select
+                value={selectedPlayerId}
+                onChange={(e) => updateParams({ player: e.target.value, page: 1 })}
+                className="select select-bordered select-sm w-full font-medium"
+              >
+                <option value="">{t("notifications.all_players")}</option>
+                {players.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} {p.surname}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Sort order Selector */}
           <div className="form-control w-full sm:w-44">
@@ -278,7 +297,9 @@ function NotificationsInboxContent() {
             >
               <option value="date_desc">{t("notifications.sort_newest")}</option>
               <option value="date_asc">{t("notifications.sort_oldest")}</option>
-              <option value="player_asc">{t("notifications.sort_player_az")}</option>
+              {user?.role === "TRAINER" && (
+                <option value="player_asc">{t("notifications.sort_player_az")}</option>
+              )}
             </select>
           </div>
         </div>
@@ -300,14 +321,31 @@ function NotificationsInboxContent() {
         <div className="space-y-3">
           {notifications.map((n) => {
             const playerName = `${n.match.player.name} ${n.match.player.surname}`;
+            const trainerName = n.match.trainer
+              ? `${n.match.trainer.name} ${n.match.trainer.surname}`
+              : n.match.player.trainer
+              ? `${n.match.player.trainer.name} ${n.match.player.trainer.surname}`
+              : "";
             const matchName = n.match.name;
 
-            const messageText = t(
-              n.type === "MATCH_CREATED"
-                ? "notifications.match_created"
-                : "notifications.match_updated",
-              { playerName, matchName }
-            );
+            let messageText = "";
+            if (n.type === "MATCH_CREATED") {
+              messageText = t("notifications.match_created", { playerName, matchName });
+            } else if (n.type === "MATCH_UPDATED") {
+              messageText = t("notifications.match_updated", { playerName, matchName });
+            } else if (n.type === "MATCH_UPDATED_BY_TRAINER") {
+              messageText = t("notifications.match_updated_by_trainer", { trainerName, matchName });
+            } else if (n.type === "FEEDBACK_MESSAGE_FROM_PLAYER") {
+              messageText = t("notifications.feedback_message_from_player", { playerName, matchName });
+            } else if (n.type === "FEEDBACK_MESSAGE_FROM_TRAINER") {
+              messageText = t("notifications.feedback_message_from_trainer", { trainerName, matchName });
+            }
+
+            const isFromTrainer = n.type === "MATCH_UPDATED_BY_TRAINER" || n.type === "FEEDBACK_MESSAGE_FROM_TRAINER";
+            const avatarUrl = isFromTrainer
+              ? (n.match.trainer?.avatarUrl || n.match.player.trainer?.avatarUrl || null)
+              : n.match.player.avatarUrl;
+            const senderName = isFromTrainer ? trainerName : playerName;
 
             // Localized full date
             const fullDateString = new Date(n.createdAt).toLocaleDateString(
@@ -332,18 +370,18 @@ function NotificationsInboxContent() {
                 }`}
               >
                 <div className="card-body p-4 flex flex-row items-center gap-4">
-                  {/* Player Avatar */}
+                  {/* Sender Avatar */}
                   <div className="avatar placeholder flex-shrink-0">
                     <div className="bg-neutral text-neutral-content rounded-full w-10 h-10 overflow-hidden flex items-center justify-center">
-                      {n.match.player.avatarUrl ? (
+                      {avatarUrl ? (
                         <img
-                          src={n.match.player.avatarUrl}
-                          alt={playerName}
+                          src={avatarUrl}
+                          alt={senderName}
                           className="w-full h-full object-cover"
                         />
                       ) : (
                         <span className="text-sm font-semibold">
-                          {n.match.player.name.charAt(0).toUpperCase()}
+                          {senderName.charAt(0).toUpperCase()}
                         </span>
                       )}
                     </div>
