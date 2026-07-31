@@ -42,9 +42,8 @@ export default function Header() {
                 )}
                 {user?.role === "TRAINER" && (
                   <>
-                    <li><Link href="/trainer/players">{t("header.all_players")}</Link></li>
                     <li><Link href="/trainer/my-players">{t("header.my_players")}</Link></li>
-                    <li><Link href="/notifications">{t("header.notifications")}</Link></li>
+                    <li><Link href="/trainer/players">{t("header.all_players")}</Link></li>
                   </>
                 )}
                 {(user?.role === "PLAYER" || user?.role === "GOAL_KEEPER") && (
@@ -52,7 +51,6 @@ export default function Header() {
                     <li><Link href="/dashboard">{t("header.dashboard")}</Link></li>
                     <li><Link href="/dashboard/physical">{t("header.physical_prep")}</Link></li>
                     <li><Link href="/dashboard/nutrition">{t("header.nutrition")}</Link></li>
-                    <li><Link href="/notifications">{t("header.notifications")}</Link></li>
                   </>
                 )}
               </>
@@ -72,9 +70,8 @@ export default function Header() {
               )}
               {user?.role === "TRAINER" && (
                 <>
-                  <li><Link href="/trainer/players">{t("header.all_players")}</Link></li>
                   <li><Link href="/trainer/my-players">{t("header.my_players")}</Link></li>
-                  <li><Link href="/notifications">{t("header.notifications")}</Link></li>
+                  <li><Link href="/trainer/players">{t("header.all_players")}</Link></li>
                 </>
               )}
               {(user?.role === "PLAYER" || user?.role === "GOAL_KEEPER") && (
@@ -82,7 +79,6 @@ export default function Header() {
                   <li><Link href="/dashboard">{t("header.dashboard")}</Link></li>
                   <li><Link href="/dashboard/physical">{t("header.physical_prep")}</Link></li>
                   <li><Link href="/dashboard/nutrition">{t("header.nutrition")}</Link></li>
-                  <li><Link href="/notifications">{t("header.notifications")}</Link></li>
                 </>
               )}
             </>
@@ -181,37 +177,52 @@ export default function Header() {
               tabIndex={0}
               className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
             >
-              <li className="menu-title">{user?.name} ({user?.role})</li>
+              {/* Identity Header */}
+              <li className="menu-title border-b border-base-content/10 pb-1.5 mb-1.5">
+                {user?.name} ({user?.role})
+              </li>
+
+              {/* Navigation Items by Role */}
               {user?.role === "ADMIN" && (
                 <li><Link href="/admin/users">{t("header.users")}</Link></li>
               )}
+
               {user?.role === "TRAINER" && (
                 <>
-                  <li><Link href="/trainer/players">{t("header.all_players")}</Link></li>
                   <li><Link href="/trainer/my-players">{t("header.my_players")}</Link></li>
                   <li><Link href="/notifications">{t("header.notifications")}</Link></li>
+                  <li><Link href="/trainer/players">{t("header.all_players")}</Link></li>
                 </>
               )}
+
               {(user?.role === "PLAYER" || user?.role === "GOAL_KEEPER") && (
                 <>
                   <li><Link href="/dashboard">{t("header.dashboard")}</Link></li>
+                  <li><Link href="/notifications">{t("header.notifications")}</Link></li>
                   <li><Link href="/dashboard/physical">{t("header.physical_prep")}</Link></li>
                   <li><Link href="/dashboard/nutrition">{t("header.nutrition")}</Link></li>
-                  <li><Link href="/notifications">{t("header.notifications")}</Link></li>
                 </>
               )}
-              {user?.role !== "ADMIN" && (
-                <li>
-                  <Link href="/matches/create">{t("header.create_match")}</Link>
-                </li>
-              )}
+
+              {/* Account Configuration Section */}
               {(user?.role === "PLAYER" || user?.role === "GOAL_KEEPER" || user?.role === "TRAINER") && (
-                <li>
-                  <Link href="/profile">{t("header.edit_profile")}</Link>
-                </li>
+                <>
+                  <div className="divider my-1"></div>
+                  <li>
+                    <Link href="/profile">{t("header.edit_profile")}</Link>
+                  </li>
+                </>
               )}
+
+              {/* Logout/Exit Section */}
+              <div className="divider my-1"></div>
               <li>
-                <button onClick={logout}>{t("header.logout")}</button>
+                <button
+                  onClick={logout}
+                  className="text-error hover:bg-error/10 hover:text-error"
+                >
+                  {t("header.logout")}
+                </button>
               </li>
             </ul>
           </div>

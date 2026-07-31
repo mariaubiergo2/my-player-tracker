@@ -170,6 +170,7 @@ export default function NotificationBell() {
         onFocus={handleOpenDropdown}
         className="btn btn-ghost btn-circle btn-sm relative border border-base-content/10 bg-base-100/50 hover:bg-base-200"
         title={t("notifications.bell_tooltip")}
+        aria-label={t("notifications.bell_tooltip")}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

@@ -99,6 +99,46 @@ export default function DashboardPage() {
     return null;
   }
 
+  // Calculate feedback statistics
+  const totalMatchesCount = matches.length;
+  const matchesWithFeedbackCount = matches.filter(
+    (m) =>
+      (m.trainerFeedback && m.trainerFeedback.trim() !== "") ||
+      (m.feedbackMessages && m.feedbackMessages.length > 0)
+  ).length;
+
+  const feedbackPercentage = totalMatchesCount > 0
+    ? Math.round((matchesWithFeedbackCount / totalMatchesCount) * 100)
+    : 0;
+
+  const getLatestFeedbackTime = (m: CompleteMatch) => {
+    const dates: Date[] = [];
+    if (m.trainerFeedback && m.trainerFeedback.trim() !== "") {
+      if (m.reviewedAt) dates.push(new Date(m.reviewedAt));
+      else if (m.updatedAt) dates.push(new Date(m.updatedAt));
+    }
+    if (m.feedbackMessages && m.feedbackMessages.length > 0) {
+      dates.push(new Date(m.feedbackMessages[0].createdAt));
+    }
+    if (dates.length === 0) return null;
+    return new Date(Math.max(...dates.map((d) => d.getTime())));
+  };
+
+  let lastFeedbackDateStr = t("dashboard_page.no_feedback_yet");
+  if (totalMatchesCount > 0) {
+    const feedbackTimes = matches
+      .map(getLatestFeedbackTime)
+      .filter((d): d is Date => d !== null);
+    if (feedbackTimes.length > 0) {
+      const latestDate = new Date(Math.max(...feedbackTimes.map((d) => d.getTime())));
+      lastFeedbackDateStr = latestDate.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    }
+  }
+
   return (
     <PageContainer className="py-10">
       {/* Header */}
@@ -116,24 +156,39 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats */}
-          <div className="stats shadow mb-8">
-            <div className="stat">
-              <div className="stat-title">{t("dashboard_page.stats_total")}</div>
-              <div className="stat-value">{matches.length}</div>
-            </div>
-            <div className="stat">
-              <div className="stat-title">{t("dashboard_page.stats_reviewed")}</div>
-              <div className="stat-value text-primary">
-                {matches.filter((s) => s.isReviewed).length}
-              </div>
-            </div>
-            <div className="stat">
-              <div className="stat-title">{t("dashboard_page.stats_pending")}</div>
-              <div className="stat-value text-secondary">
-                {matches.filter((s) => !s.isReviewed).length}
-              </div>
-            </div>
+      <div className="stats stats-vertical md:stats-horizontal shadow mb-8 w-full">
+        <div className="stat">
+          <div className="stat-title">{t("dashboard_page.stats_total")}</div>
+          <div className="stat-value">{matches.length}</div>
+        </div>
+        <div className="stat">
+          <div className="stat-title">{t("dashboard_page.stats_reviewed")}</div>
+          <div className="stat-value text-primary">
+            {matches.filter((s) => s.isReviewed).length}
           </div>
+        </div>
+        <div className="stat">
+          <div className="stat-title">{t("dashboard_page.stats_pending")}</div>
+          <div className="stat-value text-secondary">
+            {matches.filter((s) => !s.isReviewed).length}
+          </div>
+        </div>
+        <div className="stat">
+          <div className="stat-title">{t("dashboard_page.stats_feedback_ratio")}</div>
+          <div className="stat-value text-accent">
+            {feedbackPercentage}%
+          </div>
+          <div className="stat-desc">
+            {matchesWithFeedbackCount} / {totalMatchesCount} {t("dashboard_page.stats_total").toLowerCase()}
+          </div>
+        </div>
+        <div className="stat">
+          <div className="stat-title">{t("dashboard_page.stats_last_feedback")}</div>
+          <div className="stat-value text-info text-xl md:text-2xl flex items-center min-h-[3rem]">
+            {lastFeedbackDateStr}
+          </div>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
         {/* Left Column: Calendar (Optional) */}

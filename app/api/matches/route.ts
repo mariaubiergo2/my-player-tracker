@@ -23,6 +23,20 @@ export async function GET(request: NextRequest) {
         _count: {
           select: { feedbackMessages: true },
         },
+        feedbackMessages: {
+          where: {
+            authorRole: {
+              in: ["trainer", "admin"],
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+          take: 1,
+          select: {
+            createdAt: true,
+          },
+        },
       },
       orderBy: { date: "desc" },
     });

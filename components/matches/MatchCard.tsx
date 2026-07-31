@@ -85,11 +85,10 @@ export default function MatchCard({
               {match.opponent && <span>⚔️ vs {match.opponent}</span>}
             </div>
             <div className="mt-3.5 flex items-center gap-2">
-              <span className={`badge badge-sm gap-1.5 py-2.5 px-3 font-semibold transition-all ${
-                feedbackCount > 0
+              <span className={`badge badge-sm gap-1.5 py-2.5 px-3 font-semibold transition-all ${feedbackCount > 0
                   ? "badge-primary badge-outline shadow-sm"
                   : "badge-ghost text-base-content/40"
-              }`}>
+                }`}>
                 💬 {feedbackText}
               </span>
             </div>

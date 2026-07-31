@@ -56,6 +56,7 @@ export interface Match {
   _count?: {
     feedbackMessages: number;
   } | null;
+  feedbackMessages?: { createdAt: string | Date }[] | null;
 }
 
 export interface SimpleMatch {
