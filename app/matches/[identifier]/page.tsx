@@ -37,6 +37,11 @@ export default async function MatchPage({
 
   if (!match) notFound()
 
+  const isPlayer = currentUser && match.playerId === currentUser.userId
+  const isTrainer = currentUser && (match.trainerId === currentUser.userId || match.player?.trainerId === currentUser.userId)
+  const isAdmin = currentUser?.role === "ADMIN"
+  const canEdit = isPlayer || isTrainer || isAdmin
+
   return (
     <PageContainer className="py-10">
       {(currentUser?.role === "TRAINER" || currentUser?.role === "PLAYER" || currentUser?.role === "GOAL_KEEPER") && (
@@ -60,6 +65,15 @@ export default async function MatchPage({
               {match.description || t("match_details.description_placeholder")}
             </p>
           </div>
+
+          {canEdit && (
+            <Link
+              href={`/matches/${identifier}/edit`}
+              className="btn btn-primary shadow-lg hover:scale-105 active:scale-95 transition-all"
+            >
+              ✏️ {t("match_details.edit_btn")}
+            </Link>
+          )}
         </div>
       </div>
 

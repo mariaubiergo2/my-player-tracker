@@ -28,6 +28,11 @@ export default function EditMatchForm({
   const router = useRouter()
   const { t } = useTranslation()
   const isPlayerLike = currentUserRole === "PLAYER" || currentUserRole === "GOAL_KEEPER"
+  const redirectUrl = currentUserRole === "TRAINER"
+    ? "/trainer/my-players"
+    : currentUserRole === "ADMIN"
+      ? "/admin/users"
+      : "/dashboard"
 
   // State hooks for all Match fields
   const [name, setName] = useState(match.name ?? "")
@@ -144,7 +149,7 @@ export default function EditMatchForm({
       })
 
       if (result.success) {
-        router.push("/dashboard")
+        router.push(redirectUrl)
       } else {
         setError(result.error || t("common.error"))
       }
@@ -158,7 +163,7 @@ export default function EditMatchForm({
   return (
     <PageContainer className="py-10">
       <div className="mb-10">
-        <Link href="/dashboard" className="btn btn-ghost btn-sm gap-2 mb-4">
+        <Link href={redirectUrl} className="btn btn-ghost btn-sm gap-2 mb-4">
           {t("match_details.back_dashboard")}
         </Link>
         <h1 className="text-4xl font-bold text-primary">{t("match_form.edit_title")}</h1>
@@ -371,7 +376,7 @@ export default function EditMatchForm({
                       t("match_form.save_btn")
                     )}
                   </button>
-                  <Link href="/dashboard" className="btn btn-ghost w-full">
+                  <Link href={redirectUrl} className="btn btn-ghost w-full">
                     {t("common.cancel")}
                   </Link>
                 </div>

@@ -287,6 +287,7 @@
   },
   "match_details": {
     "back_dashboard": "← Tornar",
+    "edit_btn": "Editar partit",
     "description_placeholder": "Sense descripció disponible.",
     "info_title": "Informació del partit",
     "perf_title": "Rendiment del jugador",

@@ -218,7 +218,7 @@ export default function MyPlayersPage() {
               </div>
 
               {/* Scrollable list */}
-              <div className="menu bg-base-100 rounded-box border border-base-200 shadow-md p-2 space-y-1 max-h-[380px] overflow-y-auto scrollbar-thin">
+              <div className="menu w-full bg-base-100 rounded-box border border-base-200 shadow-md p-2 space-y-1 max-h-[380px] overflow-y-auto scrollbar-thin">
                 {filteredPlayers.length === 0 ? (
                   <div className="text-center py-6 text-sm text-base-content/50">
                     {t("trainer_my_players.no_players_found")}

@@ -287,6 +287,7 @@
   },
   "match_details": {
     "back_dashboard": "← Back",
+    "edit_btn": "Edit Match",
     "description_placeholder": "No description available.",
     "info_title": "Match Information",
     "perf_title": "Player Performance",
