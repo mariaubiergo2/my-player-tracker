@@ -33,7 +33,7 @@ export default function NutritionPage() {
       } else if (user?.role === "ADMIN") {
         router.push("/admin/users");
       } else if (user?.role === "TRAINER") {
-        router.push("/trainer/players");
+        router.push("/trainer/my-players");
       }
     }
   }, [isLoading, isAuthenticated, user, router]);

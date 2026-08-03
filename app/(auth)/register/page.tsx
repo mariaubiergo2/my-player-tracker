@@ -28,7 +28,7 @@ export default function RegisterPage() {
       if (user?.role === "ADMIN") {
         router.push("/admin/users");
       } else if (user?.role === "TRAINER") {
-        router.push("/trainer/players");
+        router.push("/trainer/my-players");
       } else {
         router.push("/dashboard");
       }
