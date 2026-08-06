@@ -1,0 +1,142 @@
+#!/usr/bin/env node
+/**
+ * git-hours.js
+ * Estima las horas trabajadas en un repo agrupando commits en "sesiones".
+ * No requiere dependencias externas, solo Node y Git instalados.
+ *
+ * Uso:
+ *   node git-hours.js
+ *   node git-hours.js --gap=90        (umbral de sesión en minutos, default 120)
+ *   node git-hours.js --first=15      (minutos que se cuentan para el primer commit de una sesión, default 15)
+ *   node git-hours.js --author="Tu Nombre"   (filtrar por autor)
+ */
+
+const { execSync } = require('child_process');
+
+// --- Leer argumentos ---
+const args = process.argv.slice(2).reduce((acc, arg) => {
+  const [key, value] = arg.replace(/^--/, '').split('=');
+  acc[key] = value ?? true;
+  return acc;
+}, {});
+
+const GAP_MINUTES = parseFloat(args.gap ?? 120);       // si el hueco entre commits es mayor, se considera nueva sesión
+const firstMinutes = 30 // compto amb que el primer commit sempre trigo més per connectar-me
+const FIRST_COMMIT_MINUTES = parseFloat(args.first ?? firstMinutes); // tiempo estimado "de arranque" para el primer commit de una sesión
+const AUTHOR_FILTER = args.author;
+
+// --- Alias de autores: distintos nombres/usuarios que son la misma persona ---
+// Añade aquí más entradas si tienes otros alias, formato: 'nombre_tal_como_aparece_en_git': 'Nombre unificado'
+const AUTHOR_ALIASES = {
+  'Maria': 'Maria',
+  'mariaubiergo2': 'Maria',
+};
+ 
+function normalizeAuthor(name) {
+  return AUTHOR_ALIASES[name] || name;
+}
+ 
+// --- Comprobar que estamos en un repo git ---
+try {
+  execSync('git rev-parse --is-inside-work-tree', { stdio: 'ignore' });
+} catch (e) {
+  console.error('Error: esta carpeta no es un repositorio Git (o Git no está instalado/en PATH).');
+  process.exit(1);
+}
+ 
+// --- Obtener el log ---
+let cmd = 'git log --all --pretty=format:"%H|%ad|%an" --date=iso-strict';
+if (AUTHOR_FILTER) cmd += ` --author="${AUTHOR_FILTER}"`;
+ 
+let raw;
+try {
+  raw = execSync(cmd, { encoding: 'utf-8', maxBuffer: 1024 * 1024 * 50 });
+} catch (e) {
+  console.error('Error ejecutando git log:', e.message);
+  process.exit(1);
+}
+ 
+if (!raw.trim()) {
+  console.log('No se encontraron commits (revisa el filtro de autor si usaste --author).');
+  process.exit(0);
+}
+ 
+const commits = raw
+  .trim()
+  .split('\n')
+  .map(line => {
+    const [hash, date, author] = line.split('|');
+    return { hash, date: new Date(date), author: normalizeAuthor(author) };
+  })
+  .sort((a, b) => a.date - b.date); // orden cronológico ascendente
+ 
+// --- Agrupar por autor ---
+const byAuthor = {};
+for (const c of commits) {
+  if (!byAuthor[c.author]) byAuthor[c.author] = [];
+  byAuthor[c.author].push(c);
+}
+ 
+// --- Calcular horas estimadas ---
+function estimateHours(commitList) {
+  let totalMinutes = 0;
+  const dailyMinutes = {}; // para desglose por día
+  const sessions = [];
+ 
+  let sessionStart = null;
+ 
+  for (let i = 0; i < commitList.length; i++) {
+    const day = commitList[i].date.toISOString().slice(0, 10);
+ 
+    if (i === 0) {
+      totalMinutes += FIRST_COMMIT_MINUTES;
+      dailyMinutes[day] = (dailyMinutes[day] || 0) + FIRST_COMMIT_MINUTES;
+      sessionStart = commitList[i].date;
+      continue;
+    }
+ 
+    const diffMinutes = (commitList[i].date - commitList[i - 1].date) / 60000;
+ 
+    if (diffMinutes <= GAP_MINUTES) {
+      totalMinutes += diffMinutes;
+      dailyMinutes[day] = (dailyMinutes[day] || 0) + diffMinutes;
+    } else {
+      // nueva sesión
+      sessions.push({ start: sessionStart, end: commitList[i - 1].date });
+      totalMinutes += FIRST_COMMIT_MINUTES;
+      dailyMinutes[day] = (dailyMinutes[day] || 0) + FIRST_COMMIT_MINUTES;
+      sessionStart = commitList[i].date;
+    }
+  }
+  sessions.push({ start: sessionStart, end: commitList[commitList.length - 1].date });
+ 
+  return { totalMinutes, dailyMinutes, sessionCount: sessions.length };
+}
+ 
+// --- Mostrar resultados ---
+console.log(`\nParámetros: gap=${GAP_MINUTES} min | primer commit de sesión=${FIRST_COMMIT_MINUTES} min\n`);
+console.log('='.repeat(60));
+ 
+let grandTotalMinutes = 0;
+ 
+for (const [author, list] of Object.entries(byAuthor)) {
+  const { totalMinutes, dailyMinutes, sessionCount } = estimateHours(list);
+  grandTotalMinutes += totalMinutes;
+ 
+  console.log(`\nAutor: ${author}`);
+  console.log(`Commits: ${list.length} | Sesiones detectadas: ${sessionCount}`);
+  console.log(`Horas estimadas: ${(totalMinutes / 60).toFixed(2)} h`);
+ 
+  const days = Object.keys(dailyMinutes).sort();
+  console.log(`\nDesglose por día:`);
+  for (const day of days) {
+    console.log(`  ${day}: ${(dailyMinutes[day] / 60).toFixed(2)} h`);
+  }
+}
+ 
+console.log('\n' + '='.repeat(60));
+console.log(`TOTAL ESTIMADO (todos los autores): ${(grandTotalMinutes / 60).toFixed(2)} horas`);
+console.log('='.repeat(60) + '\n');
+console.log('Nota: es una estimación basada en huecos entre commits, no un tiempo exacto.');
+console.log('Ajusta --gap y --first según tu forma de trabajar (ej: --gap=60 si haces pausas cortas).\n');
+ 
