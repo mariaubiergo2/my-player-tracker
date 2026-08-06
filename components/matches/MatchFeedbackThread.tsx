@@ -133,7 +133,7 @@ export default function MatchFeedbackThread({
 
   // Permission checks for writing
   const isAuthorizedPlayer = (currentUserRole === "PLAYER" || currentUserRole === "GOAL_KEEPER") && currentUserId === matchPlayerId
-  const isAuthorizedTrainer = currentUserRole === "TRAINER" && currentUserId === matchTrainerId
+  const isAuthorizedTrainer = currentUserRole === "TRAINER"
   const isAuthorizedAdmin = currentUserRole === "ADMIN"
   const canWrite = !readOnly && (isAuthorizedPlayer || isAuthorizedTrainer || isAuthorizedAdmin)
 
@@ -162,31 +162,14 @@ export default function MatchFeedbackThread({
 
   // Helper to determine recipient information of each email
   const getRecipientInfo = (msg: FeedbackMessage) => {
-    const authorId = msg.authorId
-    if (authorId === matchPlayerId) {
-      if (matchTrainer) {
-        return `${matchTrainer.name} ${matchTrainer.surname}`
-      }
-      return t("feedback_thread.role_trainer")
-    }
-    if (authorId === matchTrainerId) {
-      if (matchPlayer) {
-        return `${matchPlayer.name} ${matchPlayer.surname}`
-      }
-      return t("feedback_thread.role_player")
-    }
-    // Fallback based on roles
     const msgRoleLower = msg.authorRole.toLowerCase()
     if (msgRoleLower === "player" || msgRoleLower === "goal_keeper") {
-      if (matchTrainer) {
-        return `${matchTrainer.name} ${matchTrainer.surname}`
-      }
       return t("feedback_thread.role_trainer")
     } else {
       if (matchPlayer) {
         return `${matchPlayer.name} ${matchPlayer.surname}`
       }
-      return t("feedback_thread.role_" + msgRoleLower)
+      return t("feedback_thread.role_player")
     }
   }
 
@@ -302,9 +285,7 @@ export default function MatchFeedbackThread({
   let composeRecipientText = ""
   const userRoleLower = currentUserRole.toLowerCase()
   if (userRoleLower === "player" || userRoleLower === "goal_keeper") {
-    composeRecipientText = matchTrainer
-      ? `${matchTrainer.name} ${matchTrainer.surname}`
-      : t("feedback_thread.role_trainer")
+    composeRecipientText = t("feedback_thread.role_trainer")
   } else {
     composeRecipientText = matchPlayer
       ? `${matchPlayer.name} ${matchPlayer.surname}`

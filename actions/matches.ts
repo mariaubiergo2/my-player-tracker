@@ -103,7 +103,9 @@ export async function createMatch(prevState: any, formData: FormData) {
   // Verify player exists in PostgreSQL
   const playerUser = await prisma.user.findUnique({
     where: { id: playerId as string },
-    select: { trainerId: true }
+    select: {
+      trainers: { select: { id: true } }
+    }
   });
 
   if (!playerUser) {
@@ -112,11 +114,11 @@ export async function createMatch(prevState: any, formData: FormData) {
 
   // Auto-resolve trainerId
   if (isPlayer) {
-    trainerId = playerUser.trainerId || null;
+    trainerId = playerUser.trainers[0]?.id || null;
   } else if (isTrainer) {
     trainerId = currentUser.userId;
   } else if (isAdmin) {
-    trainerId = playerUser.trainerId || null;
+    trainerId = playerUser.trainers[0]?.id || null;
   }
 
   if (!name || !date) {
@@ -228,15 +230,21 @@ export async function createMatch(prevState: any, formData: FormData) {
       data: finalData,
     });
 
-    // Notify trainer if match was created by player
-    if (isPlayer && createdMatch.trainerId) {
-      await prisma.notification.create({
-        data: {
-          recipientId: createdMatch.trainerId,
-          type: "MATCH_CREATED",
-          matchId: createdMatch.id,
-        },
-      });
+    // Notify all trainers of the player if match was created by player
+    if (isPlayer && playerUser?.trainers) {
+      const trainersToNotify = playerUser.trainers.map((t) => t.id);
+      if (createdMatch.trainerId && !trainersToNotify.includes(createdMatch.trainerId)) {
+        trainersToNotify.push(createdMatch.trainerId);
+      }
+      for (const tId of trainersToNotify) {
+        await prisma.notification.create({
+          data: {
+            recipientId: tId,
+            type: "MATCH_CREATED",
+            matchId: createdMatch.id,
+          },
+        });
+      }
     }
 
     // 7. Check for uploaded video file
@@ -350,7 +358,11 @@ export async function updateMatch(matchId: string, updates: any) {
     const match = await prisma.match.findUnique({
       where: { id: matchId },
       include: {
-        player: true,
+        player: {
+          include: {
+            trainers: true,
+          },
+        },
       },
     });
 
@@ -359,7 +371,9 @@ export async function updateMatch(matchId: string, updates: any) {
     }
 
     const isPlayer = match.playerId === currentUser.userId;
-    const isTrainer = match.trainerId === currentUser.userId || match.player.trainerId === currentUser.userId;
+    const isTrainer =
+      match.trainerId === currentUser.userId ||
+      (match.player?.trainers && match.player.trainers.some((t: any) => t.id === currentUser.userId));
     const isAdmin = currentUser.role === "ADMIN";
 
     if (!isPlayer && !isTrainer && !isAdmin) {
@@ -441,17 +455,22 @@ export async function updateMatch(matchId: string, updates: any) {
       data,
     });
 
-    // Notify trainer if updated by player
+    // Notify all trainers of the player if updated by player
     const isEditingPlayer = currentUser.role === "PLAYER" || currentUser.role === "GOAL_KEEPER";
-    const targetTrainerId = match.trainerId || match.player.trainerId;
-    if (isEditingPlayer && targetTrainerId) {
-      await prisma.notification.create({
-        data: {
-          recipientId: targetTrainerId,
-          type: "MATCH_UPDATED",
-          matchId: match.id,
-        },
-      });
+    if (isEditingPlayer && match.player?.trainers) {
+      const trainersToNotify = match.player.trainers.map((t: any) => t.id);
+      if (match.trainerId && !trainersToNotify.includes(match.trainerId)) {
+        trainersToNotify.push(match.trainerId);
+      }
+      for (const tId of trainersToNotify) {
+        await prisma.notification.create({
+          data: {
+            recipientId: tId,
+            type: "MATCH_UPDATED",
+            matchId: match.id,
+          },
+        });
+      }
     }
 
     // Notify player if updated by trainer
@@ -482,6 +501,13 @@ export async function deleteMatch(id: string, userId: string) {
   try {
     const match = await prisma.match.findUnique({
       where: { id },
+      include: {
+        player: {
+          include: {
+            trainers: true,
+          },
+        },
+      },
     });
 
     if (!match) {
@@ -489,7 +515,9 @@ export async function deleteMatch(id: string, userId: string) {
     }
 
     const isPlayer = match.playerId === userId;
-    const isTrainer = match.trainerId === userId;
+    const isTrainer =
+      match.trainerId === userId ||
+      (match.player?.trainers && match.player.trainers.some((t: any) => t.id === userId));
 
     if (!isPlayer && !isTrainer) {
       return { error: "Unauthorized to delete this match" };
@@ -526,7 +554,14 @@ export async function getSelectablePlayers() {
       return { success: true, players };
     } else if (currentUser.role === "TRAINER") {
       const players = await prisma.user.findMany({
-        where: { role: { in: ["PLAYER", "GOAL_KEEPER"] }, trainerId: currentUser.userId },
+        where: {
+          role: { in: ["PLAYER", "GOAL_KEEPER"] },
+          trainers: {
+            some: {
+              id: currentUser.userId,
+            },
+          },
+        },
         select: { id: true, name: true, surname: true },
         orderBy: { name: "asc" },
       });

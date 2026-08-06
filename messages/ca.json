@@ -426,13 +426,17 @@
     "table_email": "Correu",
     "table_phone": "Telèfon",
     "table_birth": "Data de naixement",
-    "table_matches": "Partits jugats",
+    "table_trainers": "Entrenador(s)",
+    "table_matches": "Partits",
     "table_actions": "Accions",
     "assigned_to_you": "✓ Assignat a tu",
-    "assigned_to_other": "Assignat a un altre",
+    "assigned_trainers": "Entrenadors:",
+    "no_trainer_assigned": "Sense entrenador assignat",
     "assign_to_me": "Assignar a mi",
     "reassign_to_me": "Reassignar a mi",
-    "success_assign": "Jugador assignat correctament!"
+    "unassign_from_me": "Desassignar",
+    "success_assign": "Jugador assignat correctament!",
+    "success_unassign": "Jugador desassignat correctament!"
   },
   "trainer_my_players": {
     "title": "Els meus jugadors assignats",

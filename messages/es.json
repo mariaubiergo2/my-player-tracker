@@ -426,13 +426,17 @@
     "table_email": "Correo",
     "table_phone": "Teléfono",
     "table_birth": "Fecha de nacimiento",
-    "table_matches": "Partidos jugados",
+    "table_trainers": "Entrenador(es)",
+    "table_matches": "Partidos",
     "table_actions": "Acciones",
     "assigned_to_you": "✓ Asignado a ti",
-    "assigned_to_other": "Asignado a otro",
+    "assigned_trainers": "Entrenadores:",
+    "no_trainer_assigned": "Sin entrenador asignado",
     "assign_to_me": "Asignar a mí",
     "reassign_to_me": "Reassignar a mí",
-    "success_assign": "¡Jugador asignado correctamente!"
+    "unassign_from_me": "Desasignar",
+    "success_assign": "¡Jugador asignado correctamente!",
+    "success_unassign": "¡Jugador desasignado correctamente!"
   },
   "trainer_my_players": {
     "title": "Mis jugadores asignados",

@@ -33,7 +33,7 @@ export async function GET(
         video: true,
         player: {
           select: {
-            trainerId: true,
+            trainers: { select: { id: true } },
           },
         },
       },
@@ -47,7 +47,7 @@ export async function GET(
     if (
       match.playerId !== payload.userId &&
       match.trainerId !== payload.userId &&
-      match.player?.trainerId !== payload.userId
+      (!match.player?.trainers || !match.player.trainers.some((t: any) => t.id === payload.userId))
     ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -159,7 +159,7 @@ export async function POST(
         video: true,
         player: {
           select: {
-            trainerId: true,
+            trainers: { select: { id: true } },
           },
         },
       },
@@ -173,7 +173,7 @@ export async function POST(
     if (
       match.playerId !== payload.userId &&
       match.trainerId !== payload.userId &&
-      match.player?.trainerId !== payload.userId
+      (!match.player?.trainers || !match.player.trainers.some((t: any) => t.id === payload.userId))
     ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -262,7 +262,7 @@ export async function DELETE(
         video: true,
         player: {
           select: {
-            trainerId: true,
+            trainers: { select: { id: true } },
           },
         },
       },
@@ -276,7 +276,7 @@ export async function DELETE(
     if (
       match.playerId !== payload.userId &&
       match.trainerId !== payload.userId &&
-      match.player?.trainerId !== payload.userId
+      (!match.player?.trainers || !match.player.trainers.some((t: any) => t.id === payload.userId))
     ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }

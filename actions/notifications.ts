@@ -67,7 +67,7 @@ export async function getNotifications(
                   name: true,
                   surname: true,
                   avatarUrl: true,
-                  trainer: {
+                  trainers: {
                     select: {
                       id: true,
                       name: true,

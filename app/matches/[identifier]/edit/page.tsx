@@ -23,14 +23,20 @@ export default async function EditMatchPage({
   const match = await prisma.match.findUnique({
     where: { id: identifier },
     include: {
-      player: true,
+      player: {
+        include: {
+          trainers: true,
+        },
+      },
     },
   })
 
   if (!match) notFound()
 
   const isPlayer = match.playerId === payload.userId
-  const isTrainer = match.trainerId === payload.userId || match.player.trainerId === payload.userId
+  const isTrainer =
+    match.trainerId === payload.userId ||
+    (match.player?.trainers && match.player.trainers.some((t: any) => t.id === payload.userId))
   const isAdmin = payload.role === "ADMIN"
 
   if (!isPlayer && !isTrainer && !isAdmin) {
@@ -45,7 +51,13 @@ export default async function EditMatchPage({
       match={matchData as any}
       currentUserRole={payload.role}
       currentUserId={payload.userId}
-      matchTrainerId={match.trainerId || match.player.trainerId || ""}
+      matchTrainerId={
+        match.trainerId ||
+        (payload.role === "TRAINER" &&
+        match.player?.trainers?.some((t: any) => t.id === payload.userId)
+          ? payload.userId
+          : match.player?.trainers?.[0]?.id || "")
+      }
     />
   )
 }

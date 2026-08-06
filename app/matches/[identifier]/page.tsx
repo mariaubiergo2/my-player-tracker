@@ -38,7 +38,7 @@ export default async function MatchPage({
   if (!match) notFound()
 
   const isPlayer = currentUser && match.playerId === currentUser.userId
-  const isTrainer = currentUser && (match.trainerId === currentUser.userId || match.player?.trainerId === currentUser.userId)
+  const isTrainer = currentUser && (match.trainerId === currentUser.userId || match.player?.trainers?.some((t: any) => t.id === currentUser.userId))
   const isAdmin = currentUser?.role === "ADMIN"
   const canEdit = isPlayer || isTrainer || isAdmin
 
@@ -318,7 +318,13 @@ export default async function MatchPage({
             currentUserId={currentUser.userId}
             currentUserRole={currentUser.role}
             matchPlayerId={match.playerId}
-            matchTrainerId={match.trainerId || ""}
+            matchTrainerId={
+              match.trainerId ||
+              (currentUser?.role === "TRAINER" &&
+              match.player?.trainers?.some((t: any) => t.id === currentUser.userId)
+                ? currentUser.userId
+                : match.player?.trainers?.[0]?.id || "")
+            }
             readOnly={true}
           />
         )}

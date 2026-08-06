@@ -47,7 +47,7 @@ export async function getAllPlayersWithMatchCount() {
         name: true,
         surname: true,
         birthDate: true,
-        trainerId: true,
+        trainers: { select: { id: true, name: true, surname: true } },
         avatarUrl: true,
         _count: {
           select: {
@@ -63,7 +63,7 @@ export async function getAllPlayersWithMatchCount() {
       name: p.name,
       surname: p.surname,
       birthDate: p.birthDate ? new Date(p.birthDate).toISOString().split("T")[0] : null,
-      trainerId: p.trainerId,
+      trainers: p.trainers,
       avatarUrl: p.avatarUrl,
       matchCount: p._count.playerMatches,
     }));
@@ -101,7 +101,11 @@ export async function assignPlayerToTrainer(playerId: string) {
 
     await prisma.user.update({
       where: { id: playerId },
-      data: { trainerId },
+      data: {
+        trainers: {
+          connect: { id: trainerId }
+        }
+      },
     });
 
     revalidatePath("/trainer/players");
@@ -127,7 +131,11 @@ export async function getMyPlayersWithMatches() {
     const players = await prisma.user.findMany({
       where: {
         role: { in: [UserRole.PLAYER, UserRole.GOAL_KEEPER] },
-        trainerId: trainerId,
+        trainers: {
+          some: {
+            id: trainerId,
+          },
+        },
       },
       include: {
         playerMatches: {
@@ -170,7 +178,14 @@ export async function unassignPlayerFromTrainer(playerId: string) {
 
     // Check if player exists and is currently assigned to this trainer
     const player = await prisma.user.findFirst({
-      where: { id: playerId, trainerId },
+      where: {
+        id: playerId,
+        trainers: {
+          some: {
+            id: trainerId,
+          },
+        },
+      },
     });
 
     if (!player) {
@@ -179,7 +194,11 @@ export async function unassignPlayerFromTrainer(playerId: string) {
 
     await prisma.user.update({
       where: { id: playerId },
-      data: { trainerId: null },
+      data: {
+        trainers: {
+          disconnect: { id: trainerId }
+        }
+      },
     });
 
     revalidatePath("/trainer/players");

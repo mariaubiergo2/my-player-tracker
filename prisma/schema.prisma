@@ -39,8 +39,7 @@ model User {
   playerMatches  Match[] @relation("PlayerMatches")
   trainerMatches Match[] @relation("TrainerMatches")
 
-  trainerId String? @map("trainer_id")
-  trainer   User?   @relation("TrainerPlayers", fields: [trainerId], references: [id])
+  trainers  User[]  @relation("TrainerPlayers")
   players   User[]  @relation("TrainerPlayers")
   feedbackMessages MatchFeedbackMessage[]
   notifications    Notification[]         @relation("UserNotifications")

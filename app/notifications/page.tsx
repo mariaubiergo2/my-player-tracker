@@ -29,12 +29,12 @@ interface NotificationItem {
       name: string;
       surname: string;
       avatarUrl: string | null;
-      trainer?: {
+      trainers?: {
         id: string;
         name: string;
         surname: string;
         avatarUrl: string | null;
-      } | null;
+      }[];
     };
     trainer?: {
       id: string;
@@ -323,8 +323,8 @@ function NotificationsInboxContent() {
             const playerName = `${n.match.player.name} ${n.match.player.surname}`;
             const trainerName = n.match.trainer
               ? `${n.match.trainer.name} ${n.match.trainer.surname}`
-              : n.match.player.trainer
-              ? `${n.match.player.trainer.name} ${n.match.player.trainer.surname}`
+              : n.match.player.trainers?.[0]
+              ? `${n.match.player.trainers[0].name} ${n.match.player.trainers[0].surname}`
               : "";
             const matchName = n.match.name;
 
@@ -343,7 +343,7 @@ function NotificationsInboxContent() {
 
             const isFromTrainer = n.type === "MATCH_UPDATED_BY_TRAINER" || n.type === "FEEDBACK_MESSAGE_FROM_TRAINER";
             const avatarUrl = isFromTrainer
-              ? (n.match.trainer?.avatarUrl || n.match.player.trainer?.avatarUrl || null)
+              ? (n.match.trainer?.avatarUrl || n.match.player.trainers?.[0]?.avatarUrl || null)
               : n.match.player.avatarUrl;
             const senderName = isFromTrainer ? trainerName : playerName;
 

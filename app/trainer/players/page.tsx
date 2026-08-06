@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
-import { getAllPlayersWithMatchCount, assignPlayerToTrainer } from "@/actions/trainer";
+import { getAllPlayersWithMatchCount, assignPlayerToTrainer, unassignPlayerFromTrainer } from "@/actions/trainer";
 import { useTranslation } from "@/components/LanguageProvider";
 import PageContainer from "@/components/ui/PageContainer";
 
@@ -14,7 +14,7 @@ interface PlayerListItem {
   email?: string;
   phone?: string | null;
   birthDate: string | null;
-  trainerId: string | null;
+  trainers: { id: string; name: string; surname: string }[];
   avatarUrl: string | null;
   matchCount: number;
 }
@@ -30,6 +30,104 @@ export default function TrainerPlayersPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Columns config
+  type ColumnKey = "name" | "birth" | "trainers" | "matches" | "actions";
+  
+  const columns: ColumnKey[] = [
+    "name",
+    "birth",
+    "trainers",
+    "matches",
+    "actions",
+  ];
+
+  const renderHeader = (colKey: ColumnKey) => {
+    switch (colKey) {
+      case "name":
+        return t("trainer_players.table_name");
+      case "birth":
+        return t("trainer_players.table_birth");
+      case "trainers":
+        return t("trainer_players.table_trainers");
+      case "matches":
+        return t("trainer_players.table_matches");
+      case "actions":
+        return t("trainer_players.table_actions");
+      default:
+        return "";
+    }
+  };
+
+  const renderCell = (colKey: ColumnKey, p: PlayerListItem, isAssignedToMe: boolean) => {
+    switch (colKey) {
+      case "name":
+        return (
+          <div className="flex items-center gap-3">
+            <div className={`avatar placeholder ${p.avatarUrl ? "" : "bg-neutral text-neutral-content"} rounded-full w-9 h-9 flex items-center justify-center overflow-hidden`}>
+              {p.avatarUrl ? (
+                <img src={p.avatarUrl} alt={p.name} className="w-full h-full object-cover" />
+              ) : (
+                <span className="text-xs font-semibold">
+                  {p.name.charAt(0).toUpperCase()}
+                  {p.surname.charAt(0).toUpperCase()}
+                </span>
+              )}
+            </div>
+            <div className="font-bold text-base-content truncate">
+              {p.name} {p.surname}
+            </div>
+          </div>
+        );
+      case "birth":
+        return p.birthDate || <span className="text-base-content/30 italic">{t("common.not_specified")}</span>;
+      case "trainers":
+        return p.trainers && p.trainers.length > 0 ? (
+          <span className="text-sm font-medium text-base-content/80 truncate block">
+            {p.trainers.map((t) => `${t.name} ${t.surname}`).join(", ")}
+          </span>
+        ) : (
+          <span className="text-xs text-warning/70 font-semibold italic flex items-center gap-1">
+            ⚠️ {t("trainer_players.no_trainer_assigned")}
+          </span>
+        );
+      case "matches":
+        return <span className="badge badge-neutral font-semibold">{p.matchCount}</span>;
+      case "actions":
+        return isAssignedToMe ? (
+          <div className="flex items-center gap-2 justify-end">
+            <span className="badge badge-success font-semibold text-white py-3 px-4 shadow-sm">
+              {t("trainer_players.assigned_to_you")}
+            </span>
+            <button
+              onClick={() => handleUnassign(p.id, `${p.name} ${p.surname}`)}
+              className="btn btn-outline btn-error btn-sm shadow-sm"
+              disabled={assigningId === p.id}
+            >
+              {assigningId === p.id ? (
+                <span className="loading loading-spinner loading-xs"></span>
+              ) : (
+                t("trainer_players.unassign_from_me")
+              )}
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => handleAssign(p.id)}
+            className="btn btn-primary btn-sm shadow-sm"
+            disabled={assigningId === p.id}
+          >
+            {assigningId === p.id ? (
+              <span className="loading loading-spinner loading-xs"></span>
+            ) : (
+              t("trainer_players.assign_to_me")
+            )}
+          </button>
+        );
+      default:
+        return null;
+    }
+  };
 
   // Route protection & loading
   useEffect(() => {
@@ -71,7 +169,7 @@ export default function TrainerPlayersPage() {
         setSuccessMessage(t("trainer_players.success_assign"));
         // Update local state to reflect assignment
         setPlayers((prev) =>
-          prev.map((p) => (p.id === playerId ? { ...p, trainerId: user?.id || "" } : p))
+          prev.map((p) => (p.id === playerId ? { ...p, trainers: [...(p.trainers || []), { id: user?.id || "", name: user?.name || "Trainer", surname: "" }] } : p))
         );
         setTimeout(() => setSuccessMessage(""), 5000);
       } else {
@@ -84,7 +182,41 @@ export default function TrainerPlayersPage() {
       setAssigningId(null);
     }
   };
+  const handleUnassign = async (playerId: string, playerName: string) => {
+    const confirmed = window.confirm(
+      t("trainer_my_players.unassign_confirm", { name: playerName })
+    );
+    if (!confirmed) return;
 
+    setAssigningId(playerId);
+    setErrorMessage("");
+    setSuccessMessage("");
+    try {
+      const res = await unassignPlayerFromTrainer(playerId);
+      if (res.success) {
+        setSuccessMessage(t("trainer_players.success_unassign"));
+        // Update local state to reflect unassignment
+        setPlayers((prev) =>
+          prev.map((p) =>
+            p.id === playerId
+              ? {
+                  ...p,
+                  trainers: p.trainers.filter((t) => t.id !== user?.id),
+                }
+              : p
+          )
+        );
+        setTimeout(() => setSuccessMessage(""), 5000);
+      } else {
+        setErrorMessage(res.error || t("common.error"));
+      }
+    } catch (err) {
+      console.error(err);
+      setErrorMessage(t("common.error"));
+    } finally {
+      setAssigningId(null);
+    }
+  };
   const filteredPlayers = players.filter((p) => {
     const fullName = `${p.name} ${p.surname}`.toLowerCase();
     const email = p.email ? p.email.toLowerCase() : "";
@@ -171,78 +303,42 @@ export default function TrainerPlayersPage() {
           <table className="table table-zebra w-full">
             <thead>
               <tr className="bg-base-200/50">
-                <th>{t("trainer_players.table_name")}</th>
-                <th>{t("trainer_players.table_birth")}</th>
-                <th className="text-center">{t("trainer_players.table_matches")}</th>
-                <th className="text-right">{t("trainer_players.table_actions")}</th>
+                {columns.map((colKey) => {
+                  return (
+                    <th
+                      key={colKey}
+                      className={`align-middle ${
+                        colKey === "matches" ? "text-center" : colKey === "actions" ? "text-right" : "text-left"
+                      } py-3 px-3`}
+                    >
+                      <div className={`flex items-center gap-1.5 w-full ${
+                        colKey === "matches" ? "justify-center" : colKey === "actions" ? "justify-end" : "justify-between"
+                      }`}>
+                        <span className="font-bold text-xs uppercase tracking-wider text-base-content/70 break-words leading-tight">
+                          {renderHeader(colKey)}
+                        </span>
+                      </div>
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
             <tbody>
               {filteredPlayers.map((p) => {
-                const isAssignedToMe = p.trainerId === user.id;
-                const isAssignedToOther = p.trainerId !== null && p.trainerId !== user.id;
+                const isAssignedToMe = p.trainers?.some((t) => t.id === user.id);
 
                 return (
                   <tr key={p.id} className="hover:bg-base-200/30 transition-colors">
-                    <td>
-                      <div className="flex items-center gap-3">
-                        <div className={`avatar placeholder ${p.avatarUrl ? "" : "bg-neutral text-neutral-content"} rounded-full w-9 h-9 flex items-center justify-center overflow-hidden`}>
-                          {p.avatarUrl ? (
-                            <img src={p.avatarUrl} alt={p.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <span className="text-xs font-semibold">
-                              {p.name.charAt(0).toUpperCase()}
-                              {p.surname.charAt(0).toUpperCase()}
-                            </span>
-                          )}
-                        </div>
-                        <div className="font-bold text-base-content">
-                          {p.name} {p.surname}
-                        </div>
-                      </div>
-                    </td>
-                    <td>
-                      {p.birthDate || <span className="text-base-content/30 italic">{t("common.not_specified")}</span>}
-                    </td>
-                    <td className="text-center">
-                      <span className="badge badge-neutral font-semibold">{p.matchCount}</span>
-                    </td>
-                    <td className="text-right">
-                      {isAssignedToMe ? (
-                        <span className="badge badge-success font-semibold text-white py-3 px-4">
-                          {t("trainer_players.assigned_to_you")}
-                        </span>
-                      ) : isAssignedToOther ? (
-                        <div className="flex justify-end items-center gap-2">
-                          <span className="badge badge-ghost text-base-content/50 italic mr-2">
-                            {t("trainer_players.assigned_to_other")}
-                          </span>
-                          <button
-                            onClick={() => handleAssign(p.id)}
-                            className="btn btn-secondary btn-sm"
-                            disabled={assigningId === p.id}
-                          >
-                            {assigningId === p.id ? (
-                              <span className="loading loading-spinner loading-xs"></span>
-                            ) : (
-                              t("trainer_players.reassign_to_me")
-                            )}
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={() => handleAssign(p.id)}
-                          className="btn btn-primary btn-sm"
-                          disabled={assigningId === p.id}
-                        >
-                          {assigningId === p.id ? (
-                            <span className="loading loading-spinner loading-xs"></span>
-                          ) : (
-                            t("trainer_players.assign_to_me")
-                          )}
-                        </button>
-                      )}
-                    </td>
+                    {columns.map((colKey) => (
+                      <td
+                        key={colKey}
+                        className={`align-middle py-3 ${
+                          colKey === "matches" ? "text-center" : colKey === "actions" ? "text-right" : "text-left"
+                        }`}
+                      >
+                        {renderCell(colKey, p, isAssignedToMe)}
+                      </td>
+                    ))}
                   </tr>
                 );
               })}

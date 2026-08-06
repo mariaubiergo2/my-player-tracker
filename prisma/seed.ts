@@ -56,7 +56,9 @@ async function main() {
       surname: "User",
       role: UserRole.PLAYER,
       phone: "+34 600 000 002",
-      trainerId: trainer.id,
+      trainers: {
+        connect: [{ id: trainer.id }],
+      },
     },
   });
   console.log(`Created player: ${player.email}`);
@@ -71,7 +73,9 @@ async function main() {
       surname: "User",
       role: UserRole.GOAL_KEEPER,
       phone: "+34 600 000 003",
-      trainerId: trainer.id,
+      trainers: {
+        connect: [{ id: trainer.id }],
+      },
     },
   });
   console.log(`Created goalkeeper: ${goalkeeper.email}`);

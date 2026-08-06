@@ -22,7 +22,7 @@ export async function getFeedbackMessages(matchId: string) {
             surname: true,
             email: true,
             avatarUrl: true,
-            trainerId: true,
+            trainers: { select: { id: true } },
           },
         },
         trainer: {
@@ -43,7 +43,9 @@ export async function getFeedbackMessages(matchId: string) {
 
     // Authorization check
     const isPlayer = match.playerId === currentUser.userId
-    const isTrainer = match.trainerId === currentUser.userId || match.player.trainerId === currentUser.userId
+    const isTrainer =
+      match.trainerId === currentUser.userId ||
+      (match.player?.trainers && match.player.trainers.some((t: any) => t.id === currentUser.userId));
     const isAdmin = currentUser.role === "ADMIN"
 
     if (!isPlayer && !isTrainer && !isAdmin) {
@@ -110,7 +112,11 @@ export async function createFeedbackMessage(matchId: string, content: string) {
     const match = await prisma.match.findUnique({
       where: { id: matchId },
       include: {
-        player: true,
+        player: {
+          include: {
+            trainers: true,
+          },
+        },
       },
     })
 
@@ -120,7 +126,9 @@ export async function createFeedbackMessage(matchId: string, content: string) {
 
     // Permission and role mapping
     const isPlayer = match.playerId === currentUser.userId
-    const isTrainer = match.trainerId === currentUser.userId || match.player.trainerId === currentUser.userId
+    const isTrainer =
+      match.trainerId === currentUser.userId ||
+      (match.player?.trainers && match.player.trainers.some((t: any) => t.id === currentUser.userId));
     const isAdmin = currentUser.role === "ADMIN"
 
     if (!isPlayer && !isTrainer && !isAdmin) {
@@ -158,16 +166,21 @@ export async function createFeedbackMessage(matchId: string, content: string) {
     const isAuthorPlayer = currentUser.role === "PLAYER" || currentUser.role === "GOAL_KEEPER";
     const isAuthorTrainer = currentUser.role === "TRAINER";
 
-    if (isAuthorPlayer) {
-      const recipientId = match.trainerId || match.player.trainerId;
-      if (recipientId && recipientId !== currentUser.userId) {
-        await prisma.notification.create({
-          data: {
-            recipientId,
-            type: "FEEDBACK_MESSAGE_FROM_PLAYER",
-            matchId: match.id,
-          },
-        });
+    if (isAuthorPlayer && match.player?.trainers) {
+      const trainersToNotify = match.player.trainers.map((t: any) => t.id);
+      if (match.trainerId && !trainersToNotify.includes(match.trainerId)) {
+        trainersToNotify.push(match.trainerId);
+      }
+      for (const tId of trainersToNotify) {
+        if (tId !== currentUser.userId) {
+          await prisma.notification.create({
+            data: {
+              recipientId: tId,
+              type: "FEEDBACK_MESSAGE_FROM_PLAYER",
+              matchId: match.id,
+            },
+          });
+        }
       }
     } else if (isAuthorTrainer) {
       const recipientId = match.playerId;
