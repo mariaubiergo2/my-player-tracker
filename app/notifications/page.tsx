@@ -17,11 +17,12 @@ import { formatRelativeTime } from "@/lib/utils/dates";
 interface NotificationItem {
   id: string;
   recipientId: string;
-  type: "MATCH_CREATED" | "MATCH_UPDATED" | "MATCH_UPDATED_BY_TRAINER" | "FEEDBACK_MESSAGE_FROM_PLAYER" | "FEEDBACK_MESSAGE_FROM_TRAINER";
-  matchId: string;
+  type: "MATCH_CREATED" | "MATCH_UPDATED" | "MATCH_UPDATED_BY_TRAINER" | "FEEDBACK_MESSAGE_FROM_PLAYER" | "FEEDBACK_MESSAGE_FROM_TRAINER" | "QUESTIONNAIRE_SENT" | "QUESTIONNAIRE_RESPONDED" | "QUESTIONNAIRE_RECLAIMED";
+  matchId?: string | null;
+  assignmentId?: string | null;
   isRead: boolean;
   createdAt: string | Date;
-  match: {
+  match?: {
     id: string;
     name: string;
     player: {
@@ -42,7 +43,26 @@ interface NotificationItem {
       surname: string;
       avatarUrl: string | null;
     } | null;
-  };
+  } | null;
+  assignment?: {
+    id: string;
+    player: {
+      id: string;
+      name: string;
+      surname: string;
+      avatarUrl: string | null;
+    };
+    questionnaire: {
+      id: string;
+      title: string;
+      trainer: {
+        id: string;
+        name: string;
+        surname: string;
+        avatarUrl: string | null;
+      };
+    };
+  } | null;
 }
 
 function NotificationsInboxContent() {
@@ -320,13 +340,22 @@ function NotificationsInboxContent() {
       ) : (
         <div className="space-y-3">
           {notifications.map((n) => {
-            const playerName = `${n.match.player.name} ${n.match.player.surname}`;
-            const trainerName = n.match.trainer
-              ? `${n.match.trainer.name} ${n.match.trainer.surname}`
-              : n.match.player.trainers?.[0]
-              ? `${n.match.player.trainers[0].name} ${n.match.player.trainers[0].surname}`
-              : "";
-            const matchName = n.match.name;
+            const isQuestionnaire = ["QUESTIONNAIRE_SENT", "QUESTIONNAIRE_RESPONDED", "QUESTIONNAIRE_RECLAIMED"].includes(n.type);
+
+            const playerName = isQuestionnaire
+              ? (n.assignment?.player ? `${n.assignment.player.name} ${n.assignment.player.surname}` : "")
+              : (n.match?.player ? `${n.match.player.name} ${n.match.player.surname}` : "");
+
+            const trainerName = isQuestionnaire
+              ? (n.assignment?.questionnaire?.trainer ? `${n.assignment.questionnaire.trainer.name} ${n.assignment.questionnaire.trainer.surname}` : "")
+              : (n.match?.trainer
+                ? `${n.match.trainer.name} ${n.match.trainer.surname}`
+                : n.match?.player?.trainers?.[0]
+                ? `${n.match.player.trainers[0].name} ${n.match.player.trainers[0].surname}`
+                : "");
+
+            const matchName = n.match?.name || "";
+            const qTitle = n.assignment?.questionnaire?.title || "";
 
             let messageText = "";
             if (n.type === "MATCH_CREATED") {
@@ -339,12 +368,18 @@ function NotificationsInboxContent() {
               messageText = t("notifications.feedback_message_from_player", { playerName, matchName });
             } else if (n.type === "FEEDBACK_MESSAGE_FROM_TRAINER") {
               messageText = t("notifications.feedback_message_from_trainer", { trainerName, matchName });
+            } else if (n.type === "QUESTIONNAIRE_SENT") {
+              messageText = t("notifications.questionnaire_sent", { trainerName, title: qTitle });
+            } else if (n.type === "QUESTIONNAIRE_RESPONDED") {
+              messageText = t("notifications.questionnaire_responded", { playerName, title: qTitle });
+            } else if (n.type === "QUESTIONNAIRE_RECLAIMED") {
+              messageText = t("notifications.questionnaire_reclaimed", { playerName, title: qTitle });
             }
 
-            const isFromTrainer = n.type === "MATCH_UPDATED_BY_TRAINER" || n.type === "FEEDBACK_MESSAGE_FROM_TRAINER";
+            const isFromTrainer = n.type === "MATCH_UPDATED_BY_TRAINER" || n.type === "FEEDBACK_MESSAGE_FROM_TRAINER" || n.type === "QUESTIONNAIRE_SENT";
             const avatarUrl = isFromTrainer
-              ? (n.match.trainer?.avatarUrl || n.match.player.trainers?.[0]?.avatarUrl || null)
-              : n.match.player.avatarUrl;
+              ? (isQuestionnaire ? (n.assignment?.questionnaire?.trainer?.avatarUrl || null) : (n.match?.trainer?.avatarUrl || n.match?.player?.trainers?.[0]?.avatarUrl || null))
+              : (isQuestionnaire ? (n.assignment?.player?.avatarUrl || null) : n.match?.player?.avatarUrl);
             const senderName = isFromTrainer ? trainerName : playerName;
 
             // Localized full date
@@ -390,7 +425,7 @@ function NotificationsInboxContent() {
                   {/* Notification Content */}
                   <div className="flex-1 min-w-0 pr-8">
                     <Link
-                      href={`/matches/${n.matchId}`}
+                      href={isQuestionnaire ? `/questionnaires/assignments/${n.assignmentId}` : `/matches/${n.matchId}`}
                       className="block text-sm text-base-content hover:underline font-semibold leading-snug break-words"
                     >
                       <div className="flex items-center gap-2 flex-wrap">

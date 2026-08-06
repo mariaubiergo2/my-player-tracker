@@ -43,6 +43,8 @@ model User {
   players   User[]  @relation("TrainerPlayers")
   feedbackMessages MatchFeedbackMessage[]
   notifications    Notification[]         @relation("UserNotifications")
+  trainerQuestionnaires Questionnaire[]           @relation("TrainerQuestionnaires")
+  playerAssignments     QuestionnaireAssignment[] @relation("PlayerAssignments")
 
   @@map("users")
 }
@@ -145,24 +147,101 @@ model MatchFeedbackMessage {
   @@map("match_feedback_messages")
 }
 
+enum QuestionnaireStatus {
+  DRAFT
+  DEFINED
+}
+
+enum AssignmentStatus {
+  SENT
+  RECLAIMED
+  COMPLETED
+}
+
+enum QuestionType {
+  MULTIPLE_CHOICE
+  OPEN
+}
+
+model Questionnaire {
+  id          String              @id @default(cuid())
+  title       String
+  description String?
+  status      QuestionnaireStatus @default(DRAFT)
+  trainerId   String              @map("trainer_id")
+  trainer     User                @relation("TrainerQuestionnaires", fields: [trainerId], references: [id], onDelete: Cascade)
+  questions   Question[]
+  assignments QuestionnaireAssignment[]
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+  @@index([trainerId])
+  @@map("questionnaires")
+}
+
+model Question {
+  id              String        @id @default(cuid())
+  questionnaireId String        @map("questionnaire_id")
+  questionnaire   Questionnaire @relation(fields: [questionnaireId], references: [id], onDelete: Cascade)
+  text            String
+  type            QuestionType
+  options         String[]
+  order           Int
+  answers         Answer[]
+  @@index([questionnaireId])
+  @@map("questions")
+}
+
+model QuestionnaireAssignment {
+  id              String            @id @default(cuid())
+  questionnaireId String            @map("questionnaire_id")
+  questionnaire   Questionnaire     @relation(fields: [questionnaireId], references: [id], onDelete: Cascade)
+  playerId        String            @map("player_id")
+  player          User              @relation("PlayerAssignments", fields: [playerId], references: [id], onDelete: Cascade)
+  status          AssignmentStatus  @default(SENT)
+  answers         Answer[]
+  notifications   Notification[]    @relation("AssignmentNotifications")
+  sentAt          DateTime          @default(now()) @map("sent_at")
+  reclaimedAt     DateTime?         @map("reclaimed_at")
+  respondedAt     DateTime?         @map("responded_at")
+  @@index([playerId, status])
+  @@index([questionnaireId])
+  @@map("questionnaire_assignments")
+}
+
+model Answer {
+  id           String                  @id @default(cuid())
+  assignmentId String                  @map("assignment_id")
+  assignment   QuestionnaireAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  questionId   String                  @map("question_id")
+  question     Question                @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  value        String
+  @@unique([assignmentId, questionId])
+  @@map("answers")
+}
+
 enum NotificationType {
   MATCH_CREATED
   MATCH_UPDATED
   MATCH_UPDATED_BY_TRAINER
   FEEDBACK_MESSAGE_FROM_PLAYER
   FEEDBACK_MESSAGE_FROM_TRAINER
+  QUESTIONNAIRE_SENT
+  QUESTIONNAIRE_RESPONDED
+  QUESTIONNAIRE_RECLAIMED
 }
 
 model Notification {
-  id          String           @id @default(cuid())
-  recipientId String           @map("recipient_id")
-  type        NotificationType
-  matchId     String           @map("match_id")
-  isRead      Boolean          @default(false) @map("is_read")
-  createdAt   DateTime         @default(now()) @map("created_at")
+  id            String                   @id @default(cuid())
+  recipientId   String                   @map("recipient_id")
+  type          NotificationType
+  matchId       String?                  @map("match_id")
+  assignmentId  String?                  @map("assignment_id")
+  isRead        Boolean                  @default(false) @map("is_read")
+  createdAt     DateTime                 @default(now()) @map("created_at")
 
-  recipient   User             @relation("UserNotifications", fields: [recipientId], references: [id], onDelete: Cascade)
-  match       Match            @relation("MatchNotifications", fields: [matchId], references: [id], onDelete: Cascade)
+  recipient     User                     @relation("UserNotifications", fields: [recipientId], references: [id], onDelete: Cascade)
+  match         Match?                   @relation("MatchNotifications", fields: [matchId], references: [id], onDelete: Cascade)
+  assignment    QuestionnaireAssignment? @relation("AssignmentNotifications", fields: [assignmentId], references: [id], onDelete: Cascade)
 
   @@index([recipientId, isRead])
   @@index([recipientId, createdAt(sort: Desc)])

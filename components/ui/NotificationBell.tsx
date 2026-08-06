@@ -16,11 +16,12 @@ import { formatRelativeTime } from "@/lib/utils/dates";
 interface NotificationItem {
   id: string;
   recipientId: string;
-  type: "MATCH_CREATED" | "MATCH_UPDATED" | "MATCH_UPDATED_BY_TRAINER" | "FEEDBACK_MESSAGE_FROM_PLAYER" | "FEEDBACK_MESSAGE_FROM_TRAINER";
-  matchId: string;
+  type: "MATCH_CREATED" | "MATCH_UPDATED" | "MATCH_UPDATED_BY_TRAINER" | "FEEDBACK_MESSAGE_FROM_PLAYER" | "FEEDBACK_MESSAGE_FROM_TRAINER" | "QUESTIONNAIRE_SENT" | "QUESTIONNAIRE_RESPONDED" | "QUESTIONNAIRE_RECLAIMED";
+  matchId?: string | null;
+  assignmentId?: string | null;
   isRead: boolean;
   createdAt: Date;
-  match: {
+  match?: {
     id: string;
     name: string;
     player: {
@@ -28,12 +29,12 @@ interface NotificationItem {
       name: string;
       surname: string;
       avatarUrl?: string | null;
-      trainer?: {
+      trainers?: {
         id: string;
         name: string;
         surname: string;
         avatarUrl?: string | null;
-      } | null;
+      }[];
     };
     trainer?: {
       id: string;
@@ -41,7 +42,26 @@ interface NotificationItem {
       surname: string;
       avatarUrl?: string | null;
     } | null;
-  };
+  } | null;
+  assignment?: {
+    id: string;
+    player: {
+      id: string;
+      name: string;
+      surname: string;
+      avatarUrl?: string | null;
+    };
+    questionnaire: {
+      id: string;
+      title: string;
+      trainer: {
+        id: string;
+        name: string;
+        surname: string;
+        avatarUrl?: string | null;
+      };
+    };
+  } | null;
 }
 
 export default function NotificationBell() {
@@ -224,13 +244,22 @@ export default function NotificationBell() {
             </li>
           ) : (
             notifications.map((n) => {
-              const playerName = `${n.match.player.name} ${n.match.player.surname}`;
-              const trainerName = n.match.trainer
-                ? `${n.match.trainer.name} ${n.match.trainer.surname}`
-                : n.match.player.trainer
-                ? `${n.match.player.trainer.name} ${n.match.player.trainer.surname}`
-                : "";
-              const matchName = n.match.name;
+              const isQuestionnaire = ["QUESTIONNAIRE_SENT", "QUESTIONNAIRE_RESPONDED", "QUESTIONNAIRE_RECLAIMED"].includes(n.type);
+
+              const playerName = isQuestionnaire
+                ? (n.assignment?.player ? `${n.assignment.player.name} ${n.assignment.player.surname}` : "")
+                : (n.match?.player ? `${n.match.player.name} ${n.match.player.surname}` : "");
+
+              const trainerName = isQuestionnaire
+                ? (n.assignment?.questionnaire?.trainer ? `${n.assignment.questionnaire.trainer.name} ${n.assignment.questionnaire.trainer.surname}` : "")
+                : (n.match?.trainer
+                  ? `${n.match.trainer.name} ${n.match.trainer.surname}`
+                  : n.match?.player?.trainers?.[0]
+                  ? `${n.match.player.trainers[0].name} ${n.match.player.trainers[0].surname}`
+                  : "");
+
+              const matchName = n.match?.name || "";
+              const qTitle = n.assignment?.questionnaire?.title || "";
               
               let messageText = "";
               if (n.type === "MATCH_CREATED") {
@@ -243,6 +272,12 @@ export default function NotificationBell() {
                 messageText = t("notifications.feedback_message_from_player", { playerName, matchName });
               } else if (n.type === "FEEDBACK_MESSAGE_FROM_TRAINER") {
                 messageText = t("notifications.feedback_message_from_trainer", { trainerName, matchName });
+              } else if (n.type === "QUESTIONNAIRE_SENT") {
+                messageText = t("notifications.questionnaire_sent", { trainerName, title: qTitle });
+              } else if (n.type === "QUESTIONNAIRE_RESPONDED") {
+                messageText = t("notifications.questionnaire_responded", { playerName, title: qTitle });
+              } else if (n.type === "QUESTIONNAIRE_RECLAIMED") {
+                messageText = t("notifications.questionnaire_reclaimed", { playerName, title: qTitle });
               }
 
               return (
@@ -253,7 +288,7 @@ export default function NotificationBell() {
                   }`}
                 >
                   <Link
-                    href={`/matches/${n.matchId}`}
+                    href={isQuestionnaire ? `/questionnaires/assignments/${n.assignmentId}` : `/matches/${n.matchId}`}
                     onClick={closeDropdown}
                     className="flex gap-3 px-3.5 py-3 pr-10 items-start select-none"
                   >

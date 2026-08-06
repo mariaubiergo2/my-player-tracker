@@ -28,7 +28,10 @@ export async function getNotifications(
     }
 
     if (playerId) {
-      whereClause.match = { playerId };
+      whereClause.OR = [
+        { match: { playerId } },
+        { assignment: { playerId } }
+      ];
     }
 
     if (onlyRecent) {
@@ -83,6 +86,30 @@ export async function getNotifications(
                   name: true,
                   surname: true,
                   avatarUrl: true,
+                },
+              },
+            },
+          },
+          assignment: {
+            include: {
+              player: {
+                select: {
+                  id: true,
+                  name: true,
+                  surname: true,
+                  avatarUrl: true,
+                },
+              },
+              questionnaire: {
+                include: {
+                  trainer: {
+                    select: {
+                      id: true,
+                      name: true,
+                      surname: true,
+                      avatarUrl: true,
+                    },
+                  },
                 },
               },
             },
@@ -215,11 +242,22 @@ export async function getNotificationPlayers(recipientId: string) {
       return { success: false, error: "Unauthorized" };
     }
 
-    // Find all notifications for this trainer and select distinct players from matches
+    // Find all notifications for this trainer and select distinct players from matches & assignments
     const notifications = await prisma.notification.findMany({
       where: { recipientId },
       select: {
         match: {
+          select: {
+            player: {
+              select: {
+                id: true,
+                name: true,
+                surname: true,
+              },
+            },
+          },
+        },
+        assignment: {
           select: {
             player: {
               select: {
@@ -238,6 +276,9 @@ export async function getNotificationPlayers(recipientId: string) {
     for (const n of notifications) {
       if (n.match?.player) {
         playerMap.set(n.match.player.id, n.match.player);
+      }
+      if (n.assignment?.player) {
+        playerMap.set(n.assignment.player.id, n.assignment.player);
       }
     }
     const players = Array.from(playerMap.values()).sort((a, b) => a.name.localeCompare(b.name));
