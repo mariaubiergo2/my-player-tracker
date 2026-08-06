@@ -12,8 +12,12 @@ export default function Header() {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <div className="navbar bg-base-200 shadow-lg">
-      <div className="navbar-start">
+    <div className="navbar border-b border-secondary/20 shadow-lg relative">
+      {/* Capa de fondo de césped con overflow contenido para no cortar los dropdowns */}
+      <div className="absolute inset-0 grass-bg overflow-hidden pointer-events-none">
+        <div className="grass-sweep"></div>
+      </div>
+      <div className="navbar-start z-10">
         <div className="dropdown">
           <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
             <svg
@@ -57,11 +61,11 @@ export default function Header() {
             )}
           </ul>
         </div>
-        <Link href="/about" className="btn btn-ghost text-xl">
+        <Link href="/about" className="btn btn-ghost text-xl tracking-wide font-display">
           {t("header.brand")}
         </Link>
       </div>
-      <div className="navbar-center hidden lg:flex">
+      <div className="navbar-center hidden lg:flex z-10">
         <ul className="menu menu-horizontal px-1">
           {isAuthenticated && (
             <>
@@ -85,7 +89,7 @@ export default function Header() {
           )}
         </ul>
       </div>
-      <div className="navbar-end flex gap-2">
+      <div className="navbar-end flex gap-2 z-10">
         {/* Theme Toggle Button */}
         <button
           onClick={toggleTheme}
@@ -95,12 +99,12 @@ export default function Header() {
           {theme === "dark" ? (
             <>
               <span className="text-sm">☀️</span>
-              <span className="text-xs font-bold hidden sm:inline">{t("header.theme_light_short")}</span>
+              <span className="text-xs font-normal font-sans hidden sm:inline">{t("header.theme_light_short")}</span>
             </>
           ) : (
             <>
               <span className="text-sm">🌙</span>
-              <span className="text-xs font-bold hidden sm:inline">{t("header.theme_dark_short")}</span>
+              <span className="text-xs font-normal font-sans hidden sm:inline">{t("header.theme_dark_short")}</span>
             </>
           )}
         </button>
@@ -116,7 +120,7 @@ export default function Header() {
             className="btn btn-ghost btn-sm flex items-center gap-1.5 border border-base-content/10 bg-base-100/50 hover:bg-base-200"
           >
             <span>🌐</span>
-            <span className="uppercase text-xs font-bold">{locale}</span>
+            <span className="uppercase text-xs font-normal font-sans">{locale}</span>
             <span className="text-[10px] opacity-60">▼</span>
           </div>
           <ul
@@ -205,7 +209,7 @@ export default function Header() {
               )}
 
               {/* Account Configuration Section */}
-              {(user?.role === "PLAYER" || user?.role === "GOAL_KEEPER" || user?.role === "TRAINER") && (
+              {(user?.role === "PLAYER" || user?.role === "GOAL_KEEPER" || user?.role === "TRAINER" || user?.role === "ADMIN") && (
                 <>
                   <div className="divider my-1"></div>
                   <li>

@@ -3,22 +3,86 @@
   themes: light --default, dark;
 }
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+:root, [data-theme="light"] {
+  --bg: #F7F5EC;
+  --surface: #FFFFFF;
+  --surface-alt: #EAE7DA;
+  --text: #12210E;
+  --text-muted: #4B6350;
+  --accent: #E4572E;
+  --accent-secondary: #1A3F24;
+  --background: var(--bg);
+  --foreground: var(--text);
   color-scheme: light;
+  
+  --font-body: 'Nunito', sans-serif;
+  --font-display: 'Lilita One', sans-serif;
+  
+  /* Grass variables */
+  --grass-texture-opacity: 0.08;
+  --grass-sweep-opacity: 0.04;
+  --accent-secondary-alpha: rgba(26, 63, 36, 0.08);
 }
 
 [data-theme="dark"] {
-  --background: #0a0a0a;
-  --foreground: #ededed;
+  --bg: #0B2818;
+  --surface: #17381F;
+  --surface-alt: #1D4326;
+  --text: #F2F5EC;
+  --text-muted: #A9C3AC;
+  --accent: #E4572E;
+  --accent-secondary: #D9A94A;
+  --background: var(--bg);
+  --foreground: var(--text);
   color-scheme: dark;
+  
+  --font-body: 'Nunito', sans-serif;
+  --font-display: 'Lilita One', sans-serif;
+  
+  /* Grass variables */
+  --grass-texture-opacity: 0.18;
+  --grass-sweep-opacity: 0.12;
+  --accent-secondary-alpha: rgba(217, 169, 74, 0.15);
 }
 
-[data-theme="light"] {
-  --background: #ffffff;
-  --foreground: #171717;
-  color-scheme: light;
+@plugin "daisyui/theme" {
+  name: "light";
+  default: true;
+  --color-primary: #C84620; /* High-contrast coral for primary CTAs */
+  --color-primary-content: #ffffff;
+  --color-secondary: var(--accent-secondary);
+  --color-secondary-content: #ffffff;
+  --color-accent: var(--accent);
+  --color-accent-content: #ffffff;
+  --color-neutral: var(--text-muted);
+  --color-neutral-content: #ffffff;
+  --color-base-100: var(--surface);
+  --color-base-200: var(--surface-alt);
+  --color-base-300: #D8D4C3;
+  --color-base-content: var(--text);
+}
+
+@plugin "daisyui/theme" {
+  name: "dark";
+  --color-primary: #C13F17; /* High-contrast coral for dark theme primary CTAs */
+  --color-primary-content: var(--text);
+  --color-secondary: var(--accent-secondary);
+  --color-secondary-content: #0B2818;
+  --color-accent: var(--accent);
+  --color-accent-content: #ffffff;
+  --color-neutral: var(--text-muted);
+  --color-neutral-content: #0B2818;
+  --color-base-100: var(--surface);
+  --color-base-200: var(--surface-alt);
+  --color-base-300: #102615;
+  --color-base-content: var(--text);
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
 }
 
 html {
@@ -26,17 +90,10 @@ html {
   color: var(--foreground);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
@@ -77,3 +134,117 @@ progress {
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background-color: rgba(156, 163, 175, 0.5);
 }
+
+/* Focus and input styling */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.input, .select, .textarea {
+  border-radius: 10px;
+  border-color: var(--surface-alt);
+}
+.input:focus, .select:focus, .textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* Headings with sports font */
+h1, h2, h3, h4, h5, h6, .font-display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+/* Styling overlays for club feel */
+.btn {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  border-radius: 12px;
+  text-transform: uppercase;
+}
+
+.card {
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+/* Grass CSS Background Layer styling */
+.grass-bg {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--surface);
+}
+
+.grass-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    115deg,
+    var(--surface),
+    var(--surface) 50px,
+    var(--surface-alt) 50px,
+    var(--surface-alt) 100px
+  );
+  z-index: 0;
+  pointer-events: none;
+}
+
+.grass-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.08) 0px,
+    rgba(255, 255, 255, 0.08) 1px,
+    transparent 1px,
+    transparent 5px
+  );
+  mix-blend-mode: overlay;
+  opacity: var(--grass-texture-opacity);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.grass-sweep {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--accent-secondary-alpha),
+    transparent
+  );
+  width: 200%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+  transform: translateX(-100%);
+  animation: sweep 9s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  50% {
+    transform: translateX(50%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .grass-sweep {
+    animation: none;
+    transform: translateX(-30%);
+    opacity: 0.5;
+  }
+}
+

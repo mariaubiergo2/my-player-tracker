@@ -504,7 +504,8 @@
     "success_role": "S'ha actualitzat el rol de {name} a {role}",
     "loading_users": "Carregant base de dades d'usuaris...",
     "cannot_demote_self": "No pots degradar el teu propi rol",
-    "modify_role": "Modificar rol d'usuari"
+    "modify_role": "Modificar rol d'usuari",
+    "drag_reorder": "Arrossegar per reordenar columna"
   },
   "video": {
     "upload_title": "Vídeo del Partit",

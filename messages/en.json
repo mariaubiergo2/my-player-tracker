@@ -504,7 +504,8 @@
     "success_role": "Updated role of {name} to {role}",
     "loading_users": "Loading user database...",
     "cannot_demote_self": "Cannot demote yourself",
-    "modify_role": "Modify user role"
+    "modify_role": "Modify user role",
+    "drag_reorder": "Drag to reorder column"
   },
   "video": {
     "upload_title": "Match Video",

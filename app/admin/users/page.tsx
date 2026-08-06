@@ -41,6 +41,119 @@ export default function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
 
+  // Dynamic resizable and reorderable columns state
+  const [columnOrder, setColumnOrder] = useState<string[]>([
+    "name",
+    "email",
+    "role",
+    "phone",
+    "birth",
+    "registered"
+  ]);
+
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({
+    name: 240,
+    email: 220,
+    role: 220,
+    phone: 150,
+    birth: 150,
+    registered: 150
+  });
+
+  const [draggedColId, setDraggedColId] = useState<string | null>(null);
+  const [isResizing, setIsResizing] = useState(false);
+
+  // Column reordering handlers (HTML5 Drag and Drop)
+  const handleDragStart = (e: React.DragEvent, colId: string) => {
+    if (isResizing) {
+      e.preventDefault();
+      return;
+    }
+    setDraggedColId(colId);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent, targetColId: string) => {
+    e.preventDefault();
+    if (!draggedColId || draggedColId === targetColId) return;
+
+    const dragIndex = columnOrder.indexOf(draggedColId);
+    const targetIndex = columnOrder.indexOf(targetColId);
+
+    const newOrder = [...columnOrder];
+    newOrder.splice(dragIndex, 1);
+    newOrder.splice(targetIndex, 0, draggedColId);
+
+    setColumnOrder(newOrder);
+    setDraggedColId(null);
+  };
+
+  // Column resizing handler (Mousedown/Mousemove events)
+  const handleResizeStart = (e: React.MouseEvent, colId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsResizing(true);
+    
+    const startX = e.clientX;
+    const startWidth = columnWidths[colId];
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const deltaX = moveEvent.clientX - startX;
+      const newWidth = Math.max(90, startWidth + deltaX); // min 90px
+      setColumnWidths((prev) => ({
+        ...prev,
+        [colId]: newWidth
+      }));
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+  };
+
+  // Helper translations for headers
+  const getColLabel = (colId: string) => {
+    switch (colId) {
+      case "name":
+        return t("admin_users.table_name");
+      case "email":
+        return t("admin_users.table_email");
+      case "role":
+        return t("admin_users.table_role");
+      case "phone":
+        return t("admin_users.table_phone");
+      case "birth":
+        return t("admin_users.table_birth");
+      case "registered":
+        return t("admin_users.table_registered");
+      default:
+        return "";
+    }
+  };
+
+  // Helper responsive classes for columns
+  const getColClass = (colId: string) => {
+    switch (colId) {
+      case "phone":
+        return "hidden lg:table-cell";
+      case "birth":
+        return "hidden md:table-cell";
+      case "registered":
+        return "hidden xl:table-cell";
+      default:
+        return "";
+    }
+  };
+
   // Modal control states
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -370,88 +483,137 @@ export default function AdminUsersPage() {
         </div>
       ) : (
         <div className="overflow-x-auto card bg-base-100 shadow-xl border border-base-200">
-          <table className="table table-zebra w-full">
+          <table className="table table-zebra w-full" style={{ tableLayout: "fixed" }}>
             <thead>
               <tr className="bg-base-200/50">
-                <th>{t("admin_users.table_name")}</th>
-                <th>{t("admin_users.table_email")}</th>
-                <th>{t("admin_users.table_role")}</th>
-                <th className="hidden lg:table-cell">{t("admin_users.table_phone")}</th>
-                <th className="hidden md:table-cell">{t("admin_users.table_birth")}</th>
-                <th className="hidden xl:table-cell">{t("admin_users.table_registered")}</th>
-                <th className="text-right">{t("admin_users.table_actions")}</th>
+                {columnOrder.map((colId) => (
+                  <th
+                    key={colId}
+                    style={{ width: columnWidths[colId] }}
+                    className={`relative p-0 select-none group border-r border-base-content/10 last:border-0 ${getColClass(colId)}`}
+                  >
+                    <div
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, colId)}
+                      onDragOver={handleDragOver}
+                      onDrop={(e) => handleDrop(e, colId)}
+                      className="px-4 py-3 cursor-move flex items-center justify-between font-bold text-xs uppercase text-base-content/70 hover:bg-base-200/50 active:bg-base-200 transition-colors"
+                      title={t("admin_users.drag_reorder") || "Drag to reorder / Arrastra para reordenar"}
+                    >
+                      <span className="truncate">{getColLabel(colId)}</span>
+                      <span className="opacity-0 group-hover:opacity-40 text-[10px] ml-1 select-none pointer-events-none">⋮⋮</span>
+                    </div>
+                    {/* Resizer Handle */}
+                    <div
+                      onMouseDown={(e) => handleResizeStart(e, colId)}
+                      className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize hover:bg-primary/40 active:bg-primary z-20"
+                    />
+                  </th>
+                ))}
+                {/* Actions column remains fixed at the end */}
+                <th className="text-right px-4 py-3 w-[120px] font-bold text-xs uppercase text-base-content/70">
+                  {t("admin_users.table_actions")}
+                </th>
               </tr>
             </thead>
             <tbody>
               {filteredUsers.map((u) => (
                 <tr key={u.id} className="hover:bg-base-200/30 transition-colors">
-                  <td>
-                    <div className="flex items-center gap-3">
-                      <div className={`avatar placeholder ${u.avatarUrl ? "" : "bg-neutral text-neutral-content"} rounded-full w-9 h-9 flex items-center justify-center overflow-hidden`}>
-                        {u.avatarUrl ? (
-                          <img src={u.avatarUrl} alt={u.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-xs font-semibold">
-                            {u.name.charAt(0).toUpperCase()}
-                            {u.surname.charAt(0).toUpperCase()}
-                          </span>
-                        )}
-                      </div>
-                      <div>
-                        <div className="font-bold text-base-content">
-                          {u.name} {u.surname}
-                        </div>
-                        <div className="text-xs text-base-content/50 lg:hidden">
+                  {columnOrder.map((colId) => {
+                    if (colId === "name") {
+                      return (
+                        <td key="name" className="px-4 py-3 font-medium max-w-xs truncate">
+                          <div className="flex items-center gap-3">
+                            <div className={`avatar placeholder ${u.avatarUrl ? "" : "bg-neutral text-neutral-content"} rounded-full w-9 h-9 flex items-center justify-center overflow-hidden shrink-0`}>
+                              {u.avatarUrl ? (
+                                <img src={u.avatarUrl} alt={u.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <span className="text-xs font-semibold">
+                                  {u.name.charAt(0).toUpperCase()}
+                                  {u.surname.charAt(0).toUpperCase()}
+                                </span>
+                              )}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="font-bold text-base-content truncate">
+                                {u.name} {u.surname}
+                              </div>
+                              <div className="text-xs text-base-content/50 lg:hidden truncate">
+                                {u.email}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                      );
+                    }
+                    if (colId === "email") {
+                      return (
+                        <td key="email" className="px-4 py-3 text-sm font-medium text-base-content/85 max-w-xs truncate">
                           {u.email}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td>
-                    <span className="text-sm font-medium text-base-content/85">{u.email}</span>
-                  </td>
-                  <td>
-                    <div className="flex items-center gap-2">
-                      <span className={getRoleBadgeClass(u.role)}>
-                        {u.role === "PLAYER" && t("common.role_player")}
-                        {u.role === "GOAL_KEEPER" && t("common.role_goal_keeper")}
-                        {u.role === "TRAINER" && t("common.role_trainer")}
-                        {u.role === "ADMIN" && t("common.role_admin")}
-                      </span>
-                      <select
-                        className="select select-ghost select-xs max-w-[110px] text-xs font-normal border border-base-300 rounded focus:border-primary"
-                        value={u.role}
-                        onChange={(e) =>
-                          handleRoleChange(u.id, e.target.value as UserRole, u.name)
-                        }
-                        disabled={u.id === user.id} // cannot modify own admin role
-                        title={u.id === user.id ? t("admin_users.cannot_demote_self") : t("admin_users.modify_role")}
-                      >
-                        <option value="PLAYER" className="bg-base-100 text-base-content">
-                          {t("common.role_player")}
-                        </option>
-                        <option value="GOAL_KEEPER" className="bg-base-100 text-base-content">
-                          {t("common.role_goal_keeper")}
-                        </option>
-                        <option value="TRAINER" className="bg-base-100 text-base-content">
-                          {t("common.role_trainer")}
-                        </option>
-                        <option value="ADMIN" className="bg-base-100 text-base-content">
-                          {t("common.role_admin")}
-                        </option>
-                      </select>
-                    </div>
-                  </td>
-                  <td className="hidden lg:table-cell text-sm text-base-content/75">
-                    {u.phone || <span className="text-base-content/30 italic">{t("common.not_specified")}</span>}
-                  </td>
-                  <td className="hidden md:table-cell text-sm text-base-content/75">
-                    {u.birthDate || <span className="text-base-content/30 italic">{t("common.not_specified")}</span>}
-                  </td>
-                  <td className="hidden xl:table-cell text-sm text-base-content/50">
-                    {u.createdAt}
-                  </td>
-                  <td className="text-right">
+                        </td>
+                      );
+                    }
+                    if (colId === "role") {
+                      return (
+                        <td key="role" className="px-4 py-3 text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className={getRoleBadgeClass(u.role)}>
+                              {u.role === "PLAYER" && t("common.role_player")}
+                              {u.role === "GOAL_KEEPER" && t("common.role_goal_keeper")}
+                              {u.role === "TRAINER" && t("common.role_trainer")}
+                              {u.role === "ADMIN" && "Admin"}
+                            </span>
+                            <select
+                              className="select select-ghost select-xs w-auto max-w-xs text-xs font-normal border border-base-300 rounded focus:border-primary"
+                              value={u.role}
+                              onChange={(e) =>
+                                handleRoleChange(u.id, e.target.value as UserRole, u.name)
+                              }
+                              disabled={u.id === user.id} // cannot modify own admin role
+                              title={u.id === user.id ? t("admin_users.cannot_demote_self") : t("admin_users.modify_role")}
+                            >
+                              <option value="PLAYER" className="bg-base-100 text-base-content">
+                                {t("common.role_player")}
+                              </option>
+                              <option value="GOAL_KEEPER" className="bg-base-100 text-base-content">
+                                {t("common.role_goal_keeper")}
+                              </option>
+                              <option value="TRAINER" className="bg-base-100 text-base-content">
+                                {t("common.role_trainer")}
+                              </option>
+                              <option value="ADMIN" className="bg-base-100 text-base-content">
+                                {t("common.role_admin")}
+                              </option>
+                            </select>
+                          </div>
+                        </td>
+                      );
+                    }
+                    if (colId === "phone") {
+                      return (
+                        <td key="phone" className={`px-4 py-3 text-sm text-base-content/75 truncate ${getColClass(colId)}`}>
+                          {u.phone || <span className="text-base-content/30 italic">{t("common.not_specified")}</span>}
+                        </td>
+                      );
+                    }
+                    if (colId === "birth") {
+                      return (
+                        <td key="birth" className={`px-4 py-3 text-sm text-base-content/75 truncate ${getColClass(colId)}`}>
+                          {u.birthDate || <span className="text-base-content/30 italic">{t("common.not_specified")}</span>}
+                        </td>
+                      );
+                    }
+                    if (colId === "registered") {
+                      return (
+                        <td key="registered" className={`px-4 py-3 text-sm text-base-content/50 truncate ${getColClass(colId)}`}>
+                          {u.createdAt}
+                        </td>
+                      );
+                    }
+                    return null;
+                  })}
+                  {/* Actions column remains fixed at the end */}
+                  <td className="px-4 py-3 text-right w-[120px]">
                     <div className="flex justify-end gap-1">
                       <button
                         onClick={() => handleOpenEdit(u)}

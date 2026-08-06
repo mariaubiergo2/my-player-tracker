@@ -504,7 +504,8 @@
     "success_role": "Se ha actualizado el rol de {name} a {role}",
     "loading_users": "Cargando base de datos de usuarios...",
     "cannot_demote_self": "No puedes degradar tu propio rol",
-    "modify_role": "Modificar rol de usuario"
+    "modify_role": "Modificar rol de usuario",
+    "drag_reorder": "Arrastrar para reordenar columna"
   },
   "video": {
     "upload_title": "Video del Partido",

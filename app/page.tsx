@@ -9,17 +9,18 @@ export default async function Home() {
     <div className="flex flex-col flex-1 bg-gradient-to-b from-base-100 via-base-200 to-base-300">
       
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 px-6 sm:px-8 lg:px-12 text-center flex flex-col items-center justify-center min-h-[75vh]">
+      <section className="relative grass-bg border-b border-secondary/25 py-20 px-6 sm:px-8 lg:px-12 text-center flex flex-col items-center justify-center min-h-[75vh]">
+        <div className="grass-sweep"></div>
         {/* Subtle decorative glow circles */}
-        <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-80 h-80 bg-secondary/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-primary/10 rounded-full blur-3xl pointer-events-none z-10" />
+        <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-80 h-80 bg-secondary/15 rounded-full blur-3xl pointer-events-none z-10" />
 
         <div className="max-w-4xl mx-auto space-y-6 relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-wider mb-2">
             <span>{t("home.badge")}</span>
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight leading-none bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent pb-2">
+          <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight leading-none bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent pb-2 font-display">
             {t("home.title")}
           </h1>
 
@@ -118,7 +119,7 @@ export default async function Home() {
 
       {/* Workflow Showcase */}
       <PageContainer className="py-12" maxWidthClassName="max-w-6xl">
-        <div className="bg-base-100 rounded-3xl border border-base-content/10 shadow-2xl p-8 sm:p-12 space-y-8">
+        <div className="bg-base-100 rounded-3xl border-2 border-secondary/20 shadow-2xl p-8 sm:p-12 space-y-8">
           <div className="text-center max-w-xl mx-auto space-y-2">
             <span className="badge badge-accent font-semibold">{t("home.workflow_badge")}</span>
             <h2 className="text-2xl sm:text-3xl font-bold">{t("home.workflow_title")}</h2>
