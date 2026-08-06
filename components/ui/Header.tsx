@@ -61,8 +61,17 @@ export default function Header() {
             )}
           </ul>
         </div>
-        <Link href="/about" className="btn btn-ghost text-xl tracking-wide font-display">
-          {t("header.brand")}
+        <Link href="/about" className="btn btn-ghost text-xl tracking-wide font-display flex items-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={theme === "dark" ? "/logo-dark.svg" : "/logo-light.svg"}
+            alt="Logo"
+            className="h-8 w-auto transition-transform duration-300 hover:scale-105"
+            onError={(e) => {
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+          <span>{t("header.brand")}</span>
         </Link>
       </div>
       <div className="navbar-center hidden lg:flex z-10">

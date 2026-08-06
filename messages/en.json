@@ -1,6 +1,6 @@
 {
   "header": {
-    "brand": "⚽ Agent Matches",
+    "brand": "Foot-Tracker",
     "about": "How it works",
     "users": "Users",
     "all_players": "All Players",
@@ -110,8 +110,8 @@
   },
   "about_page": {
     "badge": "⚡ Next-Gen Sports Analytics",
-    "title": "Agent Matches Hub",
-    "subtitle": "Welcome to the ultimate player tracker application. Designed for teams, trainers, and aspiring athletes, Agent Matches bridges quantitative statistics with qualitative feedback to elevate player development.",
+    "title": "Foot-Tracker Hub",
+    "subtitle": "Welcome to the ultimate player tracker application. Designed for teams, trainers, and aspiring athletes, Foot-Tracker bridges quantitative statistics with qualitative feedback to elevate player development.",
     "btn_dashboard": "Go to Video Analysis",
     "btn_explore": "Explore Features",
     "stats": {

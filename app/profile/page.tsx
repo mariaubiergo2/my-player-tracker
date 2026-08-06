@@ -37,7 +37,7 @@ export default function ProfilePage() {
 
   // Set page title for SEO
   useEffect(() => {
-    document.title = `${t("profile_page.title")} | Agent Matches`;
+    document.title = `${t("profile_page.title")} | Foot-Tracker`;
   }, [t]);
 
   // Client-side authentication check

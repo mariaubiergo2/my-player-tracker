@@ -1,0 +1,21 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <rect x="2" y="2" width="96" height="96" rx="21" fill="#16251A"/>
+
+  <!-- tracking ring -->
+  <circle cx="48" cy="46" r="35" fill="none" stroke="#F0EDE3" stroke-opacity="0.18" stroke-width="2" stroke-dasharray="1 5.5" stroke-linecap="round"/>
+
+  <!-- ball -->
+  <circle cx="48" cy="46" r="26" fill="#C1502E"/>
+  <g stroke="#F0EDE3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M48,37 L48,20"/>
+    <path d="M56.56,43.22 L72.73,37.97"/>
+    <path d="M53.29,53.28 L63.29,67.04"/>
+    <path d="M42.71,53.28 L32.71,67.04"/>
+    <path d="M39.44,43.22 L23.27,37.97"/>
+  </g>
+  <path d="M48,37 L56.56,43.22 L53.29,53.28 L42.71,53.28 L39.44,43.22 Z" fill="#16251A" stroke="#F0EDE3" stroke-width="2" stroke-linejoin="round"/>
+
+  <!-- play / video badge -->
+  <circle cx="74" cy="74" r="14.5" fill="#16251A" stroke="#F0EDE3" stroke-width="2.2"/>
+  <path d="M70,67.5 L70,80.5 L80.5,74 Z" fill="#F0EDE3"/>
+</svg>

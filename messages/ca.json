@@ -1,6 +1,6 @@
 {
   "header": {
-    "brand": "⚽ Agent Matches",
+    "brand": "Foot-Tracker",
     "about": "Com funciona",
     "users": "Usuaris",
     "all_players": "Tots els jugadors",
@@ -110,7 +110,7 @@
   },
   "about_page": {
     "badge": "⚡ Analítica esportiva de nova generació",
-    "title": "Agent Matches Hub",
+    "title": "Foot-Tracker Hub",
     "subtitle": "Benvingut a l'aplicació definitiva de seguiment de jugadors. Dissenyada per a equips, entrenadors i atletes, connecta estadístiques quantitatives amb comentaris qualitatius.",
     "btn_dashboard": "Anar a l'anàlisi de vídeo",
     "btn_explore": "Explorar funcions",

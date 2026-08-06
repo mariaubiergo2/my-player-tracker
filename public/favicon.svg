@@ -1,0 +1,31 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .bg { fill: #F5F0E6; }
+    .ink-stroke { stroke: #1B2E1F; }
+    .ink-fill { fill: #1B2E1F; }
+    .ring { stroke: #1B2E1F; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #16251A; }
+      .ink-stroke { stroke: #F0EDE3; }
+      .ink-fill { fill: #F0EDE3; }
+      .ring { stroke: #F0EDE3; }
+    }
+  </style>
+
+  <rect x="2" y="2" width="96" height="96" rx="21" class="bg"/>
+
+  <circle cx="48" cy="46" r="35" fill="none" class="ring" stroke-opacity="0.18" stroke-width="2" stroke-dasharray="1 5.5" stroke-linecap="round"/>
+
+  <circle cx="48" cy="46" r="26" fill="#C1502E"/>
+  <g class="ink-stroke" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M48,37 L48,20"/>
+    <path d="M56.56,43.22 L72.73,37.97"/>
+    <path d="M53.29,53.28 L63.29,67.04"/>
+    <path d="M42.71,53.28 L32.71,67.04"/>
+    <path d="M39.44,43.22 L23.27,37.97"/>
+  </g>
+  <path d="M48,37 L56.56,43.22 L53.29,53.28 L42.71,53.28 L39.44,43.22 Z" class="bg ink-stroke" stroke-width="2" stroke-linejoin="round"/>
+
+  <circle cx="74" cy="74" r="14.5" class="bg ink-stroke" stroke-width="2.2"/>
+  <path d="M70,67.5 L70,80.5 L80.5,74 Z" class="ink-fill"/>
+</svg>

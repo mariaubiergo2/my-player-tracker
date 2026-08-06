@@ -7,11 +7,14 @@ import { cookies } from "next/headers";
 import { defaultLocale, Locale } from "@/lib/i18n";
 
 export const metadata: Metadata = {
-  title: "Player Tracker",
+  title: "Foot-Tracker",
   description:
     "Track player matches and give feedback. A Next.js application showcasing player performance monitoring with Prisma and DaisyUI.",
+  icons: {
+    icon: "/favicon.svg?v=1",
+  },
   openGraph: {
-    title: "Player Tracker",
+    title: "Foot-Tracker",
     description: "Track player matches and give feedback publicly",
     type: "website",
   },
