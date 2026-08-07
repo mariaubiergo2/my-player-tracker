@@ -1,17 +1,17 @@
 "use client";
 
 import { useEffect, useState, useTransition } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/components/LanguageProvider";
 import PageContainer from "@/components/ui/PageContainer";
-import { createQuestionnaire, defineQuestionnaire } from "@/actions/questionnaires";
+import { createQuestionnaire } from "@/actions/questionnaires";
+import { QuestionType, QuestionnaireStatus } from "@prisma/client";
 
-interface QuestionInput {
-  id: string; // temp unique key
+interface LocalQuestion {
   text: string;
-  type: "OPEN" | "MULTIPLE_CHOICE";
+  type: QuestionType;
   options: string[];
 }
 
@@ -21,54 +21,63 @@ export default function CreateQuestionnairePage() {
   const { t } = useTranslation();
   const [isPending, startTransition] = useTransition();
 
-  // Form State
+  // Form states
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [questions, setQuestions] = useState<QuestionInput[]>([
-    { id: "q-initial-1", text: "", type: "OPEN", options: ["", ""] },
+  const [questions, setQuestions] = useState<LocalQuestion[]>([
+    { text: "", type: QuestionType.OPEN, options: ["", ""] },
   ]);
 
-  // Errors / Success
   const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  const isTrainer = user?.role === "TRAINER";
+  const isAdmin = user?.role === "ADMIN";
 
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
         router.push("/login");
-      } else if (user?.role !== "TRAINER") {
+      } else if (!isTrainer && !isAdmin) {
         router.push("/dashboard");
       }
     }
-  }, [isLoading, isAuthenticated, user]);
+  }, [isLoading, isAuthenticated, user, router, isTrainer, isAdmin]);
 
-  const addQuestion = () => {
-    const newId = `q-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const handleAddQuestion = () => {
     setQuestions((prev) => [
       ...prev,
-      { id: newId, text: "", type: "OPEN", options: ["", ""] },
+      { text: "", type: QuestionType.OPEN, options: ["", ""] },
     ]);
   };
 
-  const removeQuestion = (qId: string) => {
-    setQuestions((prev) => prev.filter((q) => q.id !== qId));
+  const handleRemoveQuestion = (qIndex: number) => {
+    setQuestions((prev) => prev.filter((_, i) => i !== qIndex));
   };
 
-  const updateQuestionText = (qId: string, text: string) => {
+  const handleQuestionTextChange = (qIndex: number, text: string) => {
     setQuestions((prev) =>
-      prev.map((q) => (q.id === qId ? { ...q, text } : q))
+      prev.map((q, i) => (i === qIndex ? { ...q, text } : q))
     );
   };
 
-  const updateQuestionType = (qId: string, type: "OPEN" | "MULTIPLE_CHOICE") => {
+  const handleQuestionTypeChange = (qIndex: number, type: QuestionType) => {
     setQuestions((prev) =>
-      prev.map((q) => (q.id === qId ? { ...q, type } : q))
+      prev.map((q, i) => {
+        if (i === qIndex) {
+          // If changing to MULTIPLE_CHOICE, initialize with 2 empty options if not present
+          const options = type === QuestionType.MULTIPLE_CHOICE ? ["", ""] : [];
+          return { ...q, type, options };
+        }
+        return q;
+      })
     );
   };
 
-  const addOption = (qId: string) => {
+  const handleAddOption = (qIndex: number) => {
     setQuestions((prev) =>
-      prev.map((q) => {
-        if (q.id === qId) {
+      prev.map((q, i) => {
+        if (i === qIndex) {
           return { ...q, options: [...q.options, ""] };
         }
         return q;
@@ -76,120 +85,105 @@ export default function CreateQuestionnairePage() {
     );
   };
 
-  const removeOption = (qId: string, optionIndex: number) => {
+  const handleRemoveOption = (qIndex: number, optIndex: number) => {
     setQuestions((prev) =>
-      prev.map((q) => {
-        if (q.id === qId) {
-          const nextOptions = q.options.filter((_, idx) => idx !== optionIndex);
-          return { ...q, options: nextOptions };
+      prev.map((q, i) => {
+        if (i === qIndex) {
+          return { ...q, options: q.options.filter((_, oi) => oi !== optIndex) };
         }
         return q;
       })
     );
   };
 
-  const updateOptionText = (qId: string, optionIndex: number, val: string) => {
+  const handleOptionTextChange = (qIndex: number, optIndex: number, text: string) => {
     setQuestions((prev) =>
-      prev.map((q) => {
-        if (q.id === qId) {
-          const nextOptions = [...q.options];
-          nextOptions[optionIndex] = val;
-          return { ...q, options: nextOptions };
+      prev.map((q, i) => {
+        if (i === qIndex) {
+          const newOptions = [...q.options];
+          newOptions[optIndex] = text;
+          return { ...q, options: newOptions };
         }
         return q;
       })
     );
   };
 
-  const handleSubmit = (shouldDefine: boolean) => {
+  const handleSubmit = (status: QuestionnaireStatus) => {
     setErrorMessage("");
+    setSuccessMessage("");
 
-    // Validation
-    if (!title.trim()) {
+    // Validate inputs
+    if (!title || title.trim() === "") {
       setErrorMessage(t("questionnaires.validation_title_required"));
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo(0, 0);
       return;
     }
-
     if (questions.length === 0) {
       setErrorMessage(t("questionnaires.validation_questions_required"));
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      window.scrollTo(0, 0);
       return;
     }
 
-    // Question-specific validation
     for (let i = 0; i < questions.length; i++) {
       const q = questions[i];
-      if (!q.text.trim()) {
-        setErrorMessage(`${t("questionnaires.question_text")} #${i + 1} ${t("common.required").toLowerCase()}`);
-        window.scrollTo({ top: 0, behavior: "smooth" });
+      if (!q.text || q.text.trim() === "") {
+        setErrorMessage(`${t("questionnaires.question_text")} #${i + 1} is empty`);
+        window.scrollTo(0, 0);
         return;
       }
-      if (q.type === "MULTIPLE_CHOICE") {
-        const validOptions = q.options.filter((o) => o.trim());
-        if (validOptions.length < 2) {
+      if (q.type === QuestionType.MULTIPLE_CHOICE) {
+        const filledOptions = q.options.filter((opt) => opt && opt.trim() !== "");
+        if (filledOptions.length < 2) {
           setErrorMessage(t("questionnaires.validation_options_required"));
-          window.scrollTo({ top: 0, behavior: "smooth" });
+          window.scrollTo(0, 0);
           return;
         }
       }
     }
 
     startTransition(async () => {
-      try {
-        const res = await createQuestionnaire({
-          title,
-          description,
-          questions: questions.map((q) => ({
-            text: q.text,
-            type: q.type,
-            options: q.type === "MULTIPLE_CHOICE" ? q.options.filter((o) => o.trim()) : [],
-          })),
-        });
+      // Filter out empty options for multiple choice questions
+      const cleanedQuestions = questions.map((q) => ({
+        text: q.text.trim(),
+        type: q.type,
+        options: q.type === QuestionType.MULTIPLE_CHOICE ? q.options.filter((opt) => opt.trim() !== "") : [],
+      }));
 
-        if (res.success && res.data) {
-          if (shouldDefine) {
-            const defineRes = await defineQuestionnaire(res.data.id);
-            if (defineRes.success) {
-              router.push(`/questionnaires/${res.data.id}`);
-            } else {
-              setErrorMessage(defineRes.error || "Plantilla creada pero falló al definir.");
-            }
-          } else {
-            router.push("/questionnaires");
-          }
-        } else {
-          setErrorMessage(res.error || t("common.error"));
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }
-      } catch (err) {
-        console.error(err);
-        setErrorMessage(t("common.error"));
-        window.scrollTo({ top: 0, behavior: "smooth" });
+      const res = await createQuestionnaire({
+        title: title.trim(),
+        description: description.trim() || undefined,
+        questions: cleanedQuestions,
+        status,
+      });
+
+      if (res.success) {
+        setSuccessMessage(t("common.success"));
+        router.push("/questionnaires");
+      } else {
+        setErrorMessage(res.error ? t(`questionnaires.${res.error}`) || res.error : t("common.error"));
+        window.scrollTo(0, 0);
       }
     });
   };
 
-  if (isLoading) {
+  if (isLoading || !isTrainer && !isAdmin) {
     return (
-      <div className="flex justify-center items-center min-h-[50vh]">
-        <span className="loading loading-spinner loading-lg"></span>
+      <div className="flex h-[60vh] items-center justify-center">
+        <span className="loading loading-spinner loading-lg text-primary"></span>
       </div>
     );
   }
 
-  if (user?.role !== "TRAINER") {
-    return null;
-  }
-
   return (
-    <PageContainer className="py-10 animate-fade-in">
-      <div className="mb-10">
-        <Link href="/questionnaires" className="btn btn-ghost mb-4">
-          ← {t("questionnaires.back_list")}
-        </Link>
+    <PageContainer className="py-8" maxWidthClassName="max-w-3xl">
+      {/* Back link */}
+      <Link href="/questionnaires" className="btn btn-ghost btn-sm mb-6">
+        ← {t("questionnaires.back_list")}
+      </Link>
 
-        <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+      <div className="mb-8">
+        <h1 className="text-3xl font-extrabold tracking-tight text-base-content">
           {t("questionnaires.create_title")}
         </h1>
         <p className="text-base-content/70 mt-2">
@@ -197,208 +191,176 @@ export default function CreateQuestionnairePage() {
         </p>
       </div>
 
+      {/* Alert Banners */}
+      {successMessage && (
+        <div className="alert alert-success shadow-lg mb-6 border border-success/20 animate-fade-in">
+          <div><span>✅ {successMessage}</span></div>
+        </div>
+      )}
       {errorMessage && (
-        <div className="alert alert-error shadow-lg mb-6 border border-error/20">
-          <span>❌ {errorMessage}</span>
+        <div className="alert alert-error shadow-lg mb-6 border border-error/20 animate-fade-in">
+          <div><span>❌ {errorMessage}</span></div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Form Fields */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Title & Description Card */}
-          <div className="card bg-base-100 shadow-md border border-base-200">
-            <div className="card-body">
-              <h2 className="card-title text-xl text-primary">Información General</h2>
-              <div className="form-control w-full mt-2">
-                <label className="label">
-                  <span className="label-text font-semibold">{t("questionnaires.form_title")} *</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder={t("questionnaires.form_title")}
-                  className="input input-bordered w-full"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="form-control w-full mt-4">
-                <label className="label">
-                  <span className="label-text font-semibold">{t("questionnaires.form_description")}</span>
-                </label>
-                <textarea
-                  placeholder={t("questionnaires.form_description")}
-                  className="textarea textarea-bordered w-full"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                />
-              </div>
-            </div>
+      {/* Questionnaire Template Form */}
+      <div className="space-y-6">
+        <div className="card bg-base-100 shadow border border-base-200 p-6 space-y-4">
+          <div className="form-control w-full">
+            <label className="label">
+              <span className="label-text font-bold text-base-content">{t("questionnaires.form_title")} *</span>
+            </label>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Evaluación Mensual de Objetivos"
+              className="input input-bordered w-full"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
           </div>
 
-          {/* Dynamic Questions Section */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold">Preguntas</h2>
-              <button
-                type="button"
-                onClick={addQuestion}
-                className="btn btn-sm btn-outline btn-primary"
-              >
-                + {t("questionnaires.add_question")}
-              </button>
-            </div>
-
-            {questions.map((q, qIdx) => (
-              <div key={q.id} className="card bg-base-100 shadow border border-base-200 relative">
-                <div className="card-body p-6 space-y-4">
-                  <div className="flex justify-between items-center border-b border-base-content/5 pb-3">
-                    <span className="font-bold text-sm text-base-content/60">Pregunta #{qIdx + 1}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeQuestion(q.id)}
-                      className="btn btn-xs btn-error btn-ghost text-xs"
-                    >
-                      {t("questionnaires.remove_question")}
-                    </button>
-                  </div>
-
-                  {/* Question Text */}
-                  <div className="form-control w-full">
-                    <label className="label">
-                      <span className="label-text font-semibold">{t("questionnaires.question_text")}</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="ej. ¿Cuáles son tus objetivos personales para esta temporada?"
-                      className="input input-bordered w-full"
-                      value={q.text}
-                      onChange={(e) => updateQuestionText(q.id, e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  {/* Question Type */}
-                  <div className="form-control w-full">
-                    <label className="label">
-                      <span className="label-text font-semibold">{t("questionnaires.question_type")}</span>
-                    </label>
-                    <div className="flex gap-4">
-                      <label className="label cursor-pointer justify-start gap-2">
-                        <input
-                          type="radio"
-                          name={`type-${q.id}`}
-                          className="radio radio-primary radio-sm"
-                          checked={q.type === "OPEN"}
-                          onChange={() => updateQuestionType(q.id, "OPEN")}
-                        />
-                        <span className="label-text">{t("questionnaires.type_open")}</span>
-                      </label>
-                      <label className="label cursor-pointer justify-start gap-2">
-                        <input
-                          type="radio"
-                          name={`type-${q.id}`}
-                          className="radio radio-primary radio-sm"
-                          checked={q.type === "MULTIPLE_CHOICE"}
-                          onChange={() => updateQuestionType(q.id, "MULTIPLE_CHOICE")}
-                        />
-                        <span className="label-text">{t("questionnaires.type_multiple")}</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* Options */}
-                  {q.type === "MULTIPLE_CHOICE" && (
-                    <div className="bg-base-200/50 p-4 rounded-2xl border border-base-content/5 space-y-3">
-                      <div className="flex items-center justify-between">
-                        <span className="font-semibold text-sm">Opciones de respuesta</span>
-                        <button
-                          type="button"
-                          onClick={() => addOption(q.id)}
-                          className="btn btn-xs btn-outline btn-secondary"
-                        >
-                          + {t("questionnaires.add_option")}
-                        </button>
-                      </div>
-
-                      {q.options.map((opt, optIdx) => (
-                        <div key={optIdx} className="flex gap-2 items-center">
-                          <span className="text-xs text-base-content/50 font-bold w-6">{optIdx + 1}.</span>
-                          <input
-                            type="text"
-                            placeholder="Escribe una opción..."
-                            className="input input-bordered input-sm flex-1"
-                            value={opt}
-                            onChange={(e) => updateOptionText(q.id, optIdx, e.target.value)}
-                            required
-                          />
-                          {q.options.length > 2 && (
-                            <button
-                              type="button"
-                              onClick={() => removeOption(q.id, optIdx)}
-                              className="btn btn-xs btn-error btn-square btn-outline"
-                              title={t("questionnaires.remove_option")}
-                            >
-                              ✕
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-
-            <div className="flex justify-center pt-2">
-              <button
-                type="button"
-                onClick={addQuestion}
-                className="btn btn-neutral btn-outline w-full max-w-xs"
-              >
-                + {t("questionnaires.add_question")}
-              </button>
-            </div>
+          <div className="form-control w-full">
+            <label className="label">
+              <span className="label-text font-bold text-base-content">{t("questionnaires.form_description")}</span>
+            </label>
+            <textarea
+              placeholder="e.g. Describe brevemente los objetivos de este cuestionario..."
+              className="textarea textarea-bordered w-full min-h-[5rem]"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
           </div>
         </div>
 
-        {/* Sidebar Actions */}
-        <div className="space-y-6">
-          <div className="card bg-base-100 shadow-md border border-base-200 sticky top-6">
-            <div className="card-body">
-              <h2 className="card-title text-xl border-b border-base-content/5 pb-2 mb-4">{t("questionnaires.actions")}</h2>
+        {/* Questions Section */}
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold text-base-content">Preguntas</h2>
 
-              <div className="flex flex-col gap-3">
+          {questions.map((q, qIndex) => (
+            <div
+              key={qIndex}
+              className="card bg-base-100 shadow border border-base-200 p-6 relative space-y-4 hover:border-base-300 transition-colors"
+            >
+              {/* Remove question button */}
+              {questions.length > 1 && (
                 <button
                   type="button"
-                  onClick={() => handleSubmit(true)}
-                  disabled={isPending}
-                  className="btn btn-primary w-full shadow-md"
+                  onClick={() => handleRemoveQuestion(qIndex)}
+                  className="btn btn-ghost btn-circle btn-sm text-error absolute right-4 top-4 hover:bg-error/10"
+                  title={t("questionnaires.remove_question")}
                 >
-                  {isPending ? (
-                    <span className="loading loading-spinner loading-sm"></span>
-                  ) : (
-                    "💾 " + t("questionnaires.save_define")
-                  )}
+                  ✕
                 </button>
+              )}
 
-                <button
-                  type="button"
-                  onClick={() => handleSubmit(false)}
-                  disabled={isPending}
-                  className="btn btn-neutral btn-outline w-full"
-                >
-                  💾 {t("questionnaires.save_draft")}
-                </button>
+              <span className="badge badge-neutral text-xs font-bold">Pregunta #{qIndex + 1}</span>
 
-                <Link href="/questionnaires" className="btn btn-ghost w-full">
-                  {t("common.cancel")}
-                </Link>
+              <div className="grid md:grid-cols-3 gap-4">
+                {/* Question text */}
+                <div className="form-control md:col-span-2">
+                  <label className="label py-1">
+                    <span className="label-text text-xs font-bold">{t("questionnaires.question_text")} *</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. ¿Cuáles son tus objetivos principales esta semana?"
+                    className="input input-bordered input-sm w-full"
+                    value={q.text}
+                    onChange={(e) => handleQuestionTextChange(qIndex, e.target.value)}
+                  />
+                </div>
+
+                {/* Question type */}
+                <div className="form-control">
+                  <label className="label py-1">
+                    <span className="label-text text-xs font-bold">{t("questionnaires.question_type")}</span>
+                  </label>
+                  <select
+                    className="select select-bordered select-sm w-full font-medium"
+                    value={q.type}
+                    onChange={(e) => handleQuestionTypeChange(qIndex, e.target.value as QuestionType)}
+                  >
+                    <option value={QuestionType.OPEN}>{t("questionnaires.type_open")}</option>
+                    <option value={QuestionType.MULTIPLE_CHOICE}>{t("questionnaires.type_multiple")}</option>
+                  </select>
+                </div>
               </div>
+
+              {/* Multiple Choice Options Builder */}
+              {q.type === QuestionType.MULTIPLE_CHOICE && (
+                <div className="bg-base-200/50 p-4 rounded-xl border border-base-200 space-y-3 mt-2">
+                  <label className="label py-0">
+                    <span className="label-text text-xs font-bold">Opciones disponibles *</span>
+                  </label>
+
+                  {q.options.map((opt, optIndex) => (
+                    <div key={optIndex} className="flex gap-2 items-center">
+                      <span className="text-xs font-semibold text-base-content/40 w-4">{optIndex + 1}.</span>
+                      <input
+                        type="text"
+                        required
+                        placeholder={`Opción #${optIndex + 1}`}
+                        className="input input-bordered input-sm flex-1"
+                        value={opt}
+                        onChange={(e) => handleOptionTextChange(qIndex, optIndex, e.target.value)}
+                      />
+                      {q.options.length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveOption(qIndex, optIndex)}
+                          className="btn btn-ghost btn-circle btn-xs text-error hover:bg-error/10"
+                          title={t("questionnaires.remove_option")}
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={() => handleAddOption(qIndex)}
+                    className="btn btn-ghost btn-xs text-primary mt-2"
+                  >
+                    + {t("questionnaires.add_option")}
+                  </button>
+                </div>
+              )}
             </div>
-          </div>
+          ))}
+
+          <button
+            type="button"
+            onClick={handleAddQuestion}
+            className="btn btn-outline btn-neutral w-full mt-2"
+          >
+            + {t("questionnaires.add_question")}
+          </button>
+        </div>
+
+        {/* Submit Actions */}
+        <div className="flex gap-4 justify-end mt-8 border-t border-base-200 pt-6">
+          <Link href="/questionnaires" className={`btn btn-ghost ${isPending ? "pointer-events-none opacity-50" : ""}`}>
+            {t("common.cancel")}
+          </Link>
+          <button
+            type="button"
+            onClick={() => handleSubmit(QuestionnaireStatus.DRAFT)}
+            className="btn btn-outline btn-primary"
+            disabled={isPending}
+          >
+            {isPending ? <span className="loading loading-spinner loading-sm"></span> : t("questionnaires.save_draft")}
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSubmit(QuestionnaireStatus.DEFINED)}
+            className="btn btn-primary"
+            disabled={isPending}
+          >
+            {isPending ? <span className="loading loading-spinner loading-sm"></span> : t("questionnaires.save_define")}
+          </button>
         </div>
       </div>
     </PageContainer>

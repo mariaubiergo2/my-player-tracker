@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/components/LanguageProvider";
 import PageContainer from "@/components/ui/PageContainer";
-import { getSelectablePlayers } from "@/actions/matches";
-import { getQuestionnaireById, sendQuestionnaireToPlayers } from "@/actions/questionnaires";
+import { getQuestionnaireById, sendQuestionnaireToPlayers, getSelectablePlayersForTrainer } from "@/actions/questionnaires";
 
 export default function SendQuestionnairePage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
@@ -46,7 +45,7 @@ export default function SendQuestionnairePage({ params }: { params: Promise<{ id
     try {
       const [templateRes, playersRes] = await Promise.all([
         getQuestionnaireById(id),
-        getSelectablePlayers(),
+        getSelectablePlayersForTrainer(),
       ]);
 
       if (templateRes.success && templateRes.questionnaire) {

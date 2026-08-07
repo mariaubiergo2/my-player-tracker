@@ -150,6 +150,7 @@ model MatchFeedbackMessage {
 enum QuestionnaireStatus {
   DRAFT
   DEFINED
+  SEND
 }
 
 enum AssignmentStatus {

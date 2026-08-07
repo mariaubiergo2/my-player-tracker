@@ -664,6 +664,7 @@
     "send_to_players": "Send to Players",
     "status_draft": "Draft",
     "status_defined": "Defined",
+    "status_send": "Sent",
     "status_sent": "Sent",
     "status_reclaimed": "Reclaimed for redefinition",
     "status_completed": "Completed",

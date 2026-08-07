@@ -2,6 +2,7 @@ import { UserRole } from "@prisma/client";
 import "dotenv/config";
 
 export interface SeedUser {
+  id: string;
   key: string;
   role: UserRole;
   email: string;
@@ -14,6 +15,7 @@ export interface SeedUser {
 
 export const SEED_USERS: SeedUser[] = [
   {
+    id: "seed-admin-id",
     key: "admin",
     role: UserRole.ADMIN,
     email: process.env.SEED_ADMIN_EMAIL || "admin@tracker.com",
@@ -22,6 +24,7 @@ export const SEED_USERS: SeedUser[] = [
     surname: "User",
   },
   {
+    id: "seed-trainer-id",
     key: "trainer",
     role: UserRole.TRAINER,
     email: process.env.SEED_TRAINER_EMAIL || "trainer@tracker.com",
@@ -31,6 +34,7 @@ export const SEED_USERS: SeedUser[] = [
     phone: "+34 600 000 001",
   },
   {
+    id: "seed-player-id",
     key: "player",
     role: UserRole.PLAYER,
     email: process.env.SEED_PLAYER_EMAIL || "player@tracker.com",
@@ -41,6 +45,7 @@ export const SEED_USERS: SeedUser[] = [
     trainerKeys: ["trainer"],
   },
   {
+    id: "seed-goalkeeper-id",
     key: "goalkeeper",
     role: UserRole.GOAL_KEEPER,
     email: process.env.SEED_GOAL_KEEPER_EMAIL || process.env.SEED_GOALKEEPER_EMAIL || "goalkeeper@tracker.com",

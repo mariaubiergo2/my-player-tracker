@@ -664,6 +664,7 @@
     "send_to_players": "Enviar a Jugadors",
     "status_draft": "Esborrany",
     "status_defined": "Definida",
+    "status_send": "Enviada",
     "status_sent": "Enviat",
     "status_reclaimed": "Reclamat per a redefinició",
     "status_completed": "Respost",

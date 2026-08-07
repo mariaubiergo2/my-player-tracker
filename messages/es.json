@@ -663,6 +663,7 @@
     "send_to_players": "Enviar a Jugadores",
     "status_draft": "Borrador",
     "status_defined": "Definida",
+    "status_send": "Enviada",
     "status_sent": "Enviado",
     "status_reclaimed": "Reclamado para redefinición",
     "status_completed": "Respondido",

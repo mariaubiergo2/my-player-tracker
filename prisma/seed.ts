@@ -29,6 +29,7 @@ async function main() {
         password: hashedPassword,
       },
       create: {
+        id: seedUser.id,
         email: seedUser.email,
         name: seedUser.name,
         surname: seedUser.surname,

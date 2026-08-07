@@ -1,258 +1,300 @@
-"use server";
+"use server"
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { QuestionnaireStatus, AssignmentStatus, QuestionType, UserRole } from "@prisma/client";
 
-/**
- * Verification helper for security checks
- */
-async function checkAuth() {
+// HELPER: Validate if caller is a Trainer or Admin
+async function checkTrainerOrAdmin() {
   const currentUser = await getCurrentUser();
   if (!currentUser) {
-    throw new Error("Unauthenticated");
+    throw new Error("Unauthorized");
   }
-
-  // Verify that the user actually exists in the database.
-  // This prevents P2003 foreign key constraint errors if the database is reset/migrated but the browser cookie remains.
-  const dbUser = await prisma.user.findUnique({
-    where: { id: currentUser.userId },
-  });
-
-  if (!dbUser) {
-    throw new Error("User session expired or database reset. Please log out and log in again.");
+  const isTrainer = currentUser.role === UserRole.TRAINER;
+  const isAdmin = currentUser.role === UserRole.ADMIN;
+  if (!isTrainer && !isAdmin) {
+    throw new Error("Only trainers or admins can perform this action");
   }
-
   return currentUser;
 }
 
-/**
- * 1. CREATE: Create a new Questionnaire template (defaults to DRAFT)
- */
+// 1. CREATE QUESTIONNAIRE (Template in DRAFT)
 export async function createQuestionnaire(data: {
   title: string;
   description?: string;
-  questions: {
-    text: string;
-    type: "MULTIPLE_CHOICE" | "OPEN";
-    options: string[];
-  }[];
+  questions: Array<{ text: string; type: QuestionType; options: string[] }>;
+  status?: QuestionnaireStatus;
 }) {
   try {
-    const user = await checkAuth();
-    if (user.role !== UserRole.TRAINER) {
-      return { success: false, error: "Only trainers can create questionnaires" };
+    const currentUser = await checkTrainerOrAdmin();
+
+    if (!data.title || data.title.trim() === "") {
+      return { success: false, error: "validation_title_required" };
+    }
+    if (!data.questions || data.questions.length === 0) {
+      return { success: false, error: "validation_questions_required" };
     }
 
-    if (!data.title.trim()) {
-      return { success: false, error: "Title is required" };
-    }
-
-    if (data.questions.length === 0) {
-      return { success: false, error: "At least one question is required" };
-    }
-
-    // Validate questions
-    for (let i = 0; i < data.questions.length; i++) {
-      const q = data.questions[i];
-      if (!q.text.trim()) {
-        return { success: false, error: `Question #${i + 1} text is empty` };
-      }
-      if (q.type === "MULTIPLE_CHOICE" && q.options.filter((o) => o.trim()).length < 2) {
-        return { success: false, error: `Multiple choice question #${i + 1} requires at least 2 options` };
+    for (const q of data.questions) {
+      if (q.type === QuestionType.MULTIPLE_CHOICE && (!q.options || q.options.length < 2)) {
+        return { success: false, error: "validation_options_required" };
       }
     }
 
-    const template = await prisma.questionnaire.create({
+    const status = data.status || QuestionnaireStatus.DRAFT;
+
+    const questionnaire = await prisma.questionnaire.create({
       data: {
-        title: data.title.trim(),
-        description: data.description?.trim() || null,
-        status: QuestionnaireStatus.DRAFT,
-        trainerId: user.userId,
+        title: data.title,
+        description: data.description || null,
+        status,
+        trainerId: currentUser.userId,
         questions: {
-          create: data.questions.map((q, idx) => ({
-            text: q.text.trim(),
+          create: data.questions.map((q, index) => ({
+            text: q.text,
             type: q.type,
-            options: q.type === "MULTIPLE_CHOICE" ? q.options.filter((o) => o.trim()) : [],
-            order: idx + 1,
+            options: q.type === QuestionType.MULTIPLE_CHOICE ? q.options : [],
+            order: index,
           })),
         },
+      },
+      include: {
+        questions: true,
       },
     });
 
     revalidatePath("/questionnaires");
-    return { success: true, data: template };
+    return { success: true, data: questionnaire };
   } catch (error) {
-    console.error("createQuestionnaire error:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to create template" };
+    console.error("Create questionnaire error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Failed to create questionnaire" };
   }
 }
 
-/**
- * 2. UPDATE: Update a DRAFT template (only if DRAFT and no assignments)
- */
+// 2. UPDATE QUESTIONNAIRE
 export async function updateQuestionnaire(
   id: string,
   data: {
     title: string;
     description?: string;
-    questions: {
-      text: string;
-      type: "MULTIPLE_CHOICE" | "OPEN";
-      options: string[];
-    }[];
+    questions: Array<{ text: string; type: QuestionType; options: string[] }>;
+    status?: QuestionnaireStatus;
   }
 ) {
   try {
-    const user = await checkAuth();
-    if (user.role !== UserRole.TRAINER) {
+    const currentUser = await checkTrainerOrAdmin();
+
+    const existing = await prisma.questionnaire.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      return { success: false, error: "Questionnaire not found" };
+    }
+
+    if (existing.trainerId !== currentUser.userId && currentUser.role !== UserRole.ADMIN) {
       return { success: false, error: "Unauthorized" };
     }
 
-    const template = await prisma.questionnaire.findUnique({
-      where: { id },
-      include: { assignments: true },
-    });
-
-    if (!template) {
-      return { success: false, error: "Template not found" };
+    // Block updates if questionnaire is already in SEND status
+    if (existing.status === QuestionnaireStatus.SEND) {
+      return { success: false, error: "template_locked" };
     }
 
-    if (template.trainerId !== user.userId) {
-      return { success: false, error: "Unauthorized access" };
+    if (!data.title || data.title.trim() === "") {
+      return { success: false, error: "validation_title_required" };
+    }
+    if (!data.questions || data.questions.length === 0) {
+      return { success: false, error: "validation_questions_required" };
     }
 
-    if (template.status !== QuestionnaireStatus.DRAFT) {
-      return { success: false, error: "Cannot edit a defined template" };
-    }
-
-    if (template.assignments.length > 0) {
-      return { success: false, error: "Cannot edit a template with active assignments" };
-    }
-
-    // Validation
-    if (!data.title.trim()) {
-      return { success: false, error: "Title is required" };
-    }
-    if (data.questions.length === 0) {
-      return { success: false, error: "At least one question is required" };
-    }
-    for (let i = 0; i < data.questions.length; i++) {
-      const q = data.questions[i];
-      if (!q.text.trim()) {
-        return { success: false, error: `Question #${i + 1} text is empty` };
-      }
-      if (q.type === "MULTIPLE_CHOICE" && q.options.filter((o) => o.trim()).length < 2) {
-        return { success: false, error: `Multiple choice question #${i + 1} requires at least 2 options` };
+    for (const q of data.questions) {
+      if (q.type === QuestionType.MULTIPLE_CHOICE && (!q.options || q.options.length < 2)) {
+        return { success: false, error: "validation_options_required" };
       }
     }
 
-    // Perform update in a transaction: delete old questions and create new ones
-    await prisma.$transaction(async (tx) => {
-      // Delete old questions (Prisma cascade deletes from db schema, but let's clear explicitly)
+    const updatedStatus = data.status || existing.status;
+
+    // Use a transaction to delete old questions and create new ones
+    const result = await prisma.$transaction(async (tx) => {
+      // 1. Delete existing questions
       await tx.question.deleteMany({
         where: { questionnaireId: id },
       });
 
-      // Update Questionnaire details
-      await tx.questionnaire.update({
+      // 2. Update questionnaire and insert new questions
+      return await tx.questionnaire.update({
         where: { id },
         data: {
-          title: data.title.trim(),
-          description: data.description?.trim() || null,
+          title: data.title,
+          description: data.description || null,
+          status: updatedStatus,
           questions: {
-            create: data.questions.map((q, idx) => ({
-              text: q.text.trim(),
+            create: data.questions.map((q, index) => ({
+              text: q.text,
               type: q.type,
-              options: q.type === "MULTIPLE_CHOICE" ? q.options.filter((o) => o.trim()) : [],
-              order: idx + 1,
+              options: q.type === QuestionType.MULTIPLE_CHOICE ? q.options : [],
+              order: index,
             })),
           },
+        },
+        include: {
+          questions: true,
         },
       });
     });
 
     revalidatePath("/questionnaires");
     revalidatePath(`/questionnaires/${id}`);
-    return { success: true };
+    return { success: true, data: result };
   } catch (error) {
-    console.error("updateQuestionnaire error:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to update template" };
+    console.error("Update questionnaire error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Failed to update questionnaire" };
   }
 }
 
-/**
- * 3. DEFINE: DRAFT -> DEFINED
- */
+// 3. DEFINE QUESTIONNAIRE (DRAFT -> DEFINED)
 export async function defineQuestionnaire(id: string) {
   try {
-    const user = await checkAuth();
-    if (user.role !== UserRole.TRAINER) {
-      return { success: false, error: "Unauthorized" };
-    }
+    const currentUser = await checkTrainerOrAdmin();
 
-    const template = await prisma.questionnaire.findUnique({
+    const existing = await prisma.questionnaire.findUnique({
       where: { id },
     });
 
-    if (!template) {
-      return { success: false, error: "Template not found" };
+    if (!existing) {
+      return { success: false, error: "Questionnaire not found" };
     }
 
-    if (template.trainerId !== user.userId) {
+    if (existing.trainerId !== currentUser.userId && currentUser.role !== UserRole.ADMIN) {
       return { success: false, error: "Unauthorized" };
     }
 
-    if (template.status !== QuestionnaireStatus.DRAFT) {
-      return { success: false, error: "Template is already defined" };
+    if (existing.status !== QuestionnaireStatus.DRAFT) {
+      return { success: false, error: "Questionnaire must be in DRAFT status to be defined" };
     }
 
-    await prisma.questionnaire.update({
+    const updated = await prisma.questionnaire.update({
       where: { id },
       data: { status: QuestionnaireStatus.DEFINED },
     });
 
     revalidatePath("/questionnaires");
     revalidatePath(`/questionnaires/${id}`);
-    return { success: true };
+    return { success: true, data: updated };
   } catch (error) {
-    console.error("defineQuestionnaire error:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to define template" };
+    console.error("Define questionnaire error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Failed to define questionnaire" };
   }
 }
 
-/**
- * 4. DUPLICATE: Clone a template as a new DRAFT template
- */
-export async function duplicateQuestionnaire(id: string) {
+// 4. SEND QUESTIONNAIRE TO PLAYERS
+export async function sendQuestionnaireToPlayers(questionnaireId: string, playerIds: string[]) {
   try {
-    const user = await checkAuth();
-    if (user.role !== UserRole.TRAINER) {
+    const currentUser = await checkTrainerOrAdmin();
+
+    if (!playerIds || playerIds.length === 0) {
+      return { success: false, error: "validation_player_required" };
+    }
+
+    const questionnaire = await prisma.questionnaire.findUnique({
+      where: { id: questionnaireId },
+    });
+
+    if (!questionnaire) {
+      return { success: false, error: "Questionnaire not found" };
+    }
+
+    if (questionnaire.trainerId !== currentUser.userId && currentUser.role !== UserRole.ADMIN) {
       return { success: false, error: "Unauthorized" };
     }
 
-    const template = await prisma.questionnaire.findUnique({
+    if (questionnaire.status !== QuestionnaireStatus.DEFINED && questionnaire.status !== QuestionnaireStatus.SEND) {
+      return { success: false, error: "Questionnaire must be DEFINED or SEND to be assigned" };
+    }
+
+    // Verify all players are connected to this trainer (admins skip this check)
+    if (currentUser.role !== UserRole.ADMIN) {
+      const trainer = await prisma.user.findUnique({
+        where: { id: currentUser.userId },
+        select: {
+          players: { select: { id: true } },
+        },
+      });
+      const myPlayerIds = trainer?.players.map((p) => p.id) || [];
+      const allBelong = playerIds.every((id) => myPlayerIds.includes(id));
+      if (!allBelong) {
+        return { success: false, error: "Some selected players do not belong to you" };
+      }
+    }
+
+    // Perform operations in a transaction
+    await prisma.$transaction(async (tx) => {
+      // 1. Create assignments & notifications
+      for (const playerId of playerIds) {
+        const assignment = await tx.questionnaireAssignment.create({
+          data: {
+            questionnaireId,
+            playerId,
+            status: AssignmentStatus.SENT,
+          },
+        });
+
+        await tx.notification.create({
+          data: {
+            recipientId: playerId,
+            type: "QUESTIONNAIRE_SENT",
+            assignmentId: assignment.id,
+          },
+        });
+      }
+
+      // 2. Transition status from DEFINED -> SEND
+      if (questionnaire.status === QuestionnaireStatus.DEFINED) {
+        await tx.questionnaire.update({
+          where: { id: questionnaireId },
+          data: { status: QuestionnaireStatus.SEND },
+        });
+      }
+    });
+
+    revalidatePath("/questionnaires");
+    revalidatePath(`/questionnaires/${questionnaireId}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Send questionnaire error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Failed to send questionnaire" };
+  }
+}
+
+// 5. DUPLICATE QUESTIONNAIRE
+export async function duplicateQuestionnaire(id: string) {
+  try {
+    const currentUser = await checkTrainerOrAdmin();
+
+    const existing = await prisma.questionnaire.findUnique({
       where: { id },
       include: { questions: { orderBy: { order: "asc" } } },
     });
 
-    if (!template) {
-      return { success: false, error: "Template not found" };
+    if (!existing) {
+      return { success: false, error: "Questionnaire not found" };
     }
 
-    if (template.trainerId !== user.userId) {
+    if (existing.trainerId !== currentUser.userId && currentUser.role !== UserRole.ADMIN) {
       return { success: false, error: "Unauthorized" };
     }
 
-    const clone = await prisma.questionnaire.create({
+    const cloned = await prisma.questionnaire.create({
       data: {
-        title: `${template.title} (Copia)`,
-        description: template.description,
+        title: `${existing.title} (copia)`,
+        description: existing.description,
         status: QuestionnaireStatus.DRAFT,
-        trainerId: user.userId,
+        trainerId: currentUser.userId,
         questions: {
-          create: template.questions.map((q) => ({
+          create: existing.questions.map((q) => ({
             text: q.text,
             type: q.type,
             options: q.options,
@@ -263,96 +305,52 @@ export async function duplicateQuestionnaire(id: string) {
     });
 
     revalidatePath("/questionnaires");
-    return { success: true, data: clone };
+    return { success: true, data: cloned };
   } catch (error) {
-    console.error("duplicateQuestionnaire error:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to duplicate template" };
+    console.error("Duplicate questionnaire error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Failed to duplicate questionnaire" };
   }
 }
 
-/**
- * 5. SEND: Send a DEFINED template to multiple players
- */
-export async function sendQuestionnaireToPlayers(questionnaireId: string, playerIds: string[]) {
+// 6. DELETE QUESTIONNAIRE
+export async function deleteQuestionnaire(id: string) {
   try {
-    const user = await checkAuth();
-    if (user.role !== UserRole.TRAINER) {
+    const currentUser = await checkTrainerOrAdmin();
+
+    const existing = await prisma.questionnaire.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      return { success: false, error: "Questionnaire not found" };
+    }
+
+    if (existing.trainerId !== currentUser.userId && currentUser.role !== UserRole.ADMIN) {
       return { success: false, error: "Unauthorized" };
     }
 
-    const template = await prisma.questionnaire.findUnique({
-      where: { id: questionnaireId },
-    });
-
-    if (!template) {
-      return { success: false, error: "Template not found" };
+    if (existing.status !== QuestionnaireStatus.DRAFT && existing.status !== QuestionnaireStatus.DEFINED) {
+      return { success: false, error: "Only DRAFT or DEFINED questionnaires can be deleted" };
     }
 
-    if (template.trainerId !== user.userId) {
-      return { success: false, error: "Unauthorized access" };
-    }
-
-    if (template.status !== QuestionnaireStatus.DEFINED) {
-      return { success: false, error: "Only defined templates can be sent to players" };
-    }
-
-    if (playerIds.length === 0) {
-      return { success: false, error: "Please select at least one player" };
-    }
-
-    // Verify all players are assigned to trainer
-    const assignedPlayersCount = await prisma.user.count({
-      where: {
-        id: { in: playerIds },
-        role: { in: [UserRole.PLAYER, UserRole.GOAL_KEEPER] },
-        trainers: {
-          some: { id: user.userId },
-        },
-      },
-    });
-
-    if (assignedPlayersCount !== playerIds.length) {
-      return { success: false, error: "One or more selected players are not assigned to you" };
-    }
-
-    // Transaction to create assignments and corresponding notifications
-    await prisma.$transaction(async (tx) => {
-      for (const pId of playerIds) {
-        const assignment = await tx.questionnaireAssignment.create({
-          data: {
-            questionnaireId,
-            playerId: pId,
-            status: AssignmentStatus.SENT,
-          },
-        });
-
-        await tx.notification.create({
-          data: {
-            recipientId: pId,
-            type: "QUESTIONNAIRE_SENT",
-            assignmentId: assignment.id,
-          },
-        });
-      }
+    await prisma.questionnaire.delete({
+      where: { id },
     });
 
     revalidatePath("/questionnaires");
-    revalidatePath(`/questionnaires/${questionnaireId}`);
     return { success: true };
   } catch (error) {
-    console.error("sendQuestionnaireToPlayers error:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to send questionnaire" };
+    console.error("Delete questionnaire error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Failed to delete questionnaire" };
   }
 }
 
-/**
- * 6. RECLAIM: Player reclaims assignment
- */
+// 7. RECLAIM ASSIGNMENT (SENT -> RECLAIMED)
 export async function reclaimAssignment(assignmentId: string) {
   try {
-    const user = await checkAuth();
-    if (user.role !== UserRole.PLAYER && user.role !== UserRole.GOAL_KEEPER) {
-      return { success: false, error: "Only players can reclaim assignments" };
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: "Unauthorized" };
     }
 
     const assignment = await prisma.questionnaireAssignment.findUnique({
@@ -364,95 +362,74 @@ export async function reclaimAssignment(assignmentId: string) {
       return { success: false, error: "Assignment not found" };
     }
 
-    if (assignment.playerId !== user.userId) {
-      return { success: false, error: "Unauthorized access" };
+    if (assignment.playerId !== currentUser.userId) {
+      return { success: false, error: "Unauthorized" };
     }
 
     if (assignment.status !== AssignmentStatus.SENT) {
-      return { success: false, error: "Assignments can only be reclaimed when SENT" };
+      return { success: false, error: "Assignment cannot be reclaimed" };
     }
 
-    await prisma.$transaction(async (tx) => {
-      await tx.questionnaireAssignment.update({
-        where: { id: assignmentId },
-        data: {
-          status: AssignmentStatus.RECLAIMED,
-          reclaimedAt: new Date(),
-        },
-      });
+    const updated = await prisma.questionnaireAssignment.update({
+      where: { id: assignmentId },
+      data: {
+        status: AssignmentStatus.RECLAIMED,
+        reclaimedAt: new Date(),
+      },
+    });
 
-      await tx.notification.create({
-        data: {
-          recipientId: assignment.questionnaire.trainerId,
-          type: "QUESTIONNAIRE_RECLAIMED",
-          assignmentId: assignmentId,
-        },
-      });
+    // Notify the trainer
+    await prisma.notification.create({
+      data: {
+        recipientId: assignment.questionnaire.trainerId,
+        type: "QUESTIONNAIRE_RECLAIMED",
+        assignmentId: assignmentId,
+      },
     });
 
     revalidatePath("/questionnaires");
     revalidatePath(`/questionnaires/assignments/${assignmentId}`);
-    return { success: true };
+    return { success: true, data: updated };
   } catch (error) {
-    console.error("reclaimAssignment error:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to reclaim" };
+    console.error("Reclaim assignment error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Failed to reclaim assignment" };
   }
 }
 
-/**
- * 7. SUBMIT: Player submits assignment answers
- */
+// 8. SUBMIT ASSIGNMENT ANSWERS (SENT/RECLAIMED -> COMPLETED)
 export async function submitAssignmentAnswers(
   assignmentId: string,
-  answers: { questionId: string; value: string }[]
+  answers: Array<{ questionId: string; value: string }>
 ) {
   try {
-    const user = await checkAuth();
-    if (user.role !== UserRole.PLAYER && user.role !== UserRole.GOAL_KEEPER) {
-      return { success: false, error: "Only players can submit answers" };
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: "Unauthorized" };
     }
 
     const assignment = await prisma.questionnaireAssignment.findUnique({
       where: { id: assignmentId },
-      include: {
-        questionnaire: {
-          include: { questions: true },
-        },
-      },
+      include: { questionnaire: true },
     });
 
     if (!assignment) {
       return { success: false, error: "Assignment not found" };
     }
 
-    if (assignment.playerId !== user.userId) {
-      return { success: false, error: "Unauthorized access" };
+    if (assignment.playerId !== currentUser.userId) {
+      return { success: false, error: "Unauthorized" };
     }
 
     if (assignment.status !== AssignmentStatus.SENT && assignment.status !== AssignmentStatus.RECLAIMED) {
-      return { success: false, error: "Assignment is already completed" };
+      return { success: false, error: "Assignment already completed" };
     }
 
-    // Validate answers length
-    const templateQuestionIds = assignment.questionnaire.questions.map((q) => q.id);
-    for (const ans of answers) {
-      if (!templateQuestionIds.includes(ans.questionId)) {
-        return { success: false, error: "Invalid question answer mapping" };
-      }
-    }
-
+    // Submit in a transaction
     await prisma.$transaction(async (tx) => {
-      // Save Answer records
+      // 1. Create answers
       for (const ans of answers) {
-        await tx.answer.upsert({
-          where: {
-            assignmentId_questionId: {
-              assignmentId,
-              questionId: ans.questionId,
-            },
-          },
-          update: { value: ans.value },
-          create: {
+        await tx.answer.create({
+          data: {
             assignmentId,
             questionId: ans.questionId,
             value: ans.value,
@@ -460,7 +437,7 @@ export async function submitAssignmentAnswers(
         });
       }
 
-      // Update assignment details
+      // 2. Update assignment status
       await tx.questionnaireAssignment.update({
         where: { id: assignmentId },
         data: {
@@ -469,7 +446,7 @@ export async function submitAssignmentAnswers(
         },
       });
 
-      // Send notification to trainer
+      // 3. Notify the trainer
       await tx.notification.create({
         data: {
           recipientId: assignment.questionnaire.trainerId,
@@ -483,123 +460,93 @@ export async function submitAssignmentAnswers(
     revalidatePath(`/questionnaires/assignments/${assignmentId}`);
     return { success: true };
   } catch (error) {
-    console.error("submitAssignmentAnswers error:", error);
+    console.error("Submit answers error:", error);
     return { success: false, error: error instanceof Error ? error.message : "Failed to submit answers" };
   }
 }
 
-/**
- * 8. DELETE: Delete template (only if DRAFT and no assignments)
- */
-export async function deleteQuestionnaire(id: string) {
-  try {
-    const user = await checkAuth();
-    if (user.role !== UserRole.TRAINER) {
-      return { success: false, error: "Unauthorized" };
-    }
-
-    const template = await prisma.questionnaire.findUnique({
-      where: { id },
-      include: { assignments: true },
-    });
-
-    if (!template) {
-      return { success: false, error: "Template not found" };
-    }
-
-    if (template.trainerId !== user.userId) {
-      return { success: false, error: "Unauthorized access" };
-    }
-
-    if (template.status !== QuestionnaireStatus.DRAFT) {
-      return { success: false, error: "Only draft templates can be deleted" };
-    }
-
-    if (template.assignments.length > 0) {
-      return { success: false, error: "Cannot delete a template with active assignments" };
-    }
-
-    await prisma.questionnaire.delete({
-      where: { id },
-    });
-
-    revalidatePath("/questionnaires");
-    return { success: true };
-  } catch (error) {
-    console.error("deleteQuestionnaire error:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to delete template" };
-  }
-}
-
-/**
- * 9. READ: Trainer templates list with assignment counters
- */
+// 9. GET QUESTIONNAIRES BY TRAINER
 export async function getQuestionnairesByTrainer(trainerId: string) {
   try {
-    const user = await checkAuth();
-    if (user.role !== UserRole.TRAINER || user.userId !== trainerId) {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
       return { success: false, error: "Unauthorized" };
     }
 
     const questionnaires = await prisma.questionnaire.findMany({
       where: { trainerId },
+      orderBy: { createdAt: "desc" },
       include: {
-        _count: {
-          select: { questions: true },
-        },
         assignments: {
           select: {
             status: true,
           },
         },
       },
-      orderBy: { createdAt: "desc" },
     });
 
-    // Map to include counts for each status
+    // Map counts of assignments by status
     const mapped = questionnaires.map((q) => {
-      const active = q.assignments.filter((a) => a.status === AssignmentStatus.SENT || a.status === AssignmentStatus.RECLAIMED).length;
-      const completed = q.assignments.filter((a) => a.status === AssignmentStatus.COMPLETED).length;
-
+      const counts = {
+        sent: q.assignments.filter((a) => a.status === AssignmentStatus.SENT).length,
+        reclaimed: q.assignments.filter((a) => a.status === AssignmentStatus.RECLAIMED).length,
+        completed: q.assignments.filter((a) => a.status === AssignmentStatus.COMPLETED).length,
+      };
       return {
-        id: q.id,
-        title: q.title,
-        description: q.description,
-        status: q.status,
-        createdAt: q.createdAt,
-        questionCount: q._count.questions,
-        activeAssignments: active,
-        completedAssignments: completed,
+        ...q,
+        counts,
       };
     });
 
-    return { success: true, questionnaires: mapped };
+    // Fetch all assignments for this trainer's templates
+    const assignments = await prisma.questionnaireAssignment.findMany({
+      where: {
+        questionnaire: {
+          trainerId,
+        },
+      },
+      include: {
+        player: {
+          select: {
+            id: true,
+            name: true,
+            surname: true,
+            avatarUrl: true,
+          },
+        },
+        questionnaire: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+      orderBy: {
+        sentAt: "desc",
+      },
+    });
+
+    return { success: true, questionnaires: mapped, assignments };
   } catch (error) {
-    console.error("getQuestionnairesByTrainer error:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to load templates" };
+    console.error("Get questionnaires error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Failed to get questionnaires" };
   }
 }
 
-/**
- * 10. READ: Player assignments
- */
+// 10. GET ASSIGNMENTS BY PLAYER
 export async function getAssignmentsByPlayer(playerId: string) {
   try {
-    const user = await checkAuth();
-    if (
-      (user.role !== UserRole.PLAYER && user.role !== UserRole.GOAL_KEEPER) ||
-      user.userId !== playerId
-    ) {
+    const currentUser = await getCurrentUser();
+    if (!currentUser || currentUser.userId !== playerId) {
       return { success: false, error: "Unauthorized" };
     }
 
     const assignments = await prisma.questionnaireAssignment.findMany({
       where: { playerId },
+      orderBy: { sentAt: "desc" },
       include: {
         questionnaire: {
-          select: {
-            title: true,
-            description: true,
+          include: {
             trainer: {
               select: {
                 id: true,
@@ -611,22 +558,27 @@ export async function getAssignmentsByPlayer(playerId: string) {
           },
         },
       },
-      orderBy: { sentAt: "desc" },
     });
 
-    return { success: true, assignments };
+    const pending = assignments.filter(
+      (a) => a.status === AssignmentStatus.SENT || a.status === AssignmentStatus.RECLAIMED
+    );
+    const completed = assignments.filter((a) => a.status === AssignmentStatus.COMPLETED);
+
+    return { success: true, pending, completed };
   } catch (error) {
-    console.error("getAssignmentsByPlayer error:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to load assignments" };
+    console.error("Get assignments by player error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Failed to get assignments" };
   }
 }
 
-/**
- * 11. READ: Get assignment detail by ID
- */
+// 11. GET ASSIGNMENT BY ID
 export async function getAssignmentById(id: string) {
   try {
-    const user = await checkAuth();
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: "Unauthorized" };
+    }
 
     const assignment = await prisma.questionnaireAssignment.findUnique({
       where: { id },
@@ -641,6 +593,9 @@ export async function getAssignmentById(id: string) {
         },
         questionnaire: {
           include: {
+            questions: {
+              orderBy: { order: "asc" },
+            },
             trainer: {
               select: {
                 id: true,
@@ -648,9 +603,6 @@ export async function getAssignmentById(id: string) {
                 surname: true,
                 avatarUrl: true,
               },
-            },
-            questions: {
-              orderBy: { order: "asc" },
             },
           },
         },
@@ -662,32 +614,27 @@ export async function getAssignmentById(id: string) {
       return { success: false, error: "Assignment not found" };
     }
 
-    const isTrainer = user.role === UserRole.TRAINER;
-    const isPlayer = user.role === UserRole.PLAYER || user.role === UserRole.GOAL_KEEPER;
+    // Access control: only the assigned player, the owner trainer, or an admin
+    const isPlayer = assignment.playerId === currentUser.userId;
+    const isTrainer = assignment.questionnaire.trainerId === currentUser.userId;
+    const isAdmin = currentUser.role === UserRole.ADMIN;
 
-    // Validate access
-    if (isTrainer && assignment.questionnaire.trainerId !== user.userId) {
-      return { success: false, error: "Unauthorized access to assignment details" };
-    }
-
-    if (isPlayer && assignment.playerId !== user.userId) {
-      return { success: false, error: "Unauthorized access to assignment details" };
+    if (!isPlayer && !isTrainer && !isAdmin) {
+      return { success: false, error: "Unauthorized to access this assignment" };
     }
 
     return { success: true, assignment };
   } catch (error) {
-    console.error("getAssignmentById error:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to load assignment detail" };
+    console.error("Get assignment error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Failed to get assignment" };
   }
 }
 
-/**
- * 12. READ: Get questionnaire template by ID (for Trainer detail view)
- */
+// 12. GET QUESTIONNAIRE BY ID (for Trainer template details/editor)
 export async function getQuestionnaireById(id: string) {
   try {
-    const user = await checkAuth();
-    if (user.role !== UserRole.TRAINER) {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
       return { success: false, error: "Unauthorized" };
     }
 
@@ -698,32 +645,74 @@ export async function getQuestionnaireById(id: string) {
           orderBy: { order: "asc" },
         },
         assignments: {
+          orderBy: { sentAt: "desc" },
           include: {
             player: {
               select: {
                 id: true,
                 name: true,
                 surname: true,
-                avatarUrl: true,
               },
             },
           },
-          orderBy: { sentAt: "desc" },
         },
       },
     });
 
     if (!questionnaire) {
-      return { success: false, error: "Questionnaire template not found" };
+      return { success: false, error: "Questionnaire not found" };
     }
 
-    if (questionnaire.trainerId !== user.userId) {
-      return { success: false, error: "Unauthorized access to template details" };
+    const isOwner = questionnaire.trainerId === currentUser.userId;
+    const isAdmin = currentUser.role === UserRole.ADMIN;
+
+    if (!isOwner && !isAdmin) {
+      return { success: false, error: "Unauthorized" };
     }
 
     return { success: true, questionnaire };
   } catch (error) {
-    console.error("getQuestionnaireById error:", error);
-    return { success: false, error: error instanceof Error ? error.message : "Failed to load template" };
+    console.error("Get questionnaire error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Failed to get questionnaire" };
+  }
+}
+
+// 13. GET SELECTABLE PLAYERS FOR TRAINER (assigned players only, with avatarUrl)
+export async function getSelectablePlayersForTrainer() {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    if (currentUser.role === UserRole.ADMIN) {
+      const players = await prisma.user.findMany({
+        where: { role: { in: [UserRole.PLAYER, UserRole.GOAL_KEEPER] } },
+        select: { id: true, name: true, surname: true, avatarUrl: true },
+        orderBy: { name: "asc" },
+      });
+      return { success: true, players };
+    }
+
+    if (currentUser.role === UserRole.TRAINER) {
+      const players = await prisma.user.findMany({
+        where: {
+          role: { in: [UserRole.PLAYER, UserRole.GOAL_KEEPER] },
+          trainers: {
+            some: {
+              id: currentUser.userId,
+            },
+          },
+        },
+        select: { id: true, name: true, surname: true, avatarUrl: true },
+        orderBy: { name: "asc" },
+      });
+      return { success: true, players };
+    }
+
+    return { success: true, players: [] };
+  } catch (error) {
+    console.error("getSelectablePlayersForTrainer error:", error);
+    return { success: false, error: "Failed to get players" };
   }
 }
