@@ -155,7 +155,26 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
 
   return (
     <PageContainer className="py-10 animate-fade-in">
-      <div className="mb-8">
+      {/* Printable Header */}
+      <div className="hidden print:block border-b-2 border-black pb-4 mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <span className="text-xl font-extrabold tracking-wider text-black">FOOT-TRACKER REPORT</span>
+          <span className="text-xs text-gray-500">{new Date().toLocaleDateString(locale)}</span>
+        </div>
+        <h1 className="text-3xl font-extrabold text-black mt-2">{title}</h1>
+        {description && <p className="text-sm text-gray-600 mt-2 italic">{description}</p>}
+        
+        <div className="grid grid-cols-2 gap-x-8 gap-y-2 mt-4 pt-4 border-t border-gray-100 text-sm text-black">
+          <div><span className="text-gray-500 font-semibold">Jugador:</span> {playerFullName}</div>
+          <div><span className="text-gray-500 font-semibold">Entrenador:</span> {trainerFullName}</div>
+          <div><span className="text-gray-500 font-semibold">Enviado el:</span> {new Date(assignment.sentAt).toLocaleDateString(locale)}</div>
+          {assignment.respondedAt && (
+            <div><span className="text-gray-500 font-semibold">Respondido el:</span> {new Date(assignment.respondedAt).toLocaleDateString(locale)}</div>
+          )}
+        </div>
+      </div>
+
+      <div className="mb-8 print:hidden">
         <Link href="/questionnaires" className="btn btn-ghost mb-4">
           ← {t("questionnaires.back_list")}
         </Link>
@@ -211,9 +230,9 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print:block">
         {/* Main Q&A List */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-6 print:w-full">
           {description && (
             <div className="card bg-base-100 shadow border border-base-200">
               <div className="card-body p-6">
@@ -230,8 +249,8 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
               const currentVal = answers[q.id] || "";
 
               return (
-                <div key={q.id} className="card bg-base-100 shadow border border-base-200">
-                  <div className="card-body p-6">
+                <div key={q.id} className="card bg-base-100 shadow border border-base-200 print:shadow-none print:border print:border-gray-200 print:bg-white print:p-6 print:mb-6 print:rounded-lg">
+                  <div className="card-body p-6 print:p-0">
                     <div className="flex justify-between items-center border-b border-base-content/5 pb-2 mb-3">
                       <span className="font-bold text-xs text-base-content/40">Pregunta #{qIdx + 1}</span>
                       <span className="badge badge-sm badge-neutral">
@@ -239,15 +258,40 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
                       </span>
                     </div>
 
-                    <p className="font-bold text-base-content/85 mb-4">{q.text}</p>
+                    <p className="font-bold text-base-content/85 mb-4 print:text-black">{qIdx + 1}. {q.text}</p>
 
                     {/* Answer View Mode */}
                     {isCompleted || isTrainer ? (
-                      <div className="bg-base-200/50 p-4 rounded-2xl border border-base-content/5 mt-2">
-                        <p className="text-xs text-base-content/40 font-bold uppercase tracking-wider">Respuesta</p>
-                        <p className="text-base-content/80 mt-2 font-medium whitespace-pre-wrap">
-                          {currentVal || (isTrainer ? "Sin respuesta todavía." : "")}
-                        </p>
+                      <div className="mt-2">
+                        {q.type === "OPEN" ? (
+                          <div className="bg-base-200/50 p-4 rounded-2xl border border-base-content/5 mt-2 print:bg-white print:border-l-4 print:border-black print:rounded-none print:pl-4 print:py-1">
+                            <p className="text-xs text-base-content/40 font-bold uppercase tracking-wider print:hidden">Respuesta</p>
+                            <p className="text-base-content/80 mt-2 font-medium whitespace-pre-wrap print:text-black">
+                              {currentVal || (isTrainer ? "Sin respuesta todavía." : "")}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="space-y-2 mt-3 pl-1">
+                            {q.options.map((opt: string, optIdx: number) => {
+                              const isSelected = currentVal === opt;
+                              return (
+                                <div key={optIdx} className="flex items-center gap-3 text-sm">
+                                  <span className={`print:hidden w-4 h-4 border border-black rounded-full flex-shrink-0 flex items-center justify-center ${
+                                    isSelected ? "bg-black" : "bg-transparent"
+                                  }`}>
+                                    {isSelected && <span className="w-1.5 h-1.5 bg-white rounded-full"></span>}
+                                  </span>
+                                  <span className="hidden print:inline-block font-mono text-sm leading-none mr-1 flex-shrink-0">
+                                    {isSelected ? "●" : "○"}
+                                  </span>
+                                  <span className={isSelected ? "font-bold text-black" : "text-base-content/70 print:text-black"}>
+                                    {opt}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     ) : (
                       /* Interactive Answering Mode (For Player) */
@@ -285,7 +329,7 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
         </div>
 
         {/* Sidebar Info & Action buttons */}
-        <div className="space-y-6">
+        <div className="space-y-6 print:hidden">
           <div className="card bg-base-100 shadow border border-base-200 sticky top-6">
             <div className="card-body p-6">
               <h2 className="card-title text-xl border-b border-base-content/5 pb-2 mb-4">Detalles</h2>
@@ -307,6 +351,15 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
                     <p className="font-bold text-success mt-0.5">{new Date(assignment.respondedAt).toLocaleDateString(locale)}</p>
                   </div>
                 )}
+              </div>
+
+              <div className="mb-6 print:hidden">
+                <button
+                  onClick={() => window.print()}
+                  className="btn btn-neutral btn-outline w-full"
+                >
+                  🖨️ {t("questionnaires.download_pdf")}
+                </button>
               </div>
 
               {/* Action Buttons for Players */}

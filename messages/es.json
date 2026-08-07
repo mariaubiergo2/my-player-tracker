@@ -698,6 +698,7 @@
     "status": "Estado",
     "send_success": "Cuestionario enviado correctamente a los jugadores seleccionados.",
     "duplicate_success": "Plantilla duplicada correctamente como borrador.",
+    "download_pdf": "Descargar PDF",
     "tab_objectives": "Definir Objetivos",
     "define_objectives_btn": "Definir objetivos",
     "redefine_objectives_btn": "Redefinir objetivos",

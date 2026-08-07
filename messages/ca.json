@@ -699,6 +699,7 @@
     "status": "Estat",
     "send_success": "Qüestionari enviat correctament als jugadors seleccionats.",
     "duplicate_success": "Plantilla duplicada correctament com a esborrany.",
+    "download_pdf": "Descarregar PDF",
     "tab_objectives": "Definir Objectius",
     "define_objectives_btn": "Definir objectius",
     "redefine_objectives_btn": "Redefinir objectius",

@@ -699,6 +699,7 @@
     "status": "Status",
     "send_success": "Questionnaire successfully sent to the selected players.",
     "duplicate_success": "Template successfully duplicated as draft.",
+    "download_pdf": "Download PDF",
     "tab_objectives": "Define Objectives",
     "define_objectives_btn": "Define objectives",
     "redefine_objectives_btn": "Redefine objectives",

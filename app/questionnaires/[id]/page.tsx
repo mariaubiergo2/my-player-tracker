@@ -274,7 +274,19 @@ export default function QuestionnaireDetailPage({ params }: { params: Promise<{ 
 
   return (
     <PageContainer className="py-10 animate-fade-in">
-      <div className="mb-8">
+      {/* Printable Header */}
+      {!isDraft && (
+        <div className="hidden print:block border-b-2 border-primary pb-4 mb-8">
+          <h1 className="text-3xl font-extrabold text-black">{template.title}</h1>
+          {template.description && <p className="text-sm text-gray-600 mt-2">{template.description}</p>}
+          <div className="grid grid-cols-2 gap-4 mt-4 text-xs text-gray-500">
+            <div><strong>{t("questionnaires.created_at")}:</strong> {new Date(template.createdAt).toLocaleDateString(locale)}</div>
+            <div><strong>{t("common.status")}:</strong> {t("questionnaires.status_defined")}</div>
+          </div>
+        </div>
+      )}
+
+      <div className="mb-8 print:hidden">
         <Link href="/questionnaires" className="btn btn-ghost mb-4">
           ← {t("questionnaires.back_list")}
         </Link>
@@ -297,6 +309,9 @@ export default function QuestionnaireDetailPage({ params }: { params: Promise<{ 
           <div className="flex flex-wrap gap-2">
             {!isDraft && (
               <>
+                <button onClick={() => window.print()} className="btn btn-neutral btn-outline print:hidden">
+                  🖨️ {t("questionnaires.download_pdf")}
+                </button>
                 <Link href={`/questionnaires/${id}/send`} className="btn btn-primary shadow">
                   🚀 {t("questionnaires.send_to_players")}
                 </Link>
@@ -471,8 +486,8 @@ export default function QuestionnaireDetailPage({ params }: { params: Promise<{ 
         </div>
       ) : (
         /* DEFINED READ ONLY MODE WITH ASSIGNMENTS */
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 print:block">
+          <div className="lg:col-span-2 space-y-6 print:w-full">
             {/* Description Card */}
             {template.description && (
               <div className="card bg-base-100 shadow border border-base-200">
@@ -487,8 +502,8 @@ export default function QuestionnaireDetailPage({ params }: { params: Promise<{ 
             <div className="space-y-4">
               <h2 className="text-2xl font-bold">Preguntas de la Plantilla</h2>
               {template.questions.map((q: any, qIdx: number) => (
-                <div key={q.id} className="card bg-base-100 shadow border border-base-200">
-                  <div className="card-body p-5">
+                <div key={q.id} className="card bg-base-100 shadow border border-base-200 print:shadow-none print:border print:border-gray-200 print:bg-white print:p-5 print:mb-6 print:rounded-lg">
+                  <div className="card-body p-5 print:p-0">
                     <div className="flex justify-between items-center border-b border-base-content/5 pb-2 mb-3">
                       <span className="font-bold text-xs text-base-content/40">Pregunta #{qIdx + 1}</span>
                       <span className="badge badge-sm badge-neutral">
@@ -496,14 +511,18 @@ export default function QuestionnaireDetailPage({ params }: { params: Promise<{ 
                       </span>
                     </div>
 
-                    <p className="font-bold text-base-content/85 mb-2">{q.text}</p>
+                    <p className="font-bold text-base-content/85 mb-2 print:text-black">{qIdx + 1}. {q.text}</p>
 
                     {q.type === "MULTIPLE_CHOICE" && (
-                      <ul className="list-disc pl-5 space-y-1 text-sm text-base-content/65">
+                      <div className="space-y-2 mt-3 pl-1">
                         {q.options.map((opt: string, optIdx: number) => (
-                          <li key={optIdx}>{opt}</li>
+                          <div key={optIdx} className="flex items-center gap-3 text-sm">
+                            <span className="print:hidden w-4 h-4 border border-black rounded-full flex-shrink-0"></span>
+                            <span className="hidden print:inline-block font-mono text-sm leading-none mr-1 flex-shrink-0">○</span>
+                            <span className="text-base-content/80 print:text-black font-semibold">{opt}</span>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -512,7 +531,7 @@ export default function QuestionnaireDetailPage({ params }: { params: Promise<{ 
           </div>
 
           {/* Assignments list and duplicates info */}
-          <div className="space-y-6">
+          <div className="space-y-6 print:hidden">
             <div className="card bg-base-100 shadow border border-base-200">
               <div className="card-body p-6">
                 <div className="flex items-center justify-between border-b border-base-content/5 pb-3 mb-4">

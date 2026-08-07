@@ -248,3 +248,22 @@ h1, h2, h3, h4, h5, h6, .font-display {
   }
 }
 
+@media print {
+  header, footer, nav, button, .btn, .no-print, .print\:hidden {
+    display: none !important;
+  }
+  body, html, main {
+    background: white !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  h1, h2, h3, h4, h5, h6, p, li, strong, a, label, textarea, input, .print-text-black {
+    color: #000000 !important;
+    opacity: 1 !important;
+  }
+  .card {
+    page-break-inside: avoid;
+  }
+}
+
