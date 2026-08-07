@@ -45,6 +45,8 @@ model User {
   notifications    Notification[]         @relation("UserNotifications")
   trainerQuestionnaires Questionnaire[]           @relation("TrainerQuestionnaires")
   playerAssignments     QuestionnaireAssignment[] @relation("PlayerAssignments")
+  playerObjectivesReceived PlayerObjectives[] @relation("PlayerObjectives")
+  playerObjectivesDefined  PlayerObjectives[] @relation("TrainerDefinedObjectives")
 
   @@map("users")
 }
@@ -247,4 +249,26 @@ model Notification {
   @@index([recipientId, isRead])
   @@index([recipientId, createdAt(sort: Desc)])
   @@map("notifications")
+}
+
+model PlayerObjectives {
+  id            String    @id @default(cuid())
+
+  playerId      String    @map("player_id")
+  player        User      @relation("PlayerObjectives", fields: [playerId], references: [id], onDelete: Cascade)
+
+  trainerId     String    @map("trainer_id")
+  trainer       User      @relation("TrainerDefinedObjectives", fields: [trainerId], references: [id], onDelete: Cascade)
+
+  summary       String              // breve texto libre redactado por el trainer
+  items         String[]            // lista de objetivos individuales, en orden
+
+  effectiveFrom DateTime  @default(now()) @map("effective_from")
+  effectiveTo   DateTime? @map("effective_to")   // null = objetivo actualmente activo
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@index([playerId, effectiveFrom])
+  @@index([playerId, effectiveTo])
+  @@map("player_objectives")
 }

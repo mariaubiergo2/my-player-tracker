@@ -698,6 +698,25 @@
     "date": "Data",
     "status": "Estat",
     "send_success": "Qüestionari enviat correctament als jugadors seleccionats.",
-    "duplicate_success": "Plantilla duplicada correctament com a esborrany."
+    "duplicate_success": "Plantilla duplicada correctament com a esborrany.",
+    "tab_objectives": "Definir Objectius",
+    "define_objectives_btn": "Definir objectius",
+    "redefine_objectives_btn": "Redefinir objectius",
+    "objectives_title": "Objectius del Jugador",
+    "objectives_history_title": "Historial d'Objectius",
+    "objectives_history_btn": "Veure historial d'objectius",
+    "objectives_empty": "Sense objectius definits per a aquesta data.",
+    "objectives_no_player_objectives": "Aquest jugador encara no té objectius definits.",
+    "objectives_form_summary": "Resum",
+    "objectives_form_summary_placeholder": "Escriu un breu resum dels objectius...",
+    "objectives_form_items": "Llista d'objectius",
+    "objectives_form_item_placeholder": "Objectiu...",
+    "objectives_form_add_item": "Afegir Objectiu",
+    "objectives_form_remove_item": "Eliminar",
+    "objectives_form_save": "Desar Objectius",
+    "objectives_history_period": "Vigència: del {from} al {to}",
+    "objectives_history_active": "Actiu des del {from}",
+    "objectives_history_back": "Tornar al llistat",
+    "objectives_success_save": "Objectius definits correctament."
   }
 }

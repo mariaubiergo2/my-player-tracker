@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/lib/auth"
 import MatchFeedbackThread from "@/components/matches/MatchFeedbackThread"
 import AutoMarkRead from "@/components/matches/AutoMarkRead"
 import PageContainer from "@/components/ui/PageContainer"
+import { getEffectiveObjectivesAt } from "@/actions/objectives"
 
 export default async function MatchPage({
   params,
@@ -36,6 +37,9 @@ export default async function MatchPage({
   const match = data.match
 
   if (!match) notFound()
+
+  const objectivesRes = await getEffectiveObjectivesAt(match.playerId, match.date)
+  const activeObjective = objectivesRes.success ? objectivesRes.data : null
 
   const isPlayer = currentUser && match.playerId === currentUser.userId
   const isTrainer = currentUser && (match.trainerId === currentUser.userId || match.player?.trainers?.some((t: any) => t.id === currentUser.userId))
@@ -170,7 +174,7 @@ export default async function MatchPage({
               <Info label={t("match_details.shirt_number_label")} value={match.shirtNumber} fallback={t("common.not_specified")} />
               <Info label={t("match_details.position_label")} value={match.position} fallback={t("common.not_specified")} />
               <div>
-                <p className="text-sm text-base-content/60">{t("match_details.match_url_label")}</p>
+                <p className="text-sm text-base-content/60">{t("match_url_label") || t("match_details.match_url_label")}</p>
                 {match.matchUrl ? (
                   <a href={match.matchUrl} target="_blank" rel="noopener noreferrer" className="link link-primary font-medium break-all">
                     {match.matchUrl}
@@ -182,6 +186,56 @@ export default async function MatchPage({
             </div>
           </div>
         </div>
+
+        {/* Objectives Section */}
+        {activeObjective ? (
+          <div className="card bg-base-100 shadow-md border border-base-200">
+            <div className="card-body">
+              <div className="flex justify-between items-center border-b border-base-content/5 pb-2 mb-4">
+                <h2 className="card-title text-primary">{t("questionnaires.objectives_title")}</h2>
+                <Link
+                  href={`/questionnaires/objectives/${match.playerId}`}
+                  className="btn btn-ghost btn-xs text-xs font-semibold"
+                >
+                  📖 {t("questionnaires.objectives_history_btn")}
+                </Link>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <h3 className="font-bold text-xs uppercase tracking-wider text-base-content/50 mb-1">
+                    {t("questionnaires.objectives_form_summary")}
+                  </h3>
+                  <p className="text-base-content/80 font-medium whitespace-pre-wrap">
+                    {activeObjective.summary}
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-bold text-xs uppercase tracking-wider text-base-content/50 mb-2">
+                    {t("questionnaires.objectives_form_items")}
+                  </h3>
+                  <ul className="list-disc list-inside text-sm text-base-content/75 space-y-1 pl-1">
+                    {activeObjective.items.map((item: string, idx: number) => (
+                      <li key={idx} className="font-medium">
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="card bg-base-100 shadow-md border border-base-200">
+            <div className="card-body">
+              <h2 className="card-title text-base-content/50">{t("questionnaires.objectives_title")}</h2>
+              <p className="text-sm italic text-base-content/40 mt-2">
+                {t("questionnaires.objectives_empty")}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Player Performance */}
         <div className="card bg-base-100 shadow-md border border-base-200">

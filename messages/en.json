@@ -698,6 +698,25 @@
     "date": "Date",
     "status": "Status",
     "send_success": "Questionnaire successfully sent to the selected players.",
-    "duplicate_success": "Template successfully duplicated as draft."
+    "duplicate_success": "Template successfully duplicated as draft.",
+    "tab_objectives": "Define Objectives",
+    "define_objectives_btn": "Define objectives",
+    "redefine_objectives_btn": "Redefine objectives",
+    "objectives_title": "Player Objectives",
+    "objectives_history_title": "Objectives History",
+    "objectives_history_btn": "View objectives history",
+    "objectives_empty": "No objectives defined for this date.",
+    "objectives_no_player_objectives": "This player has no objectives defined yet.",
+    "objectives_form_summary": "Summary",
+    "objectives_form_summary_placeholder": "Write a short summary of the objectives...",
+    "objectives_form_items": "Objectives list",
+    "objectives_form_item_placeholder": "Objective...",
+    "objectives_form_add_item": "Add Objective",
+    "objectives_form_remove_item": "Remove",
+    "objectives_form_save": "Save Objectives",
+    "objectives_history_period": "Validity: from {from} to {to}",
+    "objectives_history_active": "Active since {from}",
+    "objectives_history_back": "Back to list",
+    "objectives_success_save": "Objectives defined successfully."
   }
 }

@@ -12,6 +12,10 @@ import {
   deleteQuestionnaire,
   duplicateQuestionnaire,
 } from "@/actions/questionnaires";
+import {
+  getTrainerPlayersObjectivesData,
+  defineObjectives,
+} from "@/actions/objectives";
 import { formatRelativeTime } from "@/lib/utils/dates";
 
 interface TrainerQuestionnaire {
@@ -51,8 +55,76 @@ export default function QuestionnairesPage() {
 
   const [trainerTemplates, setTrainerTemplates] = useState<TrainerQuestionnaire[]>([]);
   const [trainerAssignments, setTrainerAssignments] = useState<any[]>([]);
-  const [trainerTab, setTrainerTab] = useState<"templates" | "answers">("templates");
-  
+  const [trainerTab, setTrainerTab] = useState<"templates" | "answers" | "objectives">("templates");
+  const [trainerPlayersObjectives, setTrainerPlayersObjectives] = useState<any[]>([]);
+
+  // Objectives Modal States
+  const [selectedPlayer, setSelectedPlayer] = useState<any | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [summary, setSummary] = useState("");
+  const [items, setItems] = useState<string[]>([""]);
+  const [isSavingObjectives, setIsSavingObjectives] = useState(false);
+
+  const handleAddItem = () => {
+    setItems((prev) => [...prev, ""]);
+  };
+
+  const handleRemoveItem = (index: number) => {
+    setItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleUpdateItem = (index: number, val: string) => {
+    setItems((prev) => {
+      const clone = [...prev];
+      clone[index] = val;
+      return clone;
+    });
+  };
+
+  const handleOpenModal = (player: any) => {
+    setSelectedPlayer(player);
+    const activeObj = player.playerObjectivesReceived?.[0];
+    if (activeObj) {
+      setSummary(activeObj.summary);
+      setItems(activeObj.items.length > 0 ? activeObj.items : [""]);
+    } else {
+      setSummary("");
+      setItems([""]);
+    }
+    setIsModalOpen(true);
+  };
+
+  const handleSaveObjectives = async () => {
+    if (!selectedPlayer) return;
+    if (!summary.trim()) {
+      showError("Por favor completa el resumen de objetivos.");
+      return;
+    }
+    const clean = items.map((i) => i.trim()).filter(Boolean);
+    if (clean.length === 0) {
+      showError("Por favor añade al menos un objetivo.");
+      return;
+    }
+
+    setIsSavingObjectives(true);
+    try {
+      const res = await defineObjectives(selectedPlayer.id, summary, clean);
+      if (res.success) {
+        showSuccess(t("questionnaires.objectives_success_save"));
+        setIsModalOpen(false);
+        setSelectedPlayer(null);
+        fetchData();
+      } else {
+        showError(res.error || t("common.error"));
+      }
+    } catch (err) {
+      console.error(err);
+      showError(t("common.error"));
+    } finally {
+      setIsSavingObjectives(false);
+    }
+  };
+
   // Trainer Answers Filtering & Search States
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("ALL");
@@ -87,12 +159,20 @@ export default function QuestionnairesPage() {
     setLoading(true);
     try {
       if (isTrainer || isAdmin) {
-        const res = await getQuestionnairesByTrainer(user.id);
-        if (res.success && res.questionnaires) {
-          setTrainerTemplates(res.questionnaires as unknown as TrainerQuestionnaire[]);
-          if (res.assignments) {
-            setTrainerAssignments(res.assignments);
+        const [templatesRes, objRes] = await Promise.all([
+          getQuestionnairesByTrainer(user.id),
+          getTrainerPlayersObjectivesData(),
+        ]);
+
+        if (templatesRes.success && templatesRes.questionnaires) {
+          setTrainerTemplates(templatesRes.questionnaires as unknown as TrainerQuestionnaire[]);
+          if (templatesRes.assignments) {
+            setTrainerAssignments(templatesRes.assignments);
           }
+        }
+
+        if (objRes.success && objRes.players) {
+          setTrainerPlayersObjectives(objRes.players);
         }
       }
       if (isPlayer) {
@@ -252,8 +332,8 @@ export default function QuestionnairesPage() {
             </Link>
           </div>
 
-          {/* Tabs for templates vs. answers */}
-          <div className="tabs tabs-boxed bg-base-200/80 p-0.5 w-full max-w-md mb-8">
+          {/* Tabs for templates vs. answers vs. objectives */}
+          <div className="tabs tabs-boxed bg-base-200/80 p-0.5 w-full max-w-xl mb-8">
             <button
               onClick={() => setTrainerTab("templates")}
               className={`tab flex-1 font-semibold transition-all ${
@@ -270,9 +350,17 @@ export default function QuestionnairesPage() {
             >
               Respuestas ({trainerAssignments.length})
             </button>
+            <button
+              onClick={() => setTrainerTab("objectives")}
+              className={`tab flex-1 font-semibold transition-all ${
+                trainerTab === "objectives" ? "tab-active bg-primary text-primary-content" : ""
+              }`}
+            >
+              {t("questionnaires.tab_objectives")} ({trainerPlayersObjectives.length})
+            </button>
           </div>
 
-          {trainerTab === "templates" ? (
+          {trainerTab === "templates" && (
             trainerTemplates.length === 0 ? (
               <div className="hero bg-base-200 rounded-2xl p-10 text-center shadow-inner border border-base-content/5">
                 <div className="max-w-md">
@@ -355,7 +443,9 @@ export default function QuestionnairesPage() {
                 ))}
               </div>
             )
-          ) : (
+          )}
+
+          {trainerTab === "answers" && (
             trainerAssignments.length === 0 ? (
               <div className="hero bg-base-200 rounded-2xl p-10 text-center shadow-inner border border-base-content/5">
                 <div className="max-w-md">
@@ -485,6 +575,203 @@ export default function QuestionnairesPage() {
                 )}
               </div>
             )
+          )}
+
+          {trainerTab === "objectives" && (
+            trainerPlayersObjectives.length === 0 ? (
+              <div className="hero bg-base-200 rounded-2xl p-10 text-center shadow-inner border border-base-content/5">
+                <div className="max-w-md">
+                  <span className="text-5xl">🎯</span>
+                  <h3 className="text-2xl font-bold mt-4">{t("questionnaires.no_players_available")}</h3>
+                  <p className="py-2 text-base-content/60">No tienes jugadores asignados para definir objetivos.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {trainerPlayersObjectives.map((player) => {
+                  const activeObj = player.playerObjectivesReceived?.[0];
+                  const completedAssignments = player.playerAssignments || [];
+                  const fullName = `${player.name} ${player.surname}`;
+
+                  return (
+                    <div key={player.id} className="card bg-base-100 shadow border border-base-200 hover:shadow-md transition-all duration-200">
+                      <div className="card-body p-6">
+                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                          
+                          {/* Left Column: Player info & active objective */}
+                          <div className="flex-1 space-y-4">
+                            <div className="flex items-center gap-3">
+                              <div className="avatar placeholder">
+                                <div className="bg-neutral text-neutral-content rounded-full w-12 h-12 overflow-hidden flex items-center justify-center">
+                                  {player.avatarUrl ? (
+                                    <img src={player.avatarUrl} alt={fullName} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <span className="text-lg font-semibold">{fullName.charAt(0).toUpperCase()}</span>
+                                  )}
+                                </div>
+                              </div>
+                              <div>
+                                <h3 className="font-bold text-lg text-base-content">{fullName}</h3>
+                                <p className="text-xs text-base-content/50">Jugador asignado</p>
+                              </div>
+                            </div>
+
+                            {/* Active Objective Summary */}
+                            <div className="bg-base-200/40 p-4 rounded-2xl border border-base-content/5">
+                              <h4 className="font-bold text-xs uppercase tracking-wider text-base-content/50 mb-2">
+                                {t("questionnaires.objectives_title")}
+                              </h4>
+                              {activeObj ? (
+                                <div className="space-y-3">
+                                  <p className="text-sm font-medium text-base-content/80">{activeObj.summary}</p>
+                                  <ul className="list-disc list-inside text-xs text-base-content/70 space-y-1 pl-1">
+                                    {activeObj.items.map((item: string, idx: number) => (
+                                      <li key={idx}>{item}</li>
+                                    ))}
+                                  </ul>
+                                  <div className="text-[10px] text-base-content/40 mt-1">
+                                    {t("questionnaires.objectives_history_active", {
+                                      from: new Date(activeObj.effectiveFrom).toLocaleDateString(locale)
+                                    })}
+                                  </div>
+                                </div>
+                              ) : (
+                                <p className="text-xs italic text-base-content/40">
+                                  {t("questionnaires.objectives_no_player_objectives")}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Right Column: Completed assignments & Actions */}
+                          <div className="w-full md:w-80 shrink-0 flex flex-col justify-between self-stretch gap-4">
+                            <div>
+                              <h4 className="font-bold text-xs uppercase tracking-wider text-base-content/50 mb-2">
+                                Cuestionarios Respondidos
+                              </h4>
+                              {completedAssignments.length === 0 ? (
+                                <p className="text-xs italic text-base-content/45">No hay respuestas completadas.</p>
+                              ) : (
+                                <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                                  {completedAssignments.map((assign: any) => (
+                                    <div key={assign.id} className="flex items-center justify-between text-xs p-2 bg-base-200/30 rounded-xl border border-base-content/5">
+                                      <span className="font-medium truncate flex-1 mr-2" title={assign.questionnaire.title}>
+                                        {assign.questionnaire.title}
+                                      </span>
+                                      <Link href={`/questionnaires/assignments/${assign.id}`} className="btn btn-xs btn-ghost text-primary shrink-0">
+                                        {t("questionnaires.view_answers")}
+                                      </Link>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="flex flex-wrap gap-2 pt-4 border-t border-base-content/5 mt-auto">
+                              <button
+                                onClick={() => handleOpenModal(player)}
+                                className="btn btn-primary btn-sm flex-1"
+                              >
+                                🎯 {activeObj ? t("questionnaires.redefine_objectives_btn") : t("questionnaires.define_objectives_btn")}
+                              </button>
+                              <Link
+                                href={`/questionnaires/objectives/${player.id}`}
+                                className="btn btn-outline btn-sm flex-1 text-xs"
+                              >
+                                📖 {t("questionnaires.objectives_history_btn")}
+                              </Link>
+                            </div>
+                          </div>
+
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )
+          )}
+
+          {/* Modal for defining objectives */}
+          {isModalOpen && selectedPlayer && (
+            <div className="modal modal-open">
+              <div className="modal-box max-w-lg rounded-3xl border border-base-200">
+                <h3 className="font-bold text-2xl mb-4 text-primary">
+                  {selectedPlayer.playerObjectivesReceived && selectedPlayer.playerObjectivesReceived.length > 0
+                    ? t("questionnaires.redefine_objectives_btn")
+                    : t("questionnaires.define_objectives_btn")}
+                </h3>
+                <p className="text-sm text-base-content/60 mb-6">
+                  Jugador: <strong>{selectedPlayer.name} {selectedPlayer.surname}</strong>
+                </p>
+
+                <div className="form-control mb-4">
+                  <label className="label font-semibold">{t("questionnaires.objectives_form_summary")}</label>
+                  <textarea
+                    className="textarea textarea-bordered h-24"
+                    placeholder={t("questionnaires.objectives_form_summary_placeholder")}
+                    value={summary}
+                    onChange={(e) => setSummary(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-control mb-6">
+                  <label className="label font-semibold">{t("questionnaires.objectives_form_items")}</label>
+                  <div className="space-y-2">
+                    {items.map((item, idx) => (
+                      <div key={idx} className="flex gap-2">
+                        <input
+                          type="text"
+                          className="input input-bordered flex-1"
+                          placeholder={t("questionnaires.objectives_form_item_placeholder")}
+                          value={item}
+                          onChange={(e) => handleUpdateItem(idx, e.target.value)}
+                        />
+                        {items.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveItem(idx)}
+                            className="btn btn-error btn-outline"
+                          >
+                            {t("questionnaires.objectives_form_remove_item")}
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={handleAddItem}
+                      className="btn btn-neutral btn-sm mt-2"
+                    >
+                      + {t("questionnaires.objectives_form_add_item")}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="modal-action">
+                  <button
+                    className="btn btn-ghost"
+                    onClick={() => {
+                      setIsModalOpen(false);
+                      setSelectedPlayer(null);
+                    }}
+                  >
+                    {t("common.cancel")}
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleSaveObjectives}
+                    disabled={isSavingObjectives}
+                  >
+                    {isSavingObjectives ? (
+                      <span className="loading loading-spinner loading-sm"></span>
+                    ) : (
+                      t("questionnaires.objectives_form_save")
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       )}

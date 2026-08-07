@@ -697,6 +697,25 @@
     "date": "Fecha",
     "status": "Estado",
     "send_success": "Cuestionario enviado correctamente a los jugadores seleccionados.",
-    "duplicate_success": "Plantilla duplicada correctamente como borrador."
+    "duplicate_success": "Plantilla duplicada correctamente como borrador.",
+    "tab_objectives": "Definir Objetivos",
+    "define_objectives_btn": "Definir objetivos",
+    "redefine_objectives_btn": "Redefinir objetivos",
+    "objectives_title": "Objetivos del Jugador",
+    "objectives_history_title": "Historial de Objetivos",
+    "objectives_history_btn": "Ver historial de objetivos",
+    "objectives_empty": "Sin objetivos definidos para esta fecha.",
+    "objectives_no_player_objectives": "Este jugador aún no tiene objetivos definidos.",
+    "objectives_form_summary": "Resumen",
+    "objectives_form_summary_placeholder": "Escribe un breve resumen de los objetivos...",
+    "objectives_form_items": "Lista de objetivos",
+    "objectives_form_item_placeholder": "Objetivo...",
+    "objectives_form_add_item": "Añadir Objetivo",
+    "objectives_form_remove_item": "Eliminar",
+    "objectives_form_save": "Guardar Objetivos",
+    "objectives_history_period": "Vigencia: del {from} al {to}",
+    "objectives_history_active": "Activo desde el {from}",
+    "objectives_history_back": "Volver al listado",
+    "objectives_success_save": "Objetivos definidos correctamente."
   }
 }
