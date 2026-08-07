@@ -593,7 +593,8 @@
     "compose_title": "Redactar nuevo correo de feedback",
     "preview": "Vista previa del correo",
     "attachments": "Archivos adjuntos",
-    "remove_attachment": "Eliminar adjunto"
+    "remove_attachment": "Eliminar adjunto",
+    "spellcheck_disclaimer": "He revisado la ortografía y la gramática de mi mensaje."
   },
   "notifications": {
     "title": "Notificaciones",

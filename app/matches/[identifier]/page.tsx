@@ -174,7 +174,7 @@ export default async function MatchPage({
               <Info label={t("match_details.shirt_number_label")} value={match.shirtNumber} fallback={t("common.not_specified")} />
               <Info label={t("match_details.position_label")} value={match.position} fallback={t("common.not_specified")} />
               <div>
-                <p className="text-sm text-base-content/60">{t("match_url_label") || t("match_details.match_url_label")}</p>
+                <p className="text-sm text-base-content/60">{t("match_details.match_url_label")}</p>
                 {match.matchUrl ? (
                   <a href={match.matchUrl} target="_blank" rel="noopener noreferrer" className="link link-primary font-medium break-all">
                     {match.matchUrl}

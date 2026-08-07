@@ -185,6 +185,19 @@ function NotificationsInboxContent() {
     });
   };
 
+  const handleNotificationClick = (id: string, isRead: boolean) => {
+    if (!isRead) {
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+      );
+
+      startTransition(async () => {
+        await toggleNotificationReadState(id, true);
+        window.dispatchEvent(new CustomEvent("notifications-updated"));
+      });
+    }
+  };
+
   const handleMarkAllAsRead = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -426,6 +439,7 @@ function NotificationsInboxContent() {
                   <div className="flex-1 min-w-0 pr-8">
                     <Link
                       href={isQuestionnaire ? `/questionnaires/assignments/${n.assignmentId}` : `/matches/${n.matchId}`}
+                      onClick={() => handleNotificationClick(n.id, n.isRead)}
                       className="block text-sm text-base-content hover:underline font-semibold leading-snug break-words"
                     >
                       <div className="flex items-center gap-2 flex-wrap">

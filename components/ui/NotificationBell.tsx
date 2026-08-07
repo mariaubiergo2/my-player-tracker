@@ -150,6 +150,22 @@ export default function NotificationBell() {
     });
   };
 
+  const handleNotificationClick = (id: string, isRead: boolean) => {
+    if (!isRead) {
+      // Optimistic update
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
+      );
+      setUnreadCount((prev) => Math.max(0, prev - 1));
+
+      startTransition(async () => {
+        await toggleNotificationReadState(id, true);
+        window.dispatchEvent(new CustomEvent("notifications-updated"));
+      });
+    }
+    closeDropdown();
+  };
+
   const handleMarkAllAsRead = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -289,7 +305,7 @@ export default function NotificationBell() {
                 >
                   <Link
                     href={isQuestionnaire ? `/questionnaires/assignments/${n.assignmentId}` : `/matches/${n.matchId}`}
-                    onClick={closeDropdown}
+                    onClick={() => handleNotificationClick(n.id, n.isRead)}
                     className="flex gap-3 px-3.5 py-3 pr-10 items-start select-none"
                   >
                     {/* Unread circle indicator */}
