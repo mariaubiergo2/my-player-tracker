@@ -52,12 +52,12 @@ export default function AdminUsersPage() {
   ]);
 
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({
-    name: 240,
-    email: 220,
-    role: 220,
-    phone: 150,
-    birth: 150,
-    registered: 150
+    name: 200,
+    email: 200,
+    role: 150,
+    phone: 130,
+    birth: 120,
+    registered: 120
   });
 
   const [draggedColId, setDraggedColId] = useState<string | null>(null);
@@ -389,6 +389,7 @@ export default function AdminUsersPage() {
     }
   };
 
+
   if (isLoading || loadingUsers) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
@@ -554,37 +555,75 @@ export default function AdminUsersPage() {
                       );
                     }
                     if (colId === "role") {
+                      const isDisabled = u.id === user.id;
                       return (
                         <td key="role" className="px-4 py-3 text-sm">
-                          <div className="flex items-center gap-2">
-                            <span className={getRoleBadgeClass(u.role)}>
-                              {u.role === "PLAYER" && t("common.role_player")}
-                              {u.role === "GOAL_KEEPER" && t("common.role_goal_keeper")}
-                              {u.role === "TRAINER" && t("common.role_trainer")}
-                              {u.role === "ADMIN" && "Admin"}
-                            </span>
-                            <select
-                              className="select select-ghost select-xs w-auto max-w-xs text-xs font-normal border border-base-300 rounded focus:border-primary"
-                              value={u.role}
-                              onChange={(e) =>
-                                handleRoleChange(u.id, e.target.value as UserRole, u.name)
-                              }
-                              disabled={u.id === user.id} // cannot modify own admin role
-                              title={u.id === user.id ? t("admin_users.cannot_demote_self") : t("admin_users.modify_role")}
+                          <div className="dropdown dropdown-bottom dropdown-end">
+                            <div
+                              tabIndex={isDisabled ? undefined : 0}
+                              role={isDisabled ? undefined : "button"}
+                              className={`${getRoleBadgeClass(u.role)} gap-1 flex items-center pr-2.5 pl-2.5 h-6 rounded-full text-xs font-semibold text-white select-none ${isDisabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all"}`}
+                              title={isDisabled ? t("admin_users.cannot_demote_self") : t("admin_users.modify_role")}
                             >
-                              <option value="PLAYER" className="bg-base-100 text-base-content">
-                                {t("common.role_player")}
-                              </option>
-                              <option value="GOAL_KEEPER" className="bg-base-100 text-base-content">
-                                {t("common.role_goal_keeper")}
-                              </option>
-                              <option value="TRAINER" className="bg-base-100 text-base-content">
-                                {t("common.role_trainer")}
-                              </option>
-                              <option value="ADMIN" className="bg-base-100 text-base-content">
-                                {t("common.role_admin")}
-                              </option>
-                            </select>
+                              <span>
+                                {u.role === "PLAYER" && t("common.role_player")}
+                                {u.role === "GOAL_KEEPER" && t("common.role_goal_keeper")}
+                                {u.role === "TRAINER" && t("common.role_trainer")}
+                                {u.role === "ADMIN" && "Admin"}
+                              </span>
+                              {!isDisabled && <span className="text-[9px] opacity-80 ml-0.5">▼</span>}
+                            </div>
+                            {!isDisabled && (
+                              <ul
+                                tabIndex={0}
+                                className="dropdown-content menu p-1.5 shadow-xl bg-base-100 border border-base-300 rounded-lg w-40 z-50 text-xs text-base-content"
+                              >
+                                <li>
+                                  <button
+                                    onClick={() => {
+                                      handleRoleChange(u.id, "PLAYER", u.name);
+                                      (document.activeElement as HTMLElement)?.blur();
+                                    }}
+                                    className={`py-1.5 px-3 rounded text-left ${u.role === "PLAYER" ? "bg-primary text-primary-content font-semibold" : "hover:bg-base-200"}`}
+                                  >
+                                    {t("common.role_player")}
+                                  </button>
+                                </li>
+                                <li>
+                                  <button
+                                    onClick={() => {
+                                      handleRoleChange(u.id, "GOAL_KEEPER", u.name);
+                                      (document.activeElement as HTMLElement)?.blur();
+                                    }}
+                                    className={`py-1.5 px-3 rounded text-left ${u.role === "GOAL_KEEPER" ? "bg-primary text-primary-content font-semibold" : "hover:bg-base-200"}`}
+                                  >
+                                    {t("common.role_goal_keeper")}
+                                  </button>
+                                </li>
+                                <li>
+                                  <button
+                                    onClick={() => {
+                                      handleRoleChange(u.id, "TRAINER", u.name);
+                                      (document.activeElement as HTMLElement)?.blur();
+                                    }}
+                                    className={`py-1.5 px-3 rounded text-left ${u.role === "TRAINER" ? "bg-primary text-primary-content font-semibold" : "hover:bg-base-200"}`}
+                                  >
+                                    {t("common.role_trainer")}
+                                  </button>
+                                </li>
+                                <li>
+                                  <button
+                                    onClick={() => {
+                                      handleRoleChange(u.id, "ADMIN", u.name);
+                                      (document.activeElement as HTMLElement)?.blur();
+                                    }}
+                                    className={`py-1.5 px-3 rounded text-left ${u.role === "ADMIN" ? "bg-primary text-primary-content font-semibold" : "hover:bg-base-200"}`}
+                                  >
+                                    {t("common.role_admin")}
+                                  </button>
+                                </li>
+                              </ul>
+                            )}
                           </div>
                         </td>
                       );
