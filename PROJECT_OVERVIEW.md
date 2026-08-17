@@ -326,9 +326,9 @@ Lista completa de características operacionales en el código fuente:
 > *   [lib/db/MATCHES.ts](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/lib/db/MATCHES.ts)
 > *   [app/matches/[identifier]/MATCHES.ts](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/matches/[identifier]/MATCHES.ts)
 
-> [!WARNING]
-> **2. Endpoint de Autenticación de Desarrollo Abierto**
-> El endpoint de login alternativo `/api/login` definido en [app/api/login/route.ts](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/api/login/route.ts) posee credenciales fijas hardcodeadas (`admin` / `admin`) y tiene la comprobación real con base de datos e inyección de cookies totalmente comentadas. Esto representa una puerta trasera de pruebas que no debe desplegarse a producción.
+> [!NOTE]
+> **2. Endpoint de Autenticación de Desarrollo Abierto (Solucionado/Eliminado)**
+> El endpoint de login alternativo `/api/login` y su archivo correspondiente `app/api/login/route.ts` han sido completamente eliminados para evitar cualquier riesgo de puerta trasera en producción. El único endpoint de login oficial e intacto es `/api/auth/login`.
 
 > [!IMPORTANT]
 > **3. Limitación de Persistencia en Nutrición y Físico**
