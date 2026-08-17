@@ -17,8 +17,9 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [unverifiedData, setUnverifiedData] = useState<{ userId: string; email: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
+ 
   // Redirect if already authenticated
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
@@ -31,7 +32,7 @@ export default function LoginPage() {
       }
     }
   }, [isLoading, isAuthenticated, user, router]);
-
+ 
   if (isLoading || isAuthenticated) {
     return (
       <div className="flex justify-center items-center py-10">
@@ -39,12 +40,13 @@ export default function LoginPage() {
       </div>
     );
   }
-
+ 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setUnverifiedData(null);
     setIsSubmitting(true);
-
+ 
     try {
       const res = await login({ email, password });
       if (res.user.role === "ADMIN") {
@@ -54,21 +56,37 @@ export default function LoginPage() {
       } else {
         router.push("/dashboard");
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+    } catch (err: any) {
+      if (err.message === "email_not_verified") {
+        setUnverifiedData({ userId: err.userId, email: err.email });
+      } else {
+        setError(err instanceof Error ? err.message : "Login failed");
+      }
     } finally {
       setIsSubmitting(false);
     }
   };
-
+ 
   return (
     <>
       <h2 className="card-title text-2xl justify-center">{t("login_page.title")}</h2>
       <p className="text-center text-base-content/70">
         {t("login_page.subtitle")}
       </p>
-
+ 
       <form onSubmit={handleSubmit} className="mt-4">
+        {unverifiedData && (
+          <div className="alert alert-warning mb-4 flex flex-col items-start gap-2">
+            <span>{t("login_page.unverified_error")}</span>
+            <Link
+              href={`/verify-email?userId=${unverifiedData.userId}&email=${unverifiedData.email}`}
+              className="link font-semibold underline"
+            >
+              {t("login_page.verify_now_link")} →
+            </Link>
+          </div>
+        )}
+
         {error && (
           <div className="alert alert-error mb-4">
             <span>{error}</span>

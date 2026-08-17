@@ -234,7 +234,34 @@
     "signin_btn": "Sign In",
     "or": "OR",
     "no_account": "Don't have an account?",
-    "signup_link": "Sign up"
+    "signup_link": "Sign up",
+    "unverified_error": "You must verify your email address before logging in.",
+    "verify_now_link": "Verify now"
+  },
+  "verification": {
+    "title": "Verify your email",
+    "subtitle": "We've sent a 6-digit verification code to {email}",
+    "code_label": "Verification Code",
+    "code_placeholder": "123456",
+    "verify_btn": "Verify",
+    "resend_btn": "Resend Code",
+    "resend_countdown": "Resend in {seconds}s",
+    "attempts_left": "Attempts remaining: {count}",
+    "success_verified": "Email verified successfully! Redirecting to login...",
+    "error_generic": "Invalid or expired code",
+    "error_email_required": "Email is required",
+    "error_rate_limit_60s": "Please wait 60 seconds between requests",
+    "error_rate_limit_hourly": "Maximum resend requests exceeded. Try again in an hour.",
+    "error_resend_failed": "Failed to send code. Please try again.",
+    "resend_success": "A new verification code has been sent."
+  },
+  "email": {
+    "subject": "Verification Code - Foot-Tracker",
+    "title": "Verify your email address",
+    "greeting": "Hello {name},",
+    "body": "Thank you for registering at Foot-Tracker. Please use the following verification code to complete your registration:",
+    "expiration": "This code will expire in 10 minutes.",
+    "security_notice": "If you did not request this registration, please ignore this email."
   },
   "register_page": {
     "title": "Create Account",

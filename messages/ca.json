@@ -234,7 +234,34 @@
     "signin_btn": "Iniciar sessió",
     "or": "O",
     "no_account": "No tens compte?",
-    "signup_link": "Registra't"
+    "signup_link": "Registra't",
+    "unverified_error": "Has de verificar el teu correu electrònic abans d'iniciar sessió.",
+    "verify_now_link": "Verificar ara"
+  },
+  "verification": {
+    "title": "Verifica el teu correu",
+    "subtitle": "Hem enviat un codi de verificació de 6 dígits a {email}",
+    "code_label": "Codi de verificació",
+    "code_placeholder": "123456",
+    "verify_btn": "Verificar",
+    "resend_btn": "Tornar a enviar codi",
+    "resend_countdown": "Tornar a enviar en {seconds}s",
+    "attempts_left": "Intents restants: {count}",
+    "success_verified": "Correu verificat amb èxit! Redirigint a l'inici de sessió...",
+    "error_generic": "Codi invàlid o expirat",
+    "error_email_required": "El correu és obligatori",
+    "error_rate_limit_60s": "Si us plau, espera 60 segons entre reenviaments",
+    "error_rate_limit_hourly": "Límit de reenviaments excedit. Torna-ho a provar en una hora.",
+    "error_resend_failed": "No s'ha pogut enviar el codi. Si us plau, torna-ho a provar.",
+    "resend_success": "S'ha enviat un nou codi de verificació."
+  },
+  "email": {
+    "subject": "Codi de Verificació - Foot-Tracker",
+    "title": "Verifica el teu correu electrònic",
+    "greeting": "Hola {name},",
+    "body": "Gràcies per registrar-te a Foot-Tracker. Si us plau, utilitza el següent codi de verificació per completar el teu registre:",
+    "expiration": "Aquest codi caducarà en 10 minuts.",
+    "security_notice": "Si no has sol·licitat aquest registre, si us plau ignora aquest correu electrònic."
   },
   "register_page": {
     "title": "Crear compte",

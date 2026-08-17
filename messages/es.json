@@ -234,7 +234,34 @@
     "signin_btn": "Iniciar sesión",
     "or": "O",
     "no_account": "¿No tienes cuenta?",
-    "signup_link": "Regístrate"
+    "signup_link": "Regístrate",
+    "unverified_error": "Debes verificar tu correo electrónico antes de iniciar sesión.",
+    "verify_now_link": "Verificar ahora"
+  },
+  "verification": {
+    "title": "Verifica tu correo",
+    "subtitle": "Hemos enviado un código de verificación de 6 dígitos a {email}",
+    "code_label": "Código de verificación",
+    "code_placeholder": "123456",
+    "verify_btn": "Verificar",
+    "resend_btn": "Reenviar código",
+    "resend_countdown": "Reenviar en {seconds}s",
+    "attempts_left": "Intentos restantes: {count}",
+    "success_verified": "¡Correo verificado con éxito! Redirigiendo al inicio de sesión...",
+    "error_generic": "Código inválido o expirado",
+    "error_email_required": "El correo es obligatorio",
+    "error_rate_limit_60s": "Por favor, espera 60 segundos entre reenvíos",
+    "error_rate_limit_hourly": "Límite de reenvíos excedido. Inténtalo de nuevo en una hora.",
+    "error_resend_failed": "No se pudo enviar el código. Por favor, inténtalo de nuevo.",
+    "resend_success": "Se ha enviado un nuevo código de verificación."
+  },
+  "email": {
+    "subject": "Código de Verificación - Foot-Tracker",
+    "title": "Verifica tu correo electrónico",
+    "greeting": "Hola {name},",
+    "body": "Gracias por registrarte en Foot-Tracker. Por favor, usa el siguiente código de verificación para completar tu registro:",
+    "expiration": "Este código caducará en 10 minutos.",
+    "security_notice": "Si no has solicitado este registro, por favor ignora este correo electrónico."
   },
   "register_page": {
     "title": "Crear cuenta",

@@ -16,7 +16,7 @@ async function checkTrainer(): Promise<string> {
     throw new Error("Unauthenticated: No active session found.");
   }
 
-  const payload = verifyToken(token);
+  const payload = await verifyToken(token);
   if (!payload) {
     throw new Error("Unauthorized: Invalid session token.");
   }

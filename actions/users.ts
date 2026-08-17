@@ -16,7 +16,7 @@ async function checkAdmin(): Promise<string> {
     throw new Error("Unauthenticated: No active session found.");
   }
 
-  const payload = verifyToken(token);
+  const payload = await verifyToken(token);
   if (!payload) {
     throw new Error("Unauthorized: Invalid session token.");
   }
@@ -210,7 +210,7 @@ export async function getProfile() {
       return { success: false, error: "Unauthenticated: Please log in." };
     }
 
-    const payload = verifyToken(token);
+    const payload = await verifyToken(token);
     if (!payload) {
       return { success: false, error: "Unauthorized: Invalid session token." };
     }
@@ -270,7 +270,7 @@ export async function updateProfile(updates: {
       return { success: false, error: "Unauthenticated: Please log in." };
     }
 
-    const payload = verifyToken(token);
+    const payload = await verifyToken(token);
     if (!payload) {
       return { success: false, error: "Unauthorized: Invalid session token." };
     }
@@ -362,7 +362,7 @@ export async function updateProfile(updates: {
     });
 
     // Re-generate token since email or name might have changed
-    const newToken = generateToken({
+    const newToken = await generateToken({
       id: updatedUser.id,
       email: updatedUser.email,
       name: updatedUser.name,

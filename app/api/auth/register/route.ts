@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { hashPassword, generateToken, setAuthCookie } from "@/lib/auth";
+import { hashPassword } from "@/lib/auth";
+import { generateAndSendVerificationCode } from "@/actions/email-verification";
+import crypto from "crypto";
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,59 +24,53 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const emailClean = email.toLowerCase().trim();
+
     // Check if user already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email },
+      where: { email: emailClean },
     });
 
     if (existingUser) {
+      // Return generic success response to avoid user enumeration
       return NextResponse.json(
-        { error: "User with this email already exists" },
-        { status: 409 }
+        {
+          message: "Registration successful. If the email is valid, you will receive a code.",
+          userId: "dummy-" + crypto.randomUUID(),
+          email: emailClean,
+        },
+        { status: 201 }
       );
     }
 
-    // Hash password and create user
+    // Hash password
     const hashedPassword = await hashPassword(password);
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        name,
-        surname,
-        // role defaults to PLAYER per schema
-      },
-    });
 
-    // Generate token
-    const token = generateToken({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      role: user.role,
-      avatarUrl: user.avatarUrl,
-    });
-
-    // Create response with httpOnly cookie
-    const response = NextResponse.json(
-      {
-        message: "User registered successfully",
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          surname: user.surname,
-          role: user.role,
-          avatarUrl: user.avatarUrl,
+    // Create user and generate code inside a single Prisma transaction (rollback if email fails)
+    const result = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          email: emailClean,
+          password: hashedPassword,
+          name: name.trim(),
+          surname: surname.trim(),
         },
+      });
+
+      // This will fail if Resend fails, rolling back the transaction
+      await generateAndSendVerificationCode(user.id, tx);
+
+      return user;
+    });
+
+    return NextResponse.json(
+      {
+        message: "Registration successful. If the email is valid, you will receive a code.",
+        userId: result.id,
+        email: result.email,
       },
       { status: 201 }
     );
-
-    // Set httpOnly cookie
-    setAuthCookie(response, token);
-
-    return response;
   } catch (error) {
     console.error("Registration error:", error);
     return NextResponse.json(

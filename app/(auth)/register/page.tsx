@@ -58,10 +58,13 @@ export default function RegisterPage() {
     }
 
     setIsSubmitting(true);
-
+ 
     try {
-      await register({ email, password, name, surname });
-      router.push("/login");
+      const res = await register({ email, password, name, surname });
+      const params = new URLSearchParams();
+      if (res && (res as any).userId) params.set("userId", (res as any).userId);
+      if (res && (res as any).email) params.set("email", (res as any).email);
+      router.push(`/verify-email?${params.toString()}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed");
     } finally {

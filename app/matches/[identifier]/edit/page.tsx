@@ -17,7 +17,7 @@ export default async function EditMatchPage({
 
   if (!token) redirect("/login")
 
-  const payload = verifyToken(token)
+  const payload = await verifyToken(token)
   if (!payload) redirect("/login")
 
   const match = await prisma.match.findUnique({

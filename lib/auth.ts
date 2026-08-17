@@ -2,10 +2,33 @@ import { UserRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import { SignJWT, jwtVerify } from "jose";
 
 const SALT_ROUNDS = 10;
 const TOKEN_EXPIRY_HOURS = parseInt(process.env.AUTH_TOKEN_EXPIRY_HOURS || "24");
 const AUTH_COOKIE_NAME = "auth_token";
+
+const secret = process.env.JWT_SECRET || process.env.AUTH_SECRET;
+
+if (!secret) {
+  throw new Error(
+    "FATAL CONFIG ERROR: The authentication session secret key is missing!\n" +
+    "Please define the JWT_SECRET (or AUTH_SECRET) environment variable in your .env or .env.local file.\n" +
+    "You can generate a secure 32-byte key (encoded in base64) by running the following command:\n" +
+    "node -e \"console.log(require('crypto').randomBytes(32).toString('base64'))\""
+  );
+}
+
+if (secret.length < 32) {
+  throw new Error(
+    "FATAL CONFIG ERROR: The authentication session secret key (JWT_SECRET/AUTH_SECRET) is too short!\n" +
+    "To use HS256, the key must be at least 32 characters/bytes long to ensure cryptographic safety.\n" +
+    "You can generate a secure 32-byte key (encoded in base64) by running the following command:\n" +
+    "node -e \"console.log(require('crypto').randomBytes(32).toString('base64'))\""
+  );
+}
+
+const JWT_SECRET = new TextEncoder().encode(secret);
 
 export interface TokenPayload {
   userId: string;
@@ -34,44 +57,49 @@ export async function verifyPassword(
 }
 
 /**
- * Generate a simple base64 encoded token with expiration
- * In production, use a proper JWT library
+ * Generate a signed JWT token with expiration
  */
-export function generateToken(user: {
+export async function generateToken(user: {
   id: string;
   email: string;
   name: string;
   role: UserRole;
   avatarUrl?: string | null;
-}): string {
-  const payload: TokenPayload = {
+}): Promise<string> {
+  const payload = {
     userId: user.id,
     email: user.email,
     name: user.name,
     role: user.role,
     avatarUrl: user.avatarUrl || null,
-    exp: Date.now() + TOKEN_EXPIRY_HOURS * 60 * 60 * 1000,
   };
 
-  return Buffer.from(JSON.stringify(payload)).toString("base64");
+  const expirationString = `${TOKEN_EXPIRY_HOURS}h`;
+
+  return await new SignJWT(payload)
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime(expirationString)
+    .sign(JWT_SECRET);
 }
 
 /**
- * Verify and decode a token
+ * Verify and decode a signed JWT token
  */
-export function verifyToken(token: string): TokenPayload | null {
+export async function verifyToken(token: string): Promise<TokenPayload | null> {
   try {
-    const payload = JSON.parse(
-      Buffer.from(token, "base64").toString("utf-8")
-    ) as TokenPayload;
+    const { payload } = await jwtVerify(token, JWT_SECRET);
 
-    // Check expiration
-    if (payload.exp < Date.now()) {
-      return null;
-    }
-
-    return payload;
-  } catch {
+    return {
+      userId: payload.userId as string,
+      email: payload.email as string,
+      name: payload.name as string,
+      role: payload.role as UserRole,
+      avatarUrl: payload.avatarUrl as string | null | undefined,
+      exp: payload.exp as number,
+    };
+  } catch (error) {
+    console.error("JWT verification failed:", error);
     return null;
   }
 }
@@ -116,7 +144,7 @@ export async function getAuthToken(): Promise<string | null> {
 export async function getCurrentUser(): Promise<TokenPayload | null> {
   const token = await getAuthToken();
   if (!token) return null;
-  return verifyToken(token);
+  return await verifyToken(token);
 }
 
 /**

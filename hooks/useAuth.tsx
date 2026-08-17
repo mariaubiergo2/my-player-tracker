@@ -103,7 +103,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data: AuthResponse = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "Login failed");
+        const errorObj = new Error(data.error || "Login failed") as any;
+        errorObj.userId = (data as any).userId;
+        errorObj.email = (data as any).email;
+        throw errorObj;
       }
 
       // Update global state immediately
@@ -127,20 +130,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         credentials: "include",
       });
 
-      const data: AuthResponse = await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
         throw new Error(data.error || "Registration failed");
       }
 
-      // Update global state immediately
-      setAuthState({
-        user: data.user,
-        isAuthenticated: true,
-        isLoading: false,
-      });
-
-      return data;
+      return data as AuthResponse;
     },
     []
   );

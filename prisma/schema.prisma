@@ -32,6 +32,7 @@ model User {
   phone     String?
   avatarUrl String?
   birthDate DateTime?
+  emailVerified Boolean @default(false) @map("email_verified")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -47,8 +48,26 @@ model User {
   playerAssignments     QuestionnaireAssignment[] @relation("PlayerAssignments")
   playerObjectivesReceived PlayerObjectives[] @relation("PlayerObjectives")
   playerObjectivesDefined  PlayerObjectives[] @relation("TrainerDefinedObjectives")
+  verificationCodes EmailVerificationCode[]
 
   @@map("users")
+}
+
+model EmailVerificationCode {
+  id            String    @id @default(cuid())
+  userId        String    @map("user_id")
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  codeHash      String    @map("code_hash")
+  attempts      Int       @default(0)
+  expiresAt     DateTime  @map("expires_at")
+  consumedAt    DateTime? @map("consumed_at")
+  invalidatedAt DateTime? @map("invalidated_at")
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@index([userId, expiresAt])
+  @@map("email_verification_codes")
 }
 
 model Match {

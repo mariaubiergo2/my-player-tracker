@@ -36,8 +36,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check if email is verified
+    if (!user.emailVerified) {
+      return NextResponse.json(
+        {
+          error: "email_not_verified",
+          userId: user.id,
+          email: user.email,
+        },
+        { status: 403 }
+      );
+    }
+
     // Generate token
-    const token = generateToken({
+    const token = await generateToken({
       id: user.id,
       email: user.email,
       name: user.name,
