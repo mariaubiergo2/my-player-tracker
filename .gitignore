@@ -41,3 +41,8 @@ yarn-error.log*
 next-env.d.ts
 
 /app/generated/prisma
+
+# user-uploaded files (fallback local de vídeo cuando Mux no está configurado)
+# no deben vivir en el repo — si esta carpeta crece, mover a S3/R2 o activar Mux
+/public/uploads/*
+!/public/uploads/.gitkeep
