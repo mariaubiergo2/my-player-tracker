@@ -7,7 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run",
+    "test:db:create": "node scripts/setup-test-db.js",
+    "test:db:migrate": "node scripts/test-db-migrate.js",
+    "test:db:setup": "npm run test:db:create && npm run test:db:migrate",
+    "test": "npm run test:db:setup && vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {

@@ -316,21 +316,30 @@ Lista completa de características operacionales en el código fuente:
 2.  **Resend API (Notificaciones de Email y Códigos):** Encargado de enviar los correos transaccionales para validar las cuentas registradas.
 3.  **Mux Video Infrastructure (Transmisión HLS/MP4):** Plataforma para subir, optimizar y reproducir los videos de juego subidos de los partidos de los jugadores.
 
----
-
 # Entorno de Testing
 
-Se ha configurado un entorno de pruebas unitarias utilizando **Vitest** enfocado en validar las reglas de negocio críticas sin necesidad de conectar con la base de datos (pruebas de lógica pura en servidor).
+Se ha configurado un entorno de pruebas unitarias e integración utilizando **Vitest** enfocado en validar las reglas de negocio críticas, incluyendo una base de datos PostgreSQL de pruebas totalmente aislada.
 
 *   **Framework de Testing:** Vitest
-*   **Archivos de configuración:** [vitest.config.mts](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/vitest.config.mts) (incluye variables de entorno de prueba globales como `JWT_SECRET` para evitar fallos de inicialización).
-*   **Ubicación de los tests:** Junto al código que validan (`colocation`).
+*   **Archivos de configuración:** [vitest.config.mts](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/vitest.config.mts) (carga dinámicamente las variables de `.env.test` y registra [lib/__tests__/setup.ts](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/lib/__tests__/setup.ts) como setup file global).
+*   **Base de Datos de Test Aislada:**
+    *   **Configuración:** Utiliza la misma instancia del contenedor de PostgreSQL en Docker (puerto `5432`), pero opera sobre una base de datos dedicada llamada `my_player_tracker_test` para garantizar que la base de datos de desarrollo (`matches_db`) no sea alterada.
+    *   **Inicialización y Migraciones:** 
+        *   `npm run test:db:create`: Verifica la existencia de `my_player_tracker_test` y la crea si no existe (ejecutando [scripts/setup-test-db.js](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/scripts/setup-test-db.js)).
+        *   `npm run test:db:migrate`: Aplica todas las migraciones Prisma (`npx prisma migrate deploy`) contra la base de datos de test de forma cross-platform (ejecutando [scripts/test-db-migrate.js](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/scripts/test-db-migrate.js)).
+        *   `npm run test:db:setup`: Secuencia combinada que ejecuta la creación y migración de la base de datos de pruebas.
+        *   `npm run test`: Ejecuta la suite completa de tests de forma secuencial (`maxWorkers: 1` y `fileParallelism: false` para evitar colisiones de truncado concurrentes) configurando la base de datos de forma automática antes del inicio.
+    *   **Aislamiento y Salvaguardas:**
+        *   **Truncado de tablas:** Cada test se ejecuta en aislamiento absoluto gracias a un gancho `beforeEach` global en [lib/__tests__/setup.ts](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/lib/__tests__/setup.ts) que limpia las tablas (`TRUNCATE TABLE ... CASCADE`) de la base de datos de pruebas entre ejecuciones. Esto es requerido sobre rollbacks tradicionales ya que las Server Actions corren con su propio pool del cliente global de Prisma y no heredarían la transacción de la suite.
+        *   **Salvaguarda de Seguridad:** El script de configuración de tests verifica en tiempo de ejecución que el string del nombre de la base de datos en `DATABASE_URL` sea exactamente `"my_player_tracker_test"`. Si no lo es, aborta inmediatamente para proteger la base de datos de desarrollo y producción contra destrucciones accidentales.
 *   **Cobertura actual:**
-    *   [`lib/__tests__/permissions.test.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/lib/__tests__/permissions.test.ts): Valida el control de acceso a campos editables por cada rol en los partidos.
-    *   [`lib/__tests__/auth.test.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/lib/__tests__/auth.test.ts): Valida la lógica de autenticación en su totalidad (Grupo A: criptografía y tokens puros; Grupo B: interacciones de cabeceras, cookies y lectura de usuarios de Next.js usando mocks dinámicos de `next/headers` y `NextResponse`).
+    *   [`lib/__tests__/permissions.test.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/lib/__tests__/permissions.test.ts): Valida el control de acceso a campos editables por cada rol en los partidos (17 tests).
+    *   [`lib/__tests__/auth.test.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/lib/__tests__/auth.test.ts): Valida la lógica de autenticación en su totalidad (21 tests).
+    *   [`actions/__tests__/matches.test.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/actions/__tests__/matches.test.ts): Valida la autorización de seguridad en las Server Actions de partidos (`deleteMatch`, `updateMatch` y `createMatch`), con pruebas de detección de regresión reales (13 tests).
 *   **Comandos disponibles:**
-    *   `npm run test`: Ejecuta todos los tests una sola vez (útil para integración continua/CI).
-    *   `npm run test:watch`: Ejecuta Vitest en modo observador interactivo (desarrollo local).
+    *   `npm run test:db:setup`: Levanta y migra la base de datos de test.
+    *   `npm run test`: Prepara la base de datos de test y ejecuta todos los tests una sola vez.
+    *   `npm run test:watch`: Ejecuta Vitest en modo observador interactivo.
 
 ---
 
@@ -344,7 +353,7 @@ Se ha configurado un entorno de pruebas unitarias utilizando **Vitest** enfocado
 
 > [!NOTE]
 > **2. Endpoint de Autenticación de Desarrollo Abierto (Solucionado/Eliminado)**
-> El endpoint de login alternativo `/api/login` y su archivo correspondiente `app/api/login/route.ts` han sido completamente eliminados para evitar cualquier riesgo de puerta trasera en producción. El único endpoint de login oficial e intacto es `/api/auth/login`.
+> El endpoint de login alternativo `/api/login` y su archivo correspondiente `app/api/login/route.ts` han sido completamente eliminados para evitar cualquier riesgo de puerta trasera en producción. El único endpoint de login oficial es `/api/auth/login`.
 
 > [!IMPORTANT]
 > **3. Limitación de Persistencia en Nutrición y Físico**
@@ -362,7 +371,6 @@ Se ha configurado un entorno de pruebas unitarias utilizando **Vitest** enfocado
 > **6. Corrección de Vulnerabilidad de Autorización en deleteMatch (Solucionado)**
 > Se detectó que la server action `deleteMatch` confiaba en un parámetro `userId` enviado por el cliente para realizar las comprobaciones de permisos de borrado, lo cual permitía spoofing de identidad. Se ha eliminado este parámetro de la firma de la función, y ahora la server action deriva la identidad del usuario directamente del token de sesión (`getCurrentUser()`) del lado del servidor. Las llamadas a `deleteMatch` en el frontend ([app/dashboard/page.tsx](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/dashboard/page.tsx)) han sido actualizadas para omitir el parámetro `userId`.
 
-> [!NOTE]
+> [!IMPORTANT]
 > **7. Vínculo Entrenador-Jugador al Crear Partidos (Riesgo Conocido / Pendiente de Definición)**
 > En la server action `createMatch`, cuando un entrenador (`TRAINER`) o administrador (`ADMIN`) crea un partido, se le permite suministrar cualquier `playerId` desde el formulario sin validar si el entrenador está vinculado activamente con ese jugador. Este comportamiento ha sido documentado como un riesgo conocido. Queda pendiente de una definición de producto posterior sobre si se debe restringir o no la creación de partidos a jugadores que no pertenezcan a la plantilla del entrenador correspondiente.
-
