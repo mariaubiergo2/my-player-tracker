@@ -10,8 +10,6 @@ import MatchCard from "@/components/matches/MatchCard";
 import type { Match } from "@/types/match";
 import PageContainer from "@/components/ui/PageContainer";
 
-interface MatchItem extends Match {}
-
 interface PlayerWithMatches {
   id: string;
   name: string;
@@ -20,7 +18,7 @@ interface PlayerWithMatches {
   phone?: string | null;
   birthDate: string | null;
   avatarUrl: string | null;
-  matches: MatchItem[];
+  matches: Match[];
 }
 
 export default function MyPlayersPage() {
@@ -60,19 +58,6 @@ export default function MyPlayersPage() {
     });
   };
 
-  // Route protection
-  useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        router.push("/login");
-      } else if (user?.role !== "TRAINER") {
-        router.push("/dashboard");
-      } else {
-        fetchMyPlayers();
-      }
-    }
-  }, [isLoading, isAuthenticated, user, router]);
-
   const fetchMyPlayers = async (preserveSelection = false) => {
     setLoadingPlayers(true);
     try {
@@ -101,6 +86,19 @@ export default function MyPlayersPage() {
       setLoadingPlayers(false);
     }
   };
+
+  // Route protection
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+      } else if (user?.role !== "TRAINER") {
+        router.push("/dashboard");
+      } else {
+        fetchMyPlayers();
+      }
+    }
+  }, [isLoading, isAuthenticated, user, router]);
 
   const handleUnassignPlayer = async (playerId: string, playerName: string) => {
     const confirmed = window.confirm(

@@ -129,19 +129,6 @@ export default function TrainerPlayersPage() {
     }
   };
 
-  // Route protection & loading
-  useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        router.push("/login");
-      } else if (user?.role !== "TRAINER") {
-        router.push("/dashboard");
-      } else {
-        fetchPlayers();
-      }
-    }
-  }, [isLoading, isAuthenticated, user, router]);
-
   const fetchPlayers = async () => {
     setLoadingPlayers(true);
     try {
@@ -158,6 +145,19 @@ export default function TrainerPlayersPage() {
       setLoadingPlayers(false);
     }
   };
+
+  // Route protection & loading
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+      } else if (user?.role !== "TRAINER") {
+        router.push("/dashboard");
+      } else {
+        fetchPlayers();
+      }
+    }
+  }, [isLoading, isAuthenticated, user, router]);
 
   const handleAssign = async (playerId: string) => {
     setAssigningId(playerId);

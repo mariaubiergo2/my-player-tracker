@@ -65,10 +65,6 @@ export default function MatchFeedbackThread({
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  useEffect(() => {
-    fetchMessages()
-  }, [matchId])
-
   const fetchMessages = async () => {
     setIsLoading(true)
     setError("")
@@ -91,6 +87,10 @@ export default function MatchFeedbackThread({
       setIsLoading(false)
     }
   }
+
+  useEffect(() => {
+    fetchMessages()
+  }, [matchId])
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault()

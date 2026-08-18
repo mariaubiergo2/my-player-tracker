@@ -172,17 +172,18 @@ export default function AdminUsersPage() {
   });
 
   // Client-side authentication check
-  useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        router.push("/login");
-      } else if (user?.role !== "ADMIN") {
-        router.push("/dashboard");
-      } else {
-        fetchUsers();
-      }
-    }
-  }, [isLoading, isAuthenticated, user, router]);
+  // Utility to show temporary message banners
+  const showSuccess = (msg: string) => {
+    setSuccessMessage(msg);
+    setErrorMessage("");
+    setTimeout(() => setSuccessMessage(""), 5000);
+  };
+
+  const showError = (msg: string) => {
+    setErrorMessage(msg);
+    setSuccessMessage("");
+    setTimeout(() => setErrorMessage(""), 5000);
+  };
 
   // Fetch all users
   const fetchUsers = async () => {
@@ -208,18 +209,17 @@ export default function AdminUsersPage() {
     }
   };
 
-  // Utility to show temporary message banners
-  const showSuccess = (msg: string) => {
-    setSuccessMessage(msg);
-    setErrorMessage("");
-    setTimeout(() => setSuccessMessage(""), 5000);
-  };
-
-  const showError = (msg: string) => {
-    setErrorMessage(msg);
-    setSuccessMessage("");
-    setTimeout(() => setErrorMessage(""), 5000);
-  };
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+      } else if (user?.role !== "ADMIN") {
+        router.push("/dashboard");
+      } else {
+        fetchUsers();
+      }
+    }
+  }, [isLoading, isAuthenticated, user, router]);
 
   // Open Edit Modal with selected user details loaded
   const handleOpenEdit = (userItem: UserListItem) => {

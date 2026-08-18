@@ -29,16 +29,6 @@ export default function NewMatchPage() {
   const [players, setPlayers] = useState<{ id: string; name: string; surname: string; email?: string }[]>([])
   const [loadingPlayers, setLoadingPlayers] = useState(false)
 
-  useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        router.push("/login")
-      } else if (user?.role === "TRAINER" || user?.role === "ADMIN") {
-        loadSelectablePlayers()
-      }
-    }
-  }, [isLoading, isAuthenticated, user, router])
-
   const loadSelectablePlayers = async () => {
     setLoadingPlayers(true)
     try {
@@ -52,6 +42,16 @@ export default function NewMatchPage() {
       setLoadingPlayers(false)
     }
   }
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push("/login")
+      } else if (user?.role === "TRAINER" || user?.role === "ADMIN") {
+        loadSelectablePlayers()
+      }
+    }
+  }, [isLoading, isAuthenticated, user, router])
 
   if (isLoading) {
     return (

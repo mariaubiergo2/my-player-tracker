@@ -115,25 +115,6 @@ function NotificationsInboxContent() {
     }
   }, [user?.id, user?.role]);
 
-  // Fetch notifications when search parameters or user change
-  useEffect(() => {
-    if (isUserAuthorized && user?.id) {
-      fetchNotifications();
-    }
-  }, [user?.id, page, filter, selectedPlayerId, sortBy, onlyRecent, user?.role, isUserAuthorized]);
-
-  // Listen to custom notification update events
-  useEffect(() => {
-    if (!isUserAuthorized || !user?.id) return;
-    const handleUpdate = () => {
-      fetchNotifications();
-    };
-    window.addEventListener("notifications-updated", handleUpdate);
-    return () => {
-      window.removeEventListener("notifications-updated", handleUpdate);
-    };
-  }, [user?.role, user?.id, page, filter, selectedPlayerId, sortBy, onlyRecent, isUserAuthorized]);
-
   const fetchNotifications = async () => {
     if (!user?.id) return;
     setLoading(true);
@@ -157,6 +138,25 @@ function NotificationsInboxContent() {
       setLoading(false);
     }
   };
+
+  // Fetch notifications when search parameters or user change
+  useEffect(() => {
+    if (isUserAuthorized && user?.id) {
+      fetchNotifications();
+    }
+  }, [user?.id, page, filter, selectedPlayerId, sortBy, onlyRecent, user?.role, isUserAuthorized]);
+
+  // Listen to custom notification update events
+  useEffect(() => {
+    if (!isUserAuthorized || !user?.id) return;
+    const handleUpdate = () => {
+      fetchNotifications();
+    };
+    window.addEventListener("notifications-updated", handleUpdate);
+    return () => {
+      window.removeEventListener("notifications-updated", handleUpdate);
+    };
+  }, [user?.role, user?.id, page, filter, selectedPlayerId, sortBy, onlyRecent, isUserAuthorized]);
 
   const updateParams = (newParams: Record<string, string | number>) => {
     const params = new URLSearchParams(window.location.search);

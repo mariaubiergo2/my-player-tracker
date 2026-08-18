@@ -404,3 +404,54 @@ Se ha configurado un workflow de integración continua mediante **GitHub Actions
 > [!IMPORTANT]
 > **7. Vínculo Entrenador-Jugador al Crear Partidos (Riesgo Conocido / Pendiente de Definición)**
 > En la server action `createMatch`, cuando un entrenador (`TRAINER`) o administrador (`ADMIN`) crea un partido, se le permite suministrar cualquier `playerId` desde el formulario sin validar si el entrenador está vinculado activamente con ese jugador. Este comportamiento ha sido documentado como un riesgo conocido. Queda pendiente de una definición de producto posterior sobre si se debe restringir o no la creación de partidos a jugadores que no pertenezcan a la plantilla del entrenador correspondiente.
+
+---
+
+# Deuda Técnica de Lint (ESLint)
+
+> [!WARNING]
+> **TEMPORAL:** Las siguientes reglas de ESLint se han degradado temporalmente de `"error"` a `"warn"` en [eslint.config.mjs](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/eslint.config.mjs) para no bloquear la Integración Continua (CI) mientras se resuelven en bloques de trabajo dedicados y aislados. Una vez subsanadas, estas reglas deben restablecerse a `"error"`.
+
+### 1. Tipos `any` explícitos (`@typescript-eslint/no-explicit-any`)
+Quedan pendientes **63 instancias** distribuidas en los siguientes **24 archivos**:
+*   **Actions / Tests:**
+    *   [`actions/__tests__/matches.test.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/actions/__tests__/matches.test.ts) (5)
+    *   [`actions/feedback.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/actions/feedback.ts) (2)
+    *   [`actions/matches.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/actions/matches.ts) (2)
+    *   [`lib/validations/__tests__/matches.test.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/lib/validations/__tests__/matches.test.ts) (2)
+*   **Vistas de Cuestionarios:**
+    *   [`app/questionnaires/[id]/page.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/questionnaires/[id]/page.tsx) (4)
+    *   [`app/questionnaires/[id]/send/page.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/questionnaires/[id]/send/page.tsx) (2)
+    *   [`app/questionnaires/assignments/[id]/page.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/questionnaires/assignments/[id]/page.tsx) (4)
+    *   [`app/questionnaires/objectives/[playerId]/page.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/questionnaires/objectives/[playerId]/page.tsx) (2)
+    *   [`app/questionnaires/page.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/questionnaires/page.tsx) (5)
+*   **Vistas y APIs de Partidos:**
+    *   [`app/api/matches/[id]/route.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/api/matches/[id]/route.ts) (1)
+    *   [`app/api/matches/[id]/video/route.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/api/matches/[id]/video/route.ts) (4)
+    *   [`app/dashboard/page.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/dashboard/page.tsx) (1)
+    *   [`app/matches/[identifier]/edit-feedback/page.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/matches/[identifier]/edit-feedback/page.tsx) (3)
+    *   [`app/matches/[identifier]/edit/page.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/matches/[identifier]/edit/page.tsx) (3)
+    *   [`app/matches/[identifier]/page.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/matches/[identifier]/page.tsx) (2)
+*   **Componentes de Partidos y Videos:**
+    *   [`components/matches/MatchFeedbackThread.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/components/matches/MatchFeedbackThread.tsx) (4)
+    *   [`components/matches/MatchVideoContainer.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/components/matches/MatchVideoContainer.tsx) (2)
+    *   [`components/matches/VideoPlayer.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/components/matches/VideoPlayer.tsx) (1)
+    *   [`components/matches/VideoUpload.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/components/matches/VideoUpload.tsx) (4)
+*   **Autenticación y Core:**
+    *   [`app/(auth)/login/page.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/(auth)/login/page.tsx) (1)
+    *   [`app/(auth)/register/page.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/(auth)/register/page.tsx) (4)
+    *   [`app/admin/users/page.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/admin/users/page.tsx) (1)
+    *   [`hooks/useAuth.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/hooks/useAuth.tsx) (3)
+    *   [`lib/i18n.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/lib/i18n.ts) (1)
+    *   [`prisma/seed.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/prisma/seed.ts) (1)
+
+### 2. Llamadas a `setState` en Efectos (`react-hooks/set-state-in-effect`)
+Quedan pendientes **8 instancias** en los siguientes **8 archivos/componentes**:
+*   [`app/dashboard/nutrition/page.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/dashboard/nutrition/page.tsx) (1)
+*   [`app/dashboard/physical/page.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/dashboard/physical/page.tsx) (1)
+*   [`app/profile/page.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/profile/page.tsx) (1)
+*   [`app/trainer/my-players/page.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/trainer/my-players/page.tsx) (1)
+*   [`components/LanguageProvider.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/components/LanguageProvider.tsx) (1)
+*   [`components/ThemeProvider.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/components/ThemeProvider.tsx) (1)
+*   [`components/ui/NotificationBell.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/components/ui/NotificationBell.tsx) (1)
+*   [`hooks/useAuth.tsx`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/hooks/useAuth.tsx) (1)

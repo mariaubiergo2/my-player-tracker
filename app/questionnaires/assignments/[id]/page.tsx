@@ -30,16 +30,6 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        router.push("/login");
-      } else {
-        loadAssignment();
-      }
-    }
-  }, [isLoading, isAuthenticated, user, id]);
-
   const loadAssignment = async () => {
     setLoadingData(true);
     setErrorMessage("");
@@ -64,6 +54,16 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
       setLoadingData(false);
     }
   };
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+      } else {
+        loadAssignment();
+      }
+    }
+  }, [isLoading, isAuthenticated, user, id]);
 
   const handleUpdateAnswerValue = (qId: string, val: string) => {
     setAnswers((prev) => ({ ...prev, [qId]: val }));

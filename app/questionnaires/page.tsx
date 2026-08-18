@@ -65,6 +65,70 @@ export default function QuestionnairesPage() {
   const [items, setItems] = useState<string[]>([""]);
   const [isSavingObjectives, setIsSavingObjectives] = useState(false);
 
+  // Trainer Answers Filtering & Search States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
+  const [templateFilter, setTemplateFilter] = useState<string>("ALL");
+  const [answersSort, setAnswersSort] = useState<string>("date_desc");
+
+  const [playerPending, setPlayerPending] = useState<PlayerAssignment[]>([]);
+  const [playerCompleted, setPlayerCompleted] = useState<PlayerAssignment[]>([]);
+
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"pending" | "completed">("pending");
+
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const isTrainer = user?.role === "TRAINER";
+  const isPlayer = user?.role === "PLAYER" || user?.role === "GOAL_KEEPER";
+  const isAdmin = user?.role === "ADMIN";
+
+  const fetchData = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      if (isTrainer || isAdmin) {
+        const [templatesRes, objRes] = await Promise.all([
+          getQuestionnairesByTrainer(user.id),
+          getTrainerPlayersObjectivesData(),
+        ]);
+
+        if (templatesRes.success && templatesRes.questionnaires) {
+          setTrainerTemplates(templatesRes.questionnaires as unknown as TrainerQuestionnaire[]);
+          if (templatesRes.assignments) {
+            setTrainerAssignments(templatesRes.assignments);
+          }
+        }
+
+        if (objRes.success && objRes.players) {
+          setTrainerPlayersObjectives(objRes.players);
+        }
+      }
+      if (isPlayer) {
+        const res = await getAssignmentsByPlayer(user.id);
+        if (res.success && res.pending && res.completed) {
+          setPlayerPending(res.pending as unknown as PlayerAssignment[]);
+          setPlayerCompleted(res.completed as unknown as PlayerAssignment[]);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading questionnaires data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+      } else {
+        fetchData();
+      }
+    }
+  }, [isLoading, isAuthenticated, user, router]);
+
   const handleAddItem = () => {
     setItems((prev) => [...prev, ""]);
   };
@@ -122,70 +186,6 @@ export default function QuestionnairesPage() {
       showError(t("common.error"));
     } finally {
       setIsSavingObjectives(false);
-    }
-  };
-
-  // Trainer Answers Filtering & Search States
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [templateFilter, setTemplateFilter] = useState<string>("ALL");
-  const [answersSort, setAnswersSort] = useState<string>("date_desc");
-
-  const [playerPending, setPlayerPending] = useState<PlayerAssignment[]>([]);
-  const [playerCompleted, setPlayerCompleted] = useState<PlayerAssignment[]>([]);
-
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"pending" | "completed">("pending");
-
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-
-  const isTrainer = user?.role === "TRAINER";
-  const isPlayer = user?.role === "PLAYER" || user?.role === "GOAL_KEEPER";
-  const isAdmin = user?.role === "ADMIN";
-
-  useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        router.push("/login");
-      } else {
-        fetchData();
-      }
-    }
-  }, [isLoading, isAuthenticated, user, router]);
-
-  const fetchData = async () => {
-    if (!user) return;
-    setLoading(true);
-    try {
-      if (isTrainer || isAdmin) {
-        const [templatesRes, objRes] = await Promise.all([
-          getQuestionnairesByTrainer(user.id),
-          getTrainerPlayersObjectivesData(),
-        ]);
-
-        if (templatesRes.success && templatesRes.questionnaires) {
-          setTrainerTemplates(templatesRes.questionnaires as unknown as TrainerQuestionnaire[]);
-          if (templatesRes.assignments) {
-            setTrainerAssignments(templatesRes.assignments);
-          }
-        }
-
-        if (objRes.success && objRes.players) {
-          setTrainerPlayersObjectives(objRes.players);
-        }
-      }
-      if (isPlayer) {
-        const res = await getAssignmentsByPlayer(user.id);
-        if (res.success && res.pending && res.completed) {
-          setPlayerPending(res.pending as unknown as PlayerAssignment[]);
-          setPlayerCompleted(res.completed as unknown as PlayerAssignment[]);
-        }
-      }
-    } catch (error) {
-      console.error("Error loading questionnaires data:", error);
-    } finally {
-      setLoading(false);
     }
   };
 

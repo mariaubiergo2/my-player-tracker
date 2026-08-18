@@ -42,12 +42,6 @@ export default function DashboardPage() {
     }
   }, [isLoading, isAuthenticated, user, router]);
 
-  useEffect(() => {
-    if (user) {
-      fetchUserMatches();
-    }
-  }, [user]);
-
   const fetchUserMatches = async () => {
     try {
       // Cookies are automatically sent with fetch
@@ -65,6 +59,12 @@ export default function DashboardPage() {
       setLoadingMatches(false);
     }
   };
+
+  useEffect(() => {
+    if (user) {
+      fetchUserMatches();
+    }
+  }, [user]);
 
   const handleDelete = async (id: string) => {
     if (!user || !confirm(t("dashboard_page.confirm_delete"))) {

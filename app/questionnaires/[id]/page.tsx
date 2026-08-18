@@ -40,18 +40,6 @@ export default function QuestionnaireDetailPage({ params }: { params: Promise<{ 
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        router.push("/login");
-      } else if (user?.role !== "TRAINER") {
-        router.push("/dashboard");
-      } else {
-        loadTemplate();
-      }
-    }
-  }, [isLoading, isAuthenticated, user, id]);
-
   const loadTemplate = async () => {
     setLoadingTemplate(true);
     try {
@@ -78,6 +66,18 @@ export default function QuestionnaireDetailPage({ params }: { params: Promise<{ 
       setLoadingTemplate(false);
     }
   };
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+      } else if (user?.role !== "TRAINER") {
+        router.push("/dashboard");
+      } else {
+        loadTemplate();
+      }
+    }
+  }, [isLoading, isAuthenticated, user, id]);
 
   // --- Dynamic editor functions ---
   const addQuestion = () => {

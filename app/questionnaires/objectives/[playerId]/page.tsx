@@ -19,16 +19,6 @@ export default function ObjectivesHistoryPage({ params }: { params: Promise<{ pl
   const [loadingData, setLoadingData] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
-  useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        router.push("/login");
-      } else {
-        loadHistory();
-      }
-    }
-  }, [isLoading, isAuthenticated, user, playerId]);
-
   const loadHistory = async () => {
     setLoadingData(true);
     setErrorMessage("");
@@ -47,6 +37,16 @@ export default function ObjectivesHistoryPage({ params }: { params: Promise<{ pl
       setLoadingData(false);
     }
   };
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+      } else {
+        loadHistory();
+      }
+    }
+  }, [isLoading, isAuthenticated, user, playerId]);
 
   if (isLoading || loadingData) {
     return (

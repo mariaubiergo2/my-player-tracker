@@ -10,6 +10,8 @@ import { getCurrentUser } from "@/lib/auth";
 import Mux from "@mux/mux-node";
 import { canEditMatchField } from "@/lib/permissions";
 import { createMatchSchema, updateMatchSchema, UpdateMatchInput } from "@/lib/validations/matches";
+import fs from "fs";
+import path from "path";
 
 
 // 1. GET ALL MATCHES of a trainer
@@ -306,9 +308,6 @@ export async function createMatch(prevState: unknown, formData: FormData) {
         // Mux credentials not configured. Save video file locally to public/uploads!
         console.warn("Mux credentials not configured. Saving video file locally.");
         try {
-          const fs = require("fs");
-          const path = require("path");
-
           const uploadDir = path.join(process.cwd(), "public", "uploads");
           if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });

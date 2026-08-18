@@ -14,8 +14,8 @@ export default function NotFound() {
             </h1>
 
             <p className="text-base-content/70 max-w-md">
-              We couldn't find the page you're looking for.
-              It may have been moved, deleted, or the link may be incorrect.
+              {"We couldn't find the page you're looking for."}
+              {"It may have been moved, deleted, or the link may be incorrect."}
             </p>
 
             <div className="mt-4">

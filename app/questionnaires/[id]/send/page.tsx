@@ -27,18 +27,6 @@ export default function SendQuestionnairePage({ params }: { params: Promise<{ id
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        router.push("/login");
-      } else if (user?.role !== "TRAINER") {
-        router.push("/dashboard");
-      } else {
-        loadData();
-      }
-    }
-  }, [isLoading, isAuthenticated, user, id]);
-
   const loadData = async () => {
     setLoadingData(true);
     setErrorMessage("");
@@ -66,6 +54,18 @@ export default function SendQuestionnairePage({ params }: { params: Promise<{ id
       setLoadingData(false);
     }
   };
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+      } else if (user?.role !== "TRAINER") {
+        router.push("/dashboard");
+      } else {
+        loadData();
+      }
+    }
+  }, [isLoading, isAuthenticated, user, id]);
 
   const togglePlayerSelection = (playerId: string) => {
     setSelectedPlayerIds((prev) =>

@@ -40,17 +40,6 @@ export default function ProfilePage() {
     document.title = `${t("profile_page.title")} | Foot-Tracker`;
   }, [t]);
 
-  // Client-side authentication check
-  useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        router.push("/login");
-      } else {
-        fetchProfile();
-      }
-    }
-  }, [isLoading, isAuthenticated, router]);
-
   const fetchProfile = async () => {
     setLoadingProfile(true);
     try {
@@ -77,6 +66,17 @@ export default function ProfilePage() {
       setLoadingProfile(false);
     }
   };
+
+  // Client-side authentication check
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+      } else {
+        fetchProfile();
+      }
+    }
+  }, [isLoading, isAuthenticated, router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;

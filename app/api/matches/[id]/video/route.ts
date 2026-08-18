@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
 import Mux from "@mux/mux-node";
+import fs from "fs";
+import path from "path";
 
 // Initialize Mux SDK with credentials
 const mux = new Mux({
@@ -297,8 +299,6 @@ export async function DELETE(
     } else if (video.muxPlaybackId && video.muxPlaybackId.startsWith("/uploads/")) {
       // Delete local file if present
       try {
-        const fs = require("fs");
-        const path = require("path");
         const filePath = path.join(process.cwd(), "public", video.muxPlaybackId);
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);
