@@ -332,10 +332,15 @@ Se ha configurado un entorno de pruebas unitarias e integración utilizando **Vi
     *   **Aislamiento y Salvaguardas:**
         *   **Truncado de tablas:** Cada test se ejecuta en aislamiento absoluto gracias a un gancho `beforeEach` global en [lib/__tests__/setup.ts](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/lib/__tests__/setup.ts) que limpia las tablas (`TRUNCATE TABLE ... CASCADE`) de la base de datos de pruebas entre ejecuciones. Esto es requerido sobre rollbacks tradicionales ya que las Server Actions corren con su propio pool del cliente global de Prisma y no heredarían la transacción de la suite.
         *   **Salvaguarda de Seguridad:** El script de configuración de tests verifica en tiempo de ejecución que el string del nombre de la base de datos en `DATABASE_URL` sea exactamente `"my_player_tracker_test"`. Si no lo es, aborta inmediatamente para proteger la base de datos de desarrollo y producción contra destrucciones accidentales.
-*   **Cobertura actual:**
+*   **Cobertura actual (95 tests en total):**
     *   [`lib/__tests__/permissions.test.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/lib/__tests__/permissions.test.ts): Valida el control de acceso a campos editables por cada rol en los partidos (17 tests).
     *   [`lib/__tests__/auth.test.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/lib/__tests__/auth.test.ts): Valida la lógica de autenticación en su totalidad (21 tests).
     *   [`actions/__tests__/matches.test.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/actions/__tests__/matches.test.ts): Valida la autorización de seguridad en las Server Actions de partidos (`deleteMatch`, `updateMatch` y `createMatch`), con pruebas de detección de regresión reales (13 tests).
+    *   [`lib/validations/__tests__/email-verification.test.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/lib/validations/__tests__/email-verification.test.ts): Valida esquemas de código de verificación de correo y reenvío de códigos (6 tests).
+    *   [`lib/validations/__tests__/feedback.test.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/lib/validations/__tests__/feedback.test.ts): Valida esquemas para consultar y registrar mensajes de feedback (5 tests).
+    *   [`lib/validations/__tests__/notifications.test.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/lib/validations/__tests__/notifications.test.ts): Valida esquemas de consulta, marcado como leído e identificadores de notificaciones (13 tests).
+    *   [`lib/validations/__tests__/users.test.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/lib/validations/__tests__/users.test.ts): Valida la creación, actualización y edición de perfil de usuarios (10 tests).
+    *   [`lib/validations/__tests__/matches.test.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/lib/validations/__tests__/matches.test.ts): Valida transformaciones complejas (booleans, dates, numbers, arrays) y validaciones de creación/edición de partidos (10 tests).
 *   **Comandos disponibles:**
     *   `npm run test:db:setup`: Levanta y migra la base de datos de test.
     *   `npm run test`: Prepara la base de datos de test y ejecuta todos los tests una sola vez.
