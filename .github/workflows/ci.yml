@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Build, Lint & Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        # Health check to ensure Postgres is ready before running steps
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run type-checking
+        run: npx tsc --noEmit
+
+      - name: Run lint
+        run: npm run lint
+
+      - name: Generate .env.test dynamically for testing environment
+        run: |
+          echo "DATABASE_URL=postgres://postgres:postgres@localhost:5432/my_player_tracker_test" > .env.test
+          echo "JWT_SECRET=ci_environment_default_jwt_secret_with_32_characters" >> .env.test
+          echo "AUTH_TOKEN_EXPIRY_HOURS=24" >> .env.test
+
+      - name: Set up test database (create & migrate)
+        run: npm run test:db:setup
+
+      - name: Run test suite
+        run: npm test

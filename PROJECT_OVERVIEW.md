@@ -348,6 +348,31 @@ Se ha configurado un entorno de pruebas unitarias e integración utilizando **Vi
 
 ---
 
+# Integración Continua (CI)
+
+Se ha configurado un workflow de integración continua mediante **GitHub Actions** para validar automáticamente la calidad y corrección del código en cada contribución.
+
+*   **Archivo de Configuración:** [.github/workflows/ci.yml](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/.github/workflows/ci.yml)
+*   **Eventos de Disparo (Triggers):**
+    *   Cualquier `push` directo a la rama `main`.
+    *   Cualquier `pull_request` dirigido a la rama `main`.
+*   **Pasos ejecutados en el Job (Build, Lint & Test):**
+    1.  **Checkout y Configuración:** Obtención del código fuente y preparación de Node.js v20 (con caché de npm).
+    2.  **Instalación Limpia:** Ejecución de `npm ci` para instalar exactamente las dependencias declaradas.
+    3.  **Type-Checking:** Verificación estricta de tipos de TypeScript mediante `npx tsc --noEmit`.
+    4.  **Linter:** Análisis estático de código mediante `npm run lint` (ESLint).
+    5.  **Base de Datos en CI:**
+        *   Se levanta un contenedor de servicio de **PostgreSQL 16** (misma versión usada en desarrollo) configurado con puerto `5432` y con un healthcheck (`pg_isready`) de verificación de estado antes del inicio.
+        *   Se crea un archivo temporal `.env.test` que apunta a `localhost:5432` con la base de datos `my_player_tracker_test`.
+        *   Se ejecutan los scripts del proyecto para crear la base de datos de test (`npm run test:db:create`) y desplegar las migraciones Prisma (`npm run test:db:migrate`).
+    6.  **Suite de Pruebas:** Ejecución de los 95 tests unitarios y de integración (`npm test`) contra la base de datos de CI.
+*   **Resultados y Visibilidad:**
+    *   Si cualquier paso del flujo falla (código de salida diferente de 0), el workflow marcará la ejecución como fallida de forma inmediata y visible.
+    *   El estado de la última ejecución en la rama principal se puede visualizar mediante el badge de GitHub Actions añadido al principio del archivo [README.md](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/README.md).
+    *   Los logs y el historial detallado de las ejecuciones están accesibles bajo la pestaña **Actions** en el repositorio del proyecto en GitHub.
+
+---
+
 # Observaciones y Puntos Abiertos
 
 > [!NOTE]

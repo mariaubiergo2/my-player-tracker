@@ -1,5 +1,7 @@
 # Foot-Tracker (My Player Tracker)
 
+[![CI](https://github.com/mariaubiergo2/my-player-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/mariaubiergo2/my-player-tracker/actions/workflows/ci.yml)
+
 Aplicación web colaborativa para el seguimiento del rendimiento deportivo de futbolistas.
 
 ## Desarrollo
