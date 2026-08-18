@@ -4,6 +4,13 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
+import { Prisma } from "@prisma/client";
+import {
+  getNotificationsSchema,
+  toggleNotificationReadStateSchema,
+  recipientIdSchema,
+  markMatchNotificationsAsReadSchema,
+} from "@/lib/validations/notifications";
 
 export async function getNotifications(
   recipientId: string,
@@ -15,26 +22,40 @@ export async function getNotifications(
   onlyRecent: boolean = true
 ) {
   try {
+    const validation = getNotificationsSchema.safeParse({
+      recipientId,
+      page,
+      limit,
+      filter,
+      playerId,
+      sortBy,
+      onlyRecent,
+    });
+    if (!validation.success) {
+      return { success: false, error: "Invalid parameters" };
+    }
+    const validatedData = validation.data;
+
     const currentUser = await getCurrentUser();
-    if (!currentUser || currentUser.userId !== recipientId) {
+    if (!currentUser || currentUser.userId !== validatedData.recipientId) {
       return { success: false, error: "Unauthorized" };
     }
 
-    const whereClause: any = { recipientId };
-    if (filter === "unread") {
+    const whereClause: Prisma.NotificationWhereInput = { recipientId: validatedData.recipientId };
+    if (validatedData.filter === "unread") {
       whereClause.isRead = false;
-    } else if (filter === "read") {
+    } else if (validatedData.filter === "read") {
       whereClause.isRead = true;
     }
 
-    if (playerId) {
+    if (validatedData.playerId) {
       whereClause.OR = [
-        { match: { playerId } },
-        { assignment: { playerId } }
+        { match: { playerId: validatedData.playerId } },
+        { assignment: { playerId: validatedData.playerId } }
       ];
     }
 
-    if (onlyRecent) {
+    if (validatedData.onlyRecent) {
       const threeMonthsAgo = new Date();
       threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
       whereClause.createdAt = {
@@ -42,10 +63,10 @@ export async function getNotifications(
       };
     }
 
-    let orderByClause: any = { createdAt: "desc" };
-    if (sortBy === "date_asc") {
+    let orderByClause: Prisma.NotificationOrderByWithRelationInput = { createdAt: "desc" };
+    if (validatedData.sortBy === "date_asc") {
       orderByClause = { createdAt: "asc" };
-    } else if (sortBy === "player_asc") {
+    } else if (validatedData.sortBy === "player_asc") {
       orderByClause = {
         match: {
           player: {
@@ -59,8 +80,8 @@ export async function getNotifications(
       prisma.notification.findMany({
         where: whereClause,
         orderBy: orderByClause,
-        skip: (page - 1) * limit,
-        take: limit,
+        skip: (validatedData.page - 1) * validatedData.limit,
+        take: validatedData.limit,
         include: {
           match: {
             include: {
@@ -130,13 +151,19 @@ export async function getNotifications(
 
 export async function toggleNotificationReadState(notificationId: string, isRead: boolean) {
   try {
+    const validation = toggleNotificationReadStateSchema.safeParse({ notificationId, isRead });
+    if (!validation.success) {
+      return { success: false, error: "Invalid parameters" };
+    }
+    const validatedData = validation.data;
+
     const currentUser = await getCurrentUser();
     if (!currentUser) {
       return { success: false, error: "Unauthorized" };
     }
 
     const notification = await prisma.notification.findUnique({
-      where: { id: notificationId },
+      where: { id: validatedData.notificationId },
     });
 
     if (!notification) {
@@ -148,8 +175,8 @@ export async function toggleNotificationReadState(notificationId: string, isRead
     }
 
     const updated = await prisma.notification.update({
-      where: { id: notificationId },
-      data: { isRead },
+      where: { id: validatedData.notificationId },
+      data: { isRead: validatedData.isRead },
     });
 
     revalidatePath("/dashboard");
@@ -164,14 +191,20 @@ export async function toggleNotificationReadState(notificationId: string, isRead
 
 export async function markAllNotificationsAsRead(recipientId: string) {
   try {
+    const validation = recipientIdSchema.safeParse(recipientId);
+    if (!validation.success) {
+      return { success: false, error: "Invalid parameters" };
+    }
+    const validatedRecipientId = validation.data;
+
     const currentUser = await getCurrentUser();
-    if (!currentUser || currentUser.userId !== recipientId) {
+    if (!currentUser || currentUser.userId !== validatedRecipientId) {
       return { success: false, error: "Unauthorized" };
     }
 
     await prisma.notification.updateMany({
       where: {
-        recipientId,
+        recipientId: validatedRecipientId,
         isRead: false,
       },
       data: { isRead: true },
@@ -189,15 +222,21 @@ export async function markAllNotificationsAsRead(recipientId: string) {
 
 export async function markMatchNotificationsAsRead(matchId: string, recipientId: string) {
   try {
+    const validation = markMatchNotificationsAsReadSchema.safeParse({ matchId, recipientId });
+    if (!validation.success) {
+      return { success: false, error: "Invalid parameters" };
+    }
+    const validatedData = validation.data;
+
     const currentUser = await getCurrentUser();
-    if (!currentUser || currentUser.userId !== recipientId) {
+    if (!currentUser || currentUser.userId !== validatedData.recipientId) {
       return { success: false, error: "Unauthorized" };
     }
 
     await prisma.notification.updateMany({
       where: {
-        recipientId,
-        matchId: matchId,
+        recipientId: validatedData.recipientId,
+        matchId: validatedData.matchId,
         isRead: false,
       },
       data: { isRead: true },
@@ -216,14 +255,20 @@ export async function markMatchNotificationsAsRead(matchId: string, recipientId:
 
 export async function getUnreadNotificationsCount(recipientId: string) {
   try {
+    const validation = recipientIdSchema.safeParse(recipientId);
+    if (!validation.success) {
+      return { success: false, error: "Invalid parameters" };
+    }
+    const validatedRecipientId = validation.data;
+
     const currentUser = await getCurrentUser();
-    if (!currentUser || currentUser.userId !== recipientId) {
+    if (!currentUser || currentUser.userId !== validatedRecipientId) {
       return { success: false, error: "Unauthorized" };
     }
 
     const count = await prisma.notification.count({
       where: {
-        recipientId,
+        recipientId: validatedRecipientId,
         isRead: false,
       },
     });
@@ -237,14 +282,20 @@ export async function getUnreadNotificationsCount(recipientId: string) {
 
 export async function getNotificationPlayers(recipientId: string) {
   try {
+    const validation = recipientIdSchema.safeParse(recipientId);
+    if (!validation.success) {
+      return { success: false, error: "Invalid parameters" };
+    }
+    const validatedRecipientId = validation.data;
+
     const currentUser = await getCurrentUser();
-    if (!currentUser || currentUser.userId !== recipientId) {
+    if (!currentUser || currentUser.userId !== validatedRecipientId) {
       return { success: false, error: "Unauthorized" };
     }
 
     // Find all notifications for this trainer and select distinct players from matches & assignments
     const notifications = await prisma.notification.findMany({
-      where: { recipientId },
+      where: { recipientId: validatedRecipientId },
       select: {
         match: {
           select: {

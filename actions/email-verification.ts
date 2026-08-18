@@ -5,6 +5,8 @@ import { hashPassword, verifyPassword } from "@/lib/auth";
 import crypto from "crypto";
 import { Resend } from "resend";
 import { getTranslationsServer } from "@/lib/i18n-server";
+import { Prisma } from "@prisma/client";
+import { verifyEmailCodeSchema, resendVerificationCodeSchema } from "@/lib/validations/email-verification";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
@@ -14,7 +16,7 @@ const SENDER_EMAIL = process.env.RESEND_SENDER_EMAIL || "Foot-Tracker <noreply@f
 /**
  * Generate a 6-digit verification code, hash it, save to DB, and send via Resend
  */
-export async function generateAndSendVerificationCode(userId: string, db: any = prisma) {
+export async function generateAndSendVerificationCode(userId: string, db: Prisma.TransactionClient | typeof prisma = prisma) {
   // Invalidate any existing verification codes for this user
   await db.emailVerificationCode.updateMany({
     where: {
@@ -107,8 +109,9 @@ export async function generateAndSendVerificationCode(userId: string, db: any = 
  */
 export async function verifyEmailCode(userId: string, code: string) {
   try {
-    if (!userId || !code || code.length !== 6) {
-      console.warn(`[verifyEmailCode] Invalid inputs: userId=${userId}, codeLength=${code?.length}`);
+    const validation = verifyEmailCodeSchema.safeParse({ userId, code });
+    if (!validation.success) {
+      console.warn(`[verifyEmailCode] Invalid inputs: ${validation.error.message}`);
       return { success: false, error: "verification.error_generic" };
     }
 
@@ -191,11 +194,12 @@ export async function verifyEmailCode(userId: string, code: string) {
  */
 export async function resendVerificationCode(email: string) {
   try {
-    if (!email) {
+    const validation = resendVerificationCodeSchema.safeParse({ email });
+    if (!validation.success) {
       return { success: false, error: "verification.error_email_required" };
     }
 
-    const emailClean = email.toLowerCase().trim();
+    const emailClean = validation.data.email.toLowerCase().trim();
 
     // Check if user exists
     const user = await prisma.user.findUnique({

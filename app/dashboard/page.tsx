@@ -73,7 +73,7 @@ export default function DashboardPage() {
 
     setDeletingId(id);
     try {
-      const result = await deleteMatch(id, user.id);
+      const result = await deleteMatch(id);
       if (result.success) {
         setMatches(matches.filter((m) => m.id !== id));
       } else {

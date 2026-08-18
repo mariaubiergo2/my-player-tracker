@@ -4,16 +4,23 @@
 import { revalidatePath } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { getCurrentUser } from "@/lib/auth"
+import { getFeedbackMessagesSchema, createFeedbackMessageSchema } from "@/lib/validations/feedback"
 
 export async function getFeedbackMessages(matchId: string) {
   try {
+    const validation = getFeedbackMessagesSchema.safeParse({ matchId });
+    if (!validation.success) {
+      return { success: false, error: "Invalid parameters" }
+    }
+    const validatedData = validation.data;
+
     const currentUser = await getCurrentUser()
     if (!currentUser) {
       return { success: false, error: "Unauthorized" }
     }
 
     const match = await prisma.match.findUnique({
-      where: { id: matchId },
+      where: { id: validatedData.matchId },
       include: {
         player: {
           select: {
@@ -45,7 +52,7 @@ export async function getFeedbackMessages(matchId: string) {
     const isPlayer = match.playerId === currentUser.userId
     const isTrainer =
       match.trainerId === currentUser.userId ||
-      (match.player?.trainers && match.player.trainers.some((t: any) => t.id === currentUser.userId));
+      (match.player?.trainers && match.player.trainers.some((t: { id: string }) => t.id === currentUser.userId));
     const isAdmin = currentUser.role === "ADMIN"
 
     if (!isPlayer && !isTrainer && !isAdmin) {
@@ -53,7 +60,7 @@ export async function getFeedbackMessages(matchId: string) {
     }
 
     const messages = await prisma.matchFeedbackMessage.findMany({
-      where: { matchId },
+      where: { matchId: validatedData.matchId },
       orderBy: { createdAt: "asc" },
       include: {
         author: {
@@ -100,9 +107,11 @@ export async function getFeedbackMessages(matchId: string) {
 
 export async function createFeedbackMessage(matchId: string, content: string) {
   try {
-    if (!content || !content.trim()) {
+    const validation = createFeedbackMessageSchema.safeParse({ matchId, content });
+    if (!validation.success) {
       return { success: false, error: "Message content cannot be empty" }
     }
+    const validatedData = validation.data;
 
     const currentUser = await getCurrentUser()
     if (!currentUser) {
@@ -110,7 +119,7 @@ export async function createFeedbackMessage(matchId: string, content: string) {
     }
 
     const match = await prisma.match.findUnique({
-      where: { id: matchId },
+      where: { id: validatedData.matchId },
       include: {
         player: {
           include: {
@@ -128,7 +137,7 @@ export async function createFeedbackMessage(matchId: string, content: string) {
     const isPlayer = match.playerId === currentUser.userId
     const isTrainer =
       match.trainerId === currentUser.userId ||
-      (match.player?.trainers && match.player.trainers.some((t: any) => t.id === currentUser.userId));
+      (match.player?.trainers && match.player.trainers.some((t: { id: string }) => t.id === currentUser.userId));
     const isAdmin = currentUser.role === "ADMIN"
 
     if (!isPlayer && !isTrainer && !isAdmin) {
@@ -146,10 +155,10 @@ export async function createFeedbackMessage(matchId: string, content: string) {
 
     const newMessage = await prisma.matchFeedbackMessage.create({
       data: {
-        matchId,
+        matchId: validatedData.matchId,
         authorId: currentUser.userId,
         authorRole,
-        content: content.trim(),
+        content: validatedData.content.trim(),
       },
       include: {
         author: {
@@ -167,7 +176,7 @@ export async function createFeedbackMessage(matchId: string, content: string) {
     const isAuthorTrainer = currentUser.role === "TRAINER";
 
     if (isAuthorPlayer && match.player?.trainers) {
-      const trainersToNotify = match.player.trainers.map((t: any) => t.id);
+      const trainersToNotify = match.player.trainers.map((t: { id: string }) => t.id);
       if (match.trainerId && !trainersToNotify.includes(match.trainerId)) {
         trainersToNotify.push(match.trainerId);
       }

@@ -338,3 +338,15 @@ Lista completa de características operacionales en el código fuente:
 > **4. Autenticación con Token Firmado (Solucionado)**
 > La lógica de tokens se ha actualizado para usar firmas criptográficas fuertes con HS256 utilizando la librería `jose`. Las sesiones ahora están protegidas contra falsificaciones y manipulación externa mediante validación criptográfica obligatoria basada en la clave configurada en `JWT_SECRET` o `AUTH_SECRET` (mínimo 32 caracteres). Si falta esta clave o es insegura (menos de 32 caracteres), el sistema aborta de inmediato impidiendo el funcionamiento de la app.
 
+> [!NOTE]
+> **5. Validación de Payloads en Server Actions con Zod (Solucionado)**
+> Se ha eliminado por completo el uso de `: any` para tipar payloads de entrada y variables internas en las Server Actions del proyecto. Las entradas de datos del cliente ahora son validadas y tipadas estrictamente mediante schemas de Zod ubicados en `lib/validations/`. Las Server Actions en `email-verification.ts`, `notifications.ts`, `users.ts`, `feedback.ts` y `matches.ts` se validan al inicio mediante `.safeParse()`, garantizando la integridad de los datos antes de operar en la base de datos y manteniendo los contratos de respuesta esperados por el frontend.
+
+> [!IMPORTANT]
+> **6. Corrección de Vulnerabilidad de Autorización en deleteMatch (Solucionado)**
+> Se detectó que la server action `deleteMatch` confiaba en un parámetro `userId` enviado por el cliente para realizar las comprobaciones de permisos de borrado, lo cual permitía spoofing de identidad. Se ha eliminado este parámetro de la firma de la función, y ahora la server action deriva la identidad del usuario directamente del token de sesión (`getCurrentUser()`) del lado del servidor. Las llamadas a `deleteMatch` en el frontend ([app/dashboard/page.tsx](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/app/dashboard/page.tsx)) han sido actualizadas para omitir el parámetro `userId`.
+
+> [!NOTE]
+> **7. Vínculo Entrenador-Jugador al Crear Partidos (Riesgo Conocido / Pendiente de Definición)**
+> En la server action `createMatch`, cuando un entrenador (`TRAINER`) o administrador (`ADMIN`) crea un partido, se le permite suministrar cualquier `playerId` desde el formulario sin validar si el entrenador está vinculado activamente con ese jugador. Este comportamiento ha sido documentado como un riesgo conocido. Queda pendiente de una definición de producto posterior sobre si se debe restringir o no la creación de partidos a jugadores que no pertenezcan a la plantilla del entrenador correspondiente.
+

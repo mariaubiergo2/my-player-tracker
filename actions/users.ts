@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifyToken, hashPassword, verifyPassword, generateToken } from "@/lib/auth";
-import { UserRole } from "@prisma/client";
+import { UserRole, Prisma } from "@prisma/client";
+import { createUserSchema, updateUserSchema, updateProfileSchema } from "@/lib/validations/users";
 
 /**
  * Checks if the current request is initiated by a verified Admin user
@@ -78,30 +79,32 @@ export async function createUser(data: {
   try {
     await checkAdmin();
 
-    if (!data.name || !data.surname || !data.email || !data.role) {
-      return { success: false, error: "Please fill in all required fields." };
+    const validation = createUserSchema.safeParse(data);
+    if (!validation.success) {
+      return { success: false, error: "Please fill in all required fields correctly." };
     }
+    const validatedData = validation.data;
 
     const existingUser = await prisma.user.findUnique({
-      where: { email: data.email.toLowerCase().trim() },
+      where: { email: validatedData.email.toLowerCase().trim() },
     });
 
     if (existingUser) {
       return { success: false, error: "A user with this email already exists." };
     }
 
-    const rawPassword = data.password || "tracker123";
+    const rawPassword = validatedData.password || "tracker123";
     const hashedPassword = await hashPassword(rawPassword);
 
     const newUser = await prisma.user.create({
       data: {
-        name: data.name.trim(),
-        surname: data.surname.trim(),
-        email: data.email.toLowerCase().trim(),
+        name: validatedData.name.trim(),
+        surname: validatedData.surname.trim(),
+        email: validatedData.email.toLowerCase().trim(),
         password: hashedPassword,
-        role: data.role,
-        phone: data.phone?.trim() || null,
-        birthDate: data.birthDate ? new Date(data.birthDate) : null,
+        role: validatedData.role,
+        phone: validatedData.phone?.trim() || null,
+        birthDate: validatedData.birthDate ? new Date(validatedData.birthDate) : null,
       },
     });
 
@@ -133,12 +136,18 @@ export async function updateUser(
   try {
     await checkAdmin();
 
-    const data: any = {};
-    if (updates.name !== undefined) data.name = updates.name.trim();
-    if (updates.surname !== undefined) data.surname = updates.surname.trim();
+    const validation = updateUserSchema.safeParse(updates);
+    if (!validation.success) {
+      return { success: false, error: "Invalid updates payload." };
+    }
+    const validatedUpdates = validation.data;
+
+    const data: Prisma.UserUpdateInput = {};
+    if (validatedUpdates.name !== undefined) data.name = validatedUpdates.name.trim();
+    if (validatedUpdates.surname !== undefined) data.surname = validatedUpdates.surname.trim();
     
-    if (updates.email !== undefined) {
-      const emailLower = updates.email.toLowerCase().trim();
+    if (validatedUpdates.email !== undefined) {
+      const emailLower = validatedUpdates.email.toLowerCase().trim();
       const collision = await prisma.user.findFirst({
         where: { email: emailLower, NOT: { id } },
       });
@@ -148,11 +157,11 @@ export async function updateUser(
       data.email = emailLower;
     }
 
-    if (updates.role !== undefined) data.role = updates.role;
-    if (updates.phone !== undefined) data.phone = updates.phone?.trim() || null;
+    if (validatedUpdates.role !== undefined) data.role = validatedUpdates.role;
+    if (validatedUpdates.phone !== undefined) data.phone = validatedUpdates.phone?.trim() || null;
     
-    if (updates.birthDate !== undefined) {
-      data.birthDate = updates.birthDate ? new Date(updates.birthDate) : null;
+    if (validatedUpdates.birthDate !== undefined) {
+      data.birthDate = validatedUpdates.birthDate ? new Date(validatedUpdates.birthDate) : null;
     }
 
     const updatedUser = await prisma.user.update({
@@ -264,6 +273,12 @@ export async function updateProfile(updates: {
   confirmPassword?: string;
 }) {
   try {
+    const validation = updateProfileSchema.safeParse(updates);
+    if (!validation.success) {
+      return { success: false, error: "Please fill in all required fields correctly." };
+    }
+    const validatedUpdates = validation.data;
+
     const cookieStore = await cookies();
     const token = cookieStore.get("auth_token")?.value;
     if (!token) {
@@ -277,9 +292,9 @@ export async function updateProfile(updates: {
 
     const userId = payload.userId;
 
-    const nameTrimmed = updates.name?.trim();
-    const surnameTrimmed = updates.surname?.trim();
-    const emailTrimmed = updates.email?.toLowerCase().trim();
+    const nameTrimmed = validatedUpdates.name?.trim();
+    const surnameTrimmed = validatedUpdates.surname?.trim();
+    const emailTrimmed = validatedUpdates.email?.toLowerCase().trim();
 
     // Validate base inputs
     if (!nameTrimmed || !surnameTrimmed || !emailTrimmed) {
@@ -295,16 +310,16 @@ export async function updateProfile(updates: {
     }
 
     // Phone validation: must have code starting with + and correct digits
-    if (updates.phone) {
-      const cleanedPhone = updates.phone.replace(/[-.\s()]/g, "");
+    if (validatedUpdates.phone) {
+      const cleanedPhone = validatedUpdates.phone.replace(/[-.\s()]/g, "");
       if (!/^\+[1-9]\d{6,14}$/.test(cleanedPhone)) {
         return { success: false, error: "Please enter a valid phone number including country code (e.g. +34 600 000 000)." };
       }
     }
 
     // Birth date validation: well written, valid date, not in the future, not before 1900
-    if (updates.birthDate) {
-      const birthDateObj = new Date(updates.birthDate);
+    if (validatedUpdates.birthDate) {
+      const birthDateObj = new Date(validatedUpdates.birthDate);
       if (isNaN(birthDateObj.getTime())) {
         return { success: false, error: "Please enter a valid date of birth." };
       }
@@ -319,24 +334,24 @@ export async function updateProfile(updates: {
     }
 
     // Prepare update data
-    const data: any = {
+    const data: Prisma.UserUpdateInput = {
       name: nameTrimmed,
       surname: surnameTrimmed,
       email: emailTrimmed,
-      phone: updates.phone?.trim() || null,
-      birthDate: updates.birthDate ? new Date(updates.birthDate) : null,
-      avatarUrl: updates.avatarUrl?.trim() || null,
+      phone: validatedUpdates.phone?.trim() || null,
+      birthDate: validatedUpdates.birthDate ? new Date(validatedUpdates.birthDate) : null,
+      avatarUrl: validatedUpdates.avatarUrl?.trim() || null,
     };
 
     // Handle password update if requested
-    if (updates.newPassword || updates.confirmPassword) {
-      if (updates.newPassword !== updates.confirmPassword) {
+    if (validatedUpdates.newPassword || validatedUpdates.confirmPassword) {
+      if (validatedUpdates.newPassword !== validatedUpdates.confirmPassword) {
         return { success: false, error: "New passwords do not match." };
       }
-      if (!updates.currentPassword) {
+      if (!validatedUpdates.currentPassword) {
         return { success: false, error: "Current password is required to set a new password." };
       }
-      if (!updates.newPassword || updates.newPassword.length < 6) {
+      if (!validatedUpdates.newPassword || validatedUpdates.newPassword.length < 6) {
         return { success: false, error: "New password must be at least 6 characters long." };
       }
 
@@ -348,12 +363,12 @@ export async function updateProfile(updates: {
         return { success: false, error: "User not found." };
       }
 
-      const isValid = await verifyPassword(updates.currentPassword, user.password);
+      const isValid = await verifyPassword(validatedUpdates.currentPassword, user.password);
       if (!isValid) {
         return { success: false, error: "Incorrect current password." };
       }
 
-      data.password = await hashPassword(updates.newPassword);
+      data.password = await hashPassword(validatedUpdates.newPassword);
     }
 
     const updatedUser = await prisma.user.update({
