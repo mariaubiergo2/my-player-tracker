@@ -323,9 +323,11 @@ Lista completa de características operacionales en el código fuente:
 Se ha configurado un entorno de pruebas unitarias utilizando **Vitest** enfocado en validar las reglas de negocio críticas sin necesidad de conectar con la base de datos (pruebas de lógica pura en servidor).
 
 *   **Framework de Testing:** Vitest
-*   **Archivos de configuración:** [vitest.config.mts](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/vitest.config.mts)
-*   **Ubicación de los tests:** Junto al código que validan (`colocation`). Por ejemplo:
+*   **Archivos de configuración:** [vitest.config.mts](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/vitest.config.mts) (incluye variables de entorno de prueba globales como `JWT_SECRET` para evitar fallos de inicialización).
+*   **Ubicación de los tests:** Junto al código que validan (`colocation`).
+*   **Cobertura actual:**
     *   [`lib/__tests__/permissions.test.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/lib/__tests__/permissions.test.ts): Valida el control de acceso a campos editables por cada rol en los partidos.
+    *   [`lib/__tests__/auth.test.ts`](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/lib/__tests__/auth.test.ts): Valida la lógica de autenticación en su totalidad (Grupo A: criptografía y tokens puros; Grupo B: interacciones de cabeceras, cookies y lectura de usuarios de Next.js usando mocks dinámicos de `next/headers` y `NextResponse`).
 *   **Comandos disponibles:**
     *   `npm run test`: Ejecuta todos los tests una sola vez (útil para integración continua/CI).
     *   `npm run test:watch`: Ejecuta Vitest en modo observador interactivo (desarrollo local).
