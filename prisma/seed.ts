@@ -27,6 +27,7 @@ async function main() {
         role: seedUser.role,
         phone: seedUser.phone || null,
         password: hashedPassword,
+        emailVerified: true,
       },
       create: {
         id: seedUser.id,
@@ -36,6 +37,7 @@ async function main() {
         role: seedUser.role,
         password: hashedPassword,
         phone: seedUser.phone || null,
+        emailVerified: true,
       },
     });
     console.log(`Upserted user: ${user.email} (Role: ${user.role})`);

@@ -405,12 +405,17 @@ Se ha configurado un workflow de integración continua mediante **GitHub Actions
 > **7. Vínculo Entrenador-Jugador al Crear Partidos (Riesgo Conocido / Pendiente de Definición)**
 > En la server action `createMatch`, cuando un entrenador (`TRAINER`) o administrador (`ADMIN`) crea un partido, se le permite suministrar cualquier `playerId` desde el formulario sin validar si el entrenador está vinculado activamente con ese jugador. Este comportamiento ha sido documentado como un riesgo conocido. Queda pendiente de una definición de producto posterior sobre si se debe restringir o no la creación de partidos a jugadores que no pertenezcan a la plantilla del entrenador correspondiente.
 
----
-
-# Deuda Técnica de Lint (ESLint)
+# Deuda Técnica y Parches Temporales
 
 > [!WARNING]
-> **TEMPORAL:** Las siguientes reglas de ESLint se han degradado temporalmente de `"error"` a `"warn"` en [eslint.config.mjs](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/eslint.config.mjs) para no bloquear la Integración Continua (CI) mientras se resuelven en bloques de trabajo dedicados y aislados. Una vez subsanadas, estas reglas deben restablecerse a `"error"`.
+> **PARCHE TEMPORAL DE DESARROLLO (Agosto 2026):** 
+> Se ha configurado temporalmente un código de verificación de correo estático (`"123456"`) en `actions/email-verification.ts` únicamente para entornos de desarrollo y pruebas.
+> * **Condición de desactivación automática:** Está blindado a nivel de código para ejecutarse solo si `process.env.NODE_ENV !== "production"`. En producción, la aplicación *siempre* generará un código criptográficamente aleatorio.
+> * **Fecha estimada de remoción definitiva:** Septiembre 2026, una vez estabilizado el flujo con dominios reales de producción en Resend.
+> * **Instrucción de retiro:** Reemplazar el bloque condicional en `generateAndSendVerificationCode` por una llamada directa a `crypto.randomInt(100000, 1000000).toString()`.
+
+> [!WARNING]
+> **ESLINT DEGRADATIONS (TEMPORAL):** Las siguientes reglas de ESLint se han degradado temporalmente de `"error"` a `"warn"` en [eslint.config.mjs](file:///c:/Users/PC/Documents/FURBO/my-player-tracker/eslint.config.mjs) para no bloquear la Integración Continua (CI) mientras se resuelven en bloques de trabajo dedicados y aislados. Una vez subsanadas, estas reglas deben restablecerse a `"error"`.
 
 ### 1. Tipos `any` explícitos (`@typescript-eslint/no-explicit-any`)
 Quedan pendientes **63 instancias** distribuidas en los siguientes **24 archivos**:

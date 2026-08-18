@@ -30,7 +30,13 @@ export async function generateAndSendVerificationCode(userId: string, db: Prisma
   });
 
   // Generate 6-digit code
-  const code = crypto.randomInt(100000, 1000000).toString();
+  // ⚠️ TEMPORAL (solo desarrollo): código fijo "123456" para pruebas sin depender de Resend. Ver PROJECT_OVERVIEW.md. ELIMINAR antes de producción si no se ha retirado ya automáticamente por la condición de NODE_ENV.
+  let code: string;
+  if (process.env.NODE_ENV === "production") {
+    code = crypto.randomInt(100000, 1000000).toString();
+  } else {
+    code = "123456";
+  }
 
   // Hash code
   const codeHash = await hashPassword(code);
