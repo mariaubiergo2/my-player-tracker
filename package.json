@@ -11,7 +11,8 @@
     "test:db:migrate": "node scripts/test-db-migrate.js",
     "test:db:setup": "npm run test:db:create && npm run test:db:migrate",
     "test": "npm run test:db:setup && vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@mux/mux-node": "^14.1.1",
