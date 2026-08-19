@@ -172,11 +172,35 @@ describe("Objectives Requests Server Actions - End to End Flow", () => {
     expect(updatedRequest?.trainerReply).toBe("👀 Ho estic mirant");
 
     // Verify notification was sent back to player
-    const playerNotifications = await prisma.notification.findMany({
+    let playerNotifications = await prisma.notification.findMany({
       where: { recipientId: player.id },
     });
     expect(playerNotifications.length).toBe(1);
     expect(playerNotifications[0].type).toBe("OBJECTIVES_REQUEST_REPLIED");
+
+    // Mark the notification as read to test that a second reply resets it to unread and doesn't duplicate
+    await prisma.notification.update({
+      where: { id: playerNotifications[0].id },
+      data: { isRead: true },
+    });
+
+    // Reply again
+    const secondReplyRes = await replyToObjectivesRequest(requestId, "🛠️ Treballant-hi");
+    expect(secondReplyRes.success).toBe(true);
+
+    // Verify trainerReply was updated
+    const requestAfterSecondReply = await prisma.objectivesRequest.findUnique({
+      where: { id: requestId },
+    });
+    expect(requestAfterSecondReply?.trainerReply).toBe("🛠️ Treballant-hi");
+
+    // Verify there is still exactly one notification of type OBJECTIVES_REQUEST_REPLIED, and it is unread (isRead: false)
+    playerNotifications = await prisma.notification.findMany({
+      where: { recipientId: player.id },
+    });
+    expect(playerNotifications.length).toBe(1);
+    expect(playerNotifications[0].type).toBe("OBJECTIVES_REQUEST_REPLIED");
+    expect(playerNotifications[0].isRead).toBe(false);
 
     // 5. Trainer1 defines objectives for player
     const defineRes = await defineObjectives(player.id, "Nous objectius de la setmana", ["Tàctica defensiva", "Pressió alta"]);

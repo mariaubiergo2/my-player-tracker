@@ -250,6 +250,15 @@ export async function replyToObjectivesRequest(requestId: string, reply: string)
         },
       });
 
+      // Delete any previous reply notifications for this request and recipient
+      await tx.notification.deleteMany({
+        where: {
+          recipientId: request.playerId,
+          type: "OBJECTIVES_REQUEST_REPLIED",
+          objectivesRequestId: requestId,
+        },
+      });
+
       await tx.notification.create({
         data: {
           recipientId: request.playerId,

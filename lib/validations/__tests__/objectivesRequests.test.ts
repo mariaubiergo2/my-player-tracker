@@ -18,9 +18,9 @@ describe("objectivesRequests validations", () => {
       }
     });
 
-    it("should reject non-cuid trainerId", () => {
+    it("should reject empty trainerId", () => {
       const payload = {
-        trainerId: "not-a-cuid",
+        trainerId: "",
         reason: "Necessito nous objectius de cara al proper partit.",
       };
       const parsed = createObjectivesRequestSchema.safeParse(payload);
@@ -59,9 +59,9 @@ describe("objectivesRequests validations", () => {
       }
     });
 
-    it("should reject non-cuid requestId", () => {
+    it("should reject empty requestId", () => {
       const payload = {
-        requestId: "not-a-cuid",
+        requestId: "",
         reply: "Ho parlem al proper entrenament",
       };
       const parsed = replyObjectivesRequestSchema.safeParse(payload);

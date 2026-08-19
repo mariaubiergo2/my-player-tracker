@@ -966,7 +966,7 @@ export default function QuestionnairesPage() {
                           {/* Quick replies or Actions */}
                           <div className="w-full md:w-80 shrink-0 flex flex-col justify-between self-stretch gap-4 border-t md:border-t-0 md:border-l border-base-200/80 pt-4 md:pt-0 md:pl-6">
                             <div>
-                              {request.status === "PENDING" ? (
+                              {request.status !== "RESOLVED" ? (
                                 <>
                                   <h4 className="font-bold text-xs uppercase tracking-wider text-base-content/50 mb-3">
                                     {t("questionnaires.request_reply_placeholder_hint")}
