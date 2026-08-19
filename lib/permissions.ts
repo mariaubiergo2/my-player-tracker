@@ -60,3 +60,56 @@ export function canEditMatchField(role: UserRole | string | undefined, field: st
 
   return false;
 }
+
+export function canManageExercise(
+  role: string | undefined,
+  currentUserUserId: string,
+  exerciseTrainerId: string
+): boolean {
+  if (!role) return false;
+  const roleUpper = role.toUpperCase();
+  return roleUpper === "ADMIN" || currentUserUserId === exerciseTrainerId;
+}
+
+export function canManageTrainingPlan(
+  role: string | undefined,
+  currentUserUserId: string,
+  planTrainerId: string
+): boolean {
+  if (!role) return false;
+  const roleUpper = role.toUpperCase();
+  return roleUpper === "ADMIN" || currentUserUserId === planTrainerId;
+}
+
+export function canViewTrainingPlan(
+  role: string | undefined,
+  currentUserUserId: string,
+  planTrainerId: string,
+  assignedPlayerIds: string[]
+): boolean {
+  if (!role) return false;
+  const roleUpper = role.toUpperCase();
+  if (roleUpper === "ADMIN" || currentUserUserId === planTrainerId) return true;
+  return assignedPlayerIds.includes(currentUserUserId);
+}
+
+export function canModifySessionCompletion(
+  role: string | undefined,
+  currentUserUserId: string,
+  targetPlayerId: string
+): boolean {
+  if (!role) return false;
+  const roleUpper = role.toUpperCase();
+  return roleUpper === "ADMIN" || currentUserUserId === targetPlayerId;
+}
+
+export function canSubmitTrainingFeedback(
+  role: string | undefined,
+  currentUserUserId: string,
+  targetPlayerId: string
+): boolean {
+  if (!role) return false;
+  const roleUpper = role.toUpperCase();
+  return roleUpper === "ADMIN" || currentUserUserId === targetPlayerId;
+}
+

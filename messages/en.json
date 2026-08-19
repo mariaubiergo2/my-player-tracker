@@ -17,7 +17,10 @@
     "theme_dark": "Switch to dark theme",
     "theme_light_short": "LIGHT",
     "theme_dark_short": "DARK",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "exercises": "Exercise library",
+    "training_plans": "Training plans",
+    "training_feedback": "Feedback inbox"
   },
   "footer": {
     "text": "Built with Next.js 16 + DaisyUI — Demonstrating SSG, SSR, ISR, and CSR patterns"
@@ -572,7 +575,21 @@
     "resting_hr": "Resting Heart Rate",
     "weight": "Weight",
     "sleep": "Sleep duration",
-    "update": "Update"
+    "update": "Update",
+    "active_plans": "Your Training Plans",
+    "no_active_plans": "You do not have any active training plans assigned by your coach.",
+    "session_checklist": "Scheduled sessions for this week",
+    "objectives_title": "Physical Objectives",
+    "feedback_session_title": "Send session feedback",
+    "feedback_plan_title": "Send general plan feedback",
+    "comment_placeholder": "Write how you felt, your muscle sensations, or difficulties...",
+    "video_placeholder": "Optional external video link",
+    "send_feedback": "Send Feedback",
+    "completed": "Completed",
+    "trainer_desc": "Design and assign custom training plans, manage your exercise library, and review workload exertion (RPE) and player comments.",
+    "exercises_card_desc": "Manage the practical exercise catalogue, including repetitions, demonstration videos, and illustrative images.",
+    "plans_card_desc": "Build weekly plans, schedule occurrences, and assign them directly to your roster players.",
+    "feedback_card_desc": "Review fatigue levels, muscle soreness, and perceived exertion (RPE) reported by your players upon session completion."
   },
   "nutrition_page": {
     "title": "Nutrition & Hydration",
@@ -656,7 +673,11 @@
     "questionnaire_responded": "{playerName} responded to the questionnaire: {title}",
     "questionnaire_reclaimed": "{playerName} reclaimed the questionnaire for redefinition: {title}",
     "objectives_request_created": "{playerName} has requested new objectives",
-    "objectives_request_replied": "{trainerName} replied to your objectives request: {reply}"
+    "objectives_request_replied": "{trainerName} replied to your objectives request: {reply}",
+    "TRAINING_PLAN_SENT": "Coach {trainerName} has sent you a new training plan: {planTitle}",
+    "TRAINING_PLAN_UPDATED": "Coach {trainerName} has updated your training plan",
+    "SESSION_FEEDBACK_RECEIVED": "Player {playerName} has sent feedback for session: {sessionTitle}",
+    "PLAN_FEEDBACK_RECEIVED": "Player {playerName} has sent feedback for plan: {planTitle}"
   },
   "questionnaires": {
     "title": "Questionnaires",
@@ -769,5 +790,27 @@
     "request_quick_reply_incoming": "New objectives coming",
     "request_quick_reply_next_training": "Let's discuss at the next training session",
     "define_objectives_from_request": "Define objectives now"
+  },
+  "trainer_training_plans": {
+    "title": "Training Plans",
+    "subtitle": "Create, design, and assign custom training plans to your players.",
+    "create_plan_btn": "Create Plan",
+    "draft": "Draft",
+    "sent": "Sent",
+    "sessions_count": "{count} sessions",
+    "send_plan": "Assign Plan",
+    "select_players": "Select players to assign this plan",
+    "send_confirm": "Are you sure you want to send this training plan? Selected players will receive a notification.",
+    "delete_confirm": "Are you sure you want to delete this training plan?"
+  },
+  "trainer_exercises": {
+    "title": "Exercise Library",
+    "subtitle": "Manage the exercises you use to design your training sessions.",
+    "add_exercise_btn": "Add Exercise",
+    "exercise_title": "Exercise title",
+    "repetitions": "Repetitions (e.g. 3x12)",
+    "video_link": "Demo video link (YouTube/Vimeo...)",
+    "upload_image": "Upload illustrative image",
+    "delete_confirm": "Are you sure you want to delete this exercise?"
   }
 }

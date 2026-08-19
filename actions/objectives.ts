@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { UserRole, AssignmentStatus, ObjectivesRequestStatus } from "@prisma/client";
+import { UserRole, AssignmentStatus, ObjectivesRequestStatus, ObjectiveCategory } from "@prisma/client";
 
 // Helper helper to verify if trainer owns player or user is admin/self
 async function checkAccess(playerId: string) {
@@ -27,7 +27,12 @@ async function checkAccess(playerId: string) {
 }
 
 // 1. DEFINE OBJECTIVES
-export async function defineObjectives(playerId: string, summary: string, items: string[]) {
+export async function defineObjectives(
+  playerId: string,
+  summary: string,
+  items: string[],
+  category: ObjectiveCategory = ObjectiveCategory.MATCH
+) {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) {
@@ -65,6 +70,7 @@ export async function defineObjectives(playerId: string, summary: string, items:
         where: {
           playerId,
           effectiveTo: null,
+          category,
         },
       });
 
@@ -96,6 +102,7 @@ export async function defineObjectives(playerId: string, summary: string, items:
           items: cleanedItems,
           effectiveFrom: now,
           effectiveTo: null,
+          category,
         },
       });
     });
@@ -110,7 +117,7 @@ export async function defineObjectives(playerId: string, summary: string, items:
 }
 
 // 2. GET ACTIVE OBJECTIVES
-export async function getActiveObjectives(playerId: string) {
+export async function getActiveObjectives(playerId: string, category: ObjectiveCategory = ObjectiveCategory.MATCH) {
   try {
     const { authorized } = await checkAccess(playerId);
     if (!authorized) {
@@ -121,6 +128,7 @@ export async function getActiveObjectives(playerId: string) {
       where: {
         playerId,
         effectiveTo: null,
+        category,
       },
     });
 
@@ -132,7 +140,7 @@ export async function getActiveObjectives(playerId: string) {
 }
 
 // 3. GET OBJECTIVES HISTORY
-export async function getObjectivesHistory(playerId: string) {
+export async function getObjectivesHistory(playerId: string, category: ObjectiveCategory = ObjectiveCategory.MATCH) {
   try {
     const { authorized } = await checkAccess(playerId);
     if (!authorized) {
@@ -145,7 +153,7 @@ export async function getObjectivesHistory(playerId: string) {
     });
 
     const history = await prisma.playerObjectives.findMany({
-      where: { playerId },
+      where: { playerId, category },
       orderBy: { effectiveFrom: "desc" },
     });
 
@@ -157,7 +165,11 @@ export async function getObjectivesHistory(playerId: string) {
 }
 
 // 4. GET EFFECTIVE OBJECTIVES AT A SPECIFIC DATE (for Match detail)
-export async function getEffectiveObjectivesAt(playerId: string, date: Date | string) {
+export async function getEffectiveObjectivesAt(
+  playerId: string,
+  date: Date | string,
+  category: ObjectiveCategory = ObjectiveCategory.MATCH
+) {
   try {
     const { authorized } = await checkAccess(playerId);
     if (!authorized) {
@@ -169,6 +181,7 @@ export async function getEffectiveObjectivesAt(playerId: string, date: Date | st
     const objective = await prisma.playerObjectives.findFirst({
       where: {
         playerId,
+        category,
         effectiveFrom: {
           lte: targetDate,
         },
@@ -194,7 +207,7 @@ export async function getEffectiveObjectivesAt(playerId: string, date: Date | st
 }
 
 // 5. GET PLAYERS FOR TRAINER WITH THEIR OBJECTIVES & COMPLETED ASSIGNMENTS
-export async function getTrainerPlayersObjectivesData() {
+export async function getTrainerPlayersObjectivesData(category: ObjectiveCategory = ObjectiveCategory.MATCH) {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) {
@@ -239,6 +252,7 @@ export async function getTrainerPlayersObjectivesData() {
           where: {
             trainerId: currentUser.userId,
             effectiveTo: null,
+            category,
           },
           orderBy: { effectiveFrom: "desc" },
           take: 1,

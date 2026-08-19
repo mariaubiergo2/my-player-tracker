@@ -16,10 +16,12 @@ import { formatRelativeTime } from "@/lib/utils/dates";
 interface NotificationItem {
   id: string;
   recipientId: string;
-  type: "MATCH_CREATED" | "MATCH_UPDATED" | "MATCH_UPDATED_BY_TRAINER" | "FEEDBACK_MESSAGE_FROM_PLAYER" | "FEEDBACK_MESSAGE_FROM_TRAINER" | "QUESTIONNAIRE_SENT" | "QUESTIONNAIRE_RESPONDED" | "QUESTIONNAIRE_RECLAIMED" | "OBJECTIVES_REQUEST_CREATED" | "OBJECTIVES_REQUEST_REPLIED";
+  type: "MATCH_CREATED" | "MATCH_UPDATED" | "MATCH_UPDATED_BY_TRAINER" | "FEEDBACK_MESSAGE_FROM_PLAYER" | "FEEDBACK_MESSAGE_FROM_TRAINER" | "QUESTIONNAIRE_SENT" | "QUESTIONNAIRE_RESPONDED" | "QUESTIONNAIRE_RECLAIMED" | "OBJECTIVES_REQUEST_CREATED" | "OBJECTIVES_REQUEST_REPLIED" | "TRAINING_PLAN_SENT" | "SESSION_FEEDBACK_RECEIVED" | "PLAN_FEEDBACK_RECEIVED" | "TRAINING_PLAN_UPDATED";
   matchId?: string | null;
   assignmentId?: string | null;
   objectivesRequestId?: string | null;
+  trainingPlanAssignmentId?: string | null;
+  trainingFeedbackId?: string | null;
   isRead: boolean;
   createdAt: Date;
   match?: {
@@ -83,6 +85,61 @@ interface NotificationItem {
       surname: string;
       avatarUrl?: string | null;
     };
+  } | null;
+  trainingPlanAssignment?: {
+    id: string;
+    player: {
+      id: string;
+      name: string;
+      surname: string;
+      avatarUrl?: string | null;
+    };
+    trainingPlan: {
+      id: string;
+      title: string;
+      trainer: {
+        id: string;
+        name: string;
+        surname: string;
+        avatarUrl?: string | null;
+      };
+    };
+  } | null;
+  trainingFeedback?: {
+    id: string;
+    player: {
+      id: string;
+      name: string;
+      surname: string;
+      avatarUrl?: string | null;
+    };
+    session?: {
+      id: string;
+      title: string;
+      trainingPlan: {
+        id: string;
+        title: string;
+        trainer: {
+          id: string;
+          name: string;
+          surname: string;
+          avatarUrl?: string | null;
+        };
+      };
+    } | null;
+    assignment?: {
+      id: string;
+      trainingPlan: {
+        id: string;
+        title: string;
+        trainer: {
+          id: string;
+          name: string;
+          surname: string;
+          avatarUrl?: string | null;
+        };
+      };
+    } | null;
   } | null;
 }
 
@@ -284,17 +341,31 @@ export default function NotificationBell() {
             notifications.map((n) => {
               const isQuestionnaire = ["QUESTIONNAIRE_SENT", "QUESTIONNAIRE_RESPONDED", "QUESTIONNAIRE_RECLAIMED"].includes(n.type);
               const isObjectivesRequest = ["OBJECTIVES_REQUEST_CREATED", "OBJECTIVES_REQUEST_REPLIED"].includes(n.type);
+              const isTrainingPlan = ["TRAINING_PLAN_SENT", "TRAINING_PLAN_UPDATED"].includes(n.type);
+              const isTrainingFeedback = ["SESSION_FEEDBACK_RECEIVED", "PLAN_FEEDBACK_RECEIVED"].includes(n.type);
 
               const playerName = isQuestionnaire
                 ? (n.assignment?.player ? `${n.assignment.player.name} ${n.assignment.player.surname}` : "")
                 : isObjectivesRequest
                 ? (n.objectivesRequest?.player ? `${n.objectivesRequest.player.name} ${n.objectivesRequest.player.surname}` : "")
+                : isTrainingPlan
+                ? (n.trainingPlanAssignment?.player ? `${n.trainingPlanAssignment.player.name} ${n.trainingPlanAssignment.player.surname}` : "")
+                : isTrainingFeedback
+                ? (n.trainingFeedback?.player ? `${n.trainingFeedback.player.name} ${n.trainingFeedback.player.surname}` : "")
                 : (n.match?.player ? `${n.match.player.name} ${n.match.player.surname}` : "");
 
               const trainerName = isQuestionnaire
                 ? (n.assignment?.questionnaire?.trainer ? `${n.assignment.questionnaire.trainer.name} ${n.assignment.questionnaire.trainer.surname}` : "")
                 : isObjectivesRequest
                 ? (n.objectivesRequest?.trainer ? `${n.objectivesRequest.trainer.name} ${n.objectivesRequest.trainer.surname}` : "")
+                : isTrainingPlan
+                ? (n.trainingPlanAssignment?.trainingPlan?.trainer ? `${n.trainingPlanAssignment.trainingPlan.trainer.name} ${n.trainingPlanAssignment.trainingPlan.trainer.surname}` : "")
+                : isTrainingFeedback
+                ? (n.trainingFeedback?.session?.trainingPlan?.trainer
+                  ? `${n.trainingFeedback.session.trainingPlan.trainer.name} ${n.trainingFeedback.session.trainingPlan.trainer.surname}`
+                  : n.trainingFeedback?.assignment?.trainingPlan?.trainer
+                  ? `${n.trainingFeedback.assignment.trainingPlan.trainer.name} ${n.trainingFeedback.assignment.trainingPlan.trainer.surname}`
+                  : "")
                 : (n.match?.trainer
                   ? `${n.match.trainer.name} ${n.match.trainer.surname}`
                   : n.match?.player?.trainers?.[0]
@@ -303,6 +374,8 @@ export default function NotificationBell() {
 
               const matchName = n.match?.name || "";
               const qTitle = n.assignment?.questionnaire?.title || "";
+              const planTitle = n.trainingPlanAssignment?.trainingPlan?.title || n.trainingFeedback?.session?.trainingPlan?.title || n.trainingFeedback?.assignment?.trainingPlan?.title || "";
+              const sessionTitle = n.trainingFeedback?.session?.title || "";
               
               let messageText = "";
               if (n.type === "MATCH_CREATED") {
@@ -325,6 +398,14 @@ export default function NotificationBell() {
                 messageText = t("notifications.objectives_request_created", { playerName });
               } else if (n.type === "OBJECTIVES_REQUEST_REPLIED") {
                 messageText = t("notifications.objectives_request_replied", { trainerName, reply: n.objectivesRequest?.trainerReply || "" });
+              } else if (n.type === "TRAINING_PLAN_SENT") {
+                messageText = t("notifications.TRAINING_PLAN_SENT", { trainerName, planTitle });
+              } else if (n.type === "TRAINING_PLAN_UPDATED") {
+                messageText = t("notifications.TRAINING_PLAN_UPDATED", { trainerName });
+              } else if (n.type === "SESSION_FEEDBACK_RECEIVED") {
+                messageText = t("notifications.SESSION_FEEDBACK_RECEIVED", { playerName, sessionTitle });
+              } else if (n.type === "PLAN_FEEDBACK_RECEIVED") {
+                messageText = t("notifications.PLAN_FEEDBACK_RECEIVED", { playerName, planTitle });
               }
 
               return (
@@ -340,6 +421,10 @@ export default function NotificationBell() {
                         ? `/questionnaires/assignments/${n.assignmentId}`
                         : isObjectivesRequest
                         ? `/questionnaires?tab=requests`
+                        : isTrainingPlan
+                        ? `/dashboard/physical`
+                        : isTrainingFeedback
+                        ? `/trainer/training-feedback`
                         : `/matches/${n.matchId}`
                     }
                     onClick={() => handleNotificationClick(n.id, n.isRead)}

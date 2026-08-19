@@ -17,7 +17,10 @@
     "theme_dark": "Cambiar a tema oscuro",
     "theme_light_short": "CLARO",
     "theme_dark_short": "OSCURO",
-    "notifications": "Notificaciones"
+    "notifications": "Notificaciones",
+    "exercises": "Biblioteca de ejercicios",
+    "training_plans": "Planes de entrenamiento",
+    "training_feedback": "Bandeja de feedback"
   },
   "footer": {
     "text": "Creado con Next.js 16 + DaisyUI — Demostrando patrones SSG, SSR, ISR y CSR"
@@ -572,7 +575,21 @@
     "resting_hr": "Frecuencia Cardíaca en reposo",
     "weight": "Peso",
     "sleep": "Horas de sueño",
-    "update": "Actualizar"
+    "update": "Actualizar",
+    "active_plans": "Tus Planes de Entrenamiento",
+    "no_active_plans": "No tienes planes de entrenamiento activos asignados por tu entrenador.",
+    "session_checklist": "Sesiones programadas para esta semana",
+    "objectives_title": "Objetivos Físicos",
+    "feedback_session_title": "Enviar feedback de la sesión",
+    "feedback_plan_title": "Enviar feedback del plan completo",
+    "comment_placeholder": "Escribe aquí cómo te has sentido, tus sensaciones o dificultades...",
+    "video_placeholder": "URL externa de vídeo (opcional)",
+    "send_feedback": "Enviar Feedback",
+    "completed": "Completada",
+    "trainer_desc": "Diseña y asigna planes de entrenamiento personalizados, gestiona tu biblioteca de ejercicios y revisa la carga de esfuerzo (RPE) y comentarios de tus jugadores.",
+    "exercises_card_desc": "Gestiona el catálogo de ejercicios prácticos, incluyendo repeticiones, vídeos de demostración e imágenes ilustrativas.",
+    "plans_card_desc": "Construye planes semanales, programa recurrencias y asígnalos directamente a los jugadores de tu plantilla.",
+    "feedback_card_desc": "Revisa los niveles de fatiga, dolor muscular y el esfuerzo percibido (RPE) reportados por tus jugadores al completar sesiones."
   },
   "nutrition_page": {
     "title": "Nutrición e Hidratación",
@@ -656,7 +673,11 @@
     "questionnaire_responded": "{playerName} ha respondido al cuestionario: {title}",
     "questionnaire_reclaimed": "{playerName} ha reclamado el cuestionario para redefinición: {title}",
     "objectives_request_created": "{playerName} ha solicitado nuevos objetivos",
-    "objectives_request_replied": "{trainerName} ha respondido a tu solicitud de objetivos: {reply}"
+    "objectives_request_replied": "{trainerName} ha respondido a tu solicitud de objetivos: {reply}",
+    "TRAINING_PLAN_SENT": "El entrenador {trainerName} te ha enviado un nuevo plan de entrenamiento: {planTitle}",
+    "TRAINING_PLAN_UPDATED": "El entrenador {trainerName} ha actualizado tu plan de entrenamiento",
+    "SESSION_FEEDBACK_RECEIVED": "El jugador {playerName} ha enviado feedback de la sesión: {sessionTitle}",
+    "PLAN_FEEDBACK_RECEIVED": "El jugador {playerName} ha enviado feedback del plan: {planTitle}"
   },
   "questionnaires": {
     "title": "Cuestionarios",
@@ -769,5 +790,27 @@
     "request_quick_reply_incoming": "Objetivos nuevos en camino",
     "request_quick_reply_next_training": "Lo hablamos en el próximo entrenamiento",
     "define_objectives_from_request": "Definir objetivos ahora"
+  },
+  "trainer_training_plans": {
+    "title": "Planes de Entrenamiento",
+    "subtitle": "Crea, diseña y envía planes de entrenamiento personalizados a tus jugadores.",
+    "create_plan_btn": "Crear Plan",
+    "draft": "Borrador",
+    "sent": "Enviado",
+    "sessions_count": "{count} sesiones",
+    "send_plan": "Enviar Plan",
+    "select_players": "Seleccionar jugadores para asignar el plan",
+    "send_confirm": "¿Estás seguro de que deseas enviar este plan de entrenamiento? Los jugadores seleccionados recibirán una notificación.",
+    "delete_confirm": "¿Estás seguro de que deseas eliminar este plan de entrenamiento?"
+  },
+  "trainer_exercises": {
+    "title": "Biblioteca de Ejercicios",
+    "subtitle": "Gestiona los ejercicios que utilizas para diseñar tus sesiones de entrenamiento.",
+    "add_exercise_btn": "Añadir Ejercicio",
+    "exercise_title": "Título del ejercicio",
+    "repetitions": "Repeticiones (ej. 3x12)",
+    "video_link": "Enlace de vídeo de demostración (YouTube/Vimeo...)",
+    "upload_image": "Subir imagen ilustrativa",
+    "delete_confirm": "¿Estás seguro de que deseas eliminar este ejercicio?"
   }
 }

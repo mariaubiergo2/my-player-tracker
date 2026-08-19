@@ -52,6 +52,12 @@ model User {
   objectivesRequestsAsPlayer  ObjectivesRequest[] @relation("ObjectivesRequestsAsPlayer")
   objectivesRequestsAsTrainer ObjectivesRequest[] @relation("ObjectivesRequestsAsTrainer")
 
+  trainerExercises         Exercise[]               @relation("TrainerExercises")
+  trainerPlans             TrainingPlan[]           @relation("TrainerPlans")
+  playerPlanAssignments   TrainingPlanAssignment[] @relation("PlayerPlanAssignments")
+  playerSessionCompletions SessionCompletion[]     @relation("PlayerSessionCompletions")
+  playerTrainingFeedback  TrainingFeedback[]       @relation("PlayerTrainingFeedback")
+
   @@map("users")
 }
 
@@ -192,6 +198,7 @@ model Questionnaire {
   title       String
   description String?
   status      QuestionnaireStatus @default(DRAFT)
+  type        QuestionnaireType   @default(ANALYSIS_VIDEO)
   trainerId   String              @map("trainer_id")
   trainer     User                @relation("TrainerQuestionnaires", fields: [trainerId], references: [id], onDelete: Cascade)
   questions   Question[]
@@ -254,6 +261,10 @@ enum NotificationType {
   QUESTIONNAIRE_RECLAIMED
   OBJECTIVES_REQUEST_CREATED
   OBJECTIVES_REQUEST_REPLIED
+  TRAINING_PLAN_SENT
+  SESSION_FEEDBACK_RECEIVED
+  PLAN_FEEDBACK_RECEIVED
+  TRAINING_PLAN_UPDATED
 }
 
 model Notification {
@@ -263,6 +274,8 @@ model Notification {
   matchId       String?                  @map("match_id")
   assignmentId  String?                  @map("assignment_id")
   objectivesRequestId String?            @map("objectives_request_id")
+  trainingPlanAssignmentId String?       @map("training_plan_assignment_id")
+  trainingFeedbackId String?             @map("training_feedback_id")
   isRead        Boolean                  @default(false) @map("is_read")
   createdAt     DateTime                 @default(now()) @map("created_at")
 
@@ -270,6 +283,8 @@ model Notification {
   match         Match?                   @relation("MatchNotifications", fields: [matchId], references: [id], onDelete: Cascade)
   assignment    QuestionnaireAssignment? @relation("AssignmentNotifications", fields: [assignmentId], references: [id], onDelete: Cascade)
   objectivesRequest ObjectivesRequest?   @relation("ObjectivesRequestNotifications", fields: [objectivesRequestId], references: [id], onDelete: Cascade)
+  trainingPlanAssignment TrainingPlanAssignment? @relation("NotificationTrainingPlanAssignment", fields: [trainingPlanAssignmentId], references: [id], onDelete: Cascade)
+  trainingFeedback TrainingFeedback? @relation("NotificationTrainingFeedback", fields: [trainingFeedbackId], references: [id], onDelete: Cascade)
 
   @@index([recipientId, isRead])
   @@index([recipientId, createdAt(sort: Desc)])
@@ -288,6 +303,7 @@ model PlayerObjectives {
 
   summary       String              // breve texto libre redactado por el trainer
   items         String[]            // lista de objetivos individuales, en orden
+  category      ObjectiveCategory   @default(MATCH)
 
   effectiveFrom DateTime  @default(now()) @map("effective_from")
   effectiveTo   DateTime? @map("effective_to")   // null = objetivo actualmente activo
@@ -322,4 +338,151 @@ model ObjectivesRequest {
   @@index([playerId, createdAt(sort: Desc)])
   @@index([trainerId, status, createdAt(sort: Desc)])
   @@map("objectives_requests")
+}
+
+enum PlanStatus {
+  DRAFT
+  SENT
+}
+
+enum ExerciseMediaType {
+  IMAGE
+  VIDEO_LINK
+}
+
+enum RecurrenceDay {
+  MON
+  TUE
+  WED
+  THU
+  FRI
+  SAT
+  SUN
+}
+
+enum QuestionnaireType {
+  ANALYSIS_VIDEO
+  PHYSICAL
+  NUTRITION
+}
+
+enum ObjectiveCategory {
+  MATCH
+  PHYSICAL
+}
+
+model Exercise {
+  id          String             @id @default(cuid())
+  trainerId   String             @map("trainer_id")
+  trainer     User               @relation("TrainerExercises", fields: [trainerId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  repetitions String
+  mediaType   ExerciseMediaType? @map("media_type")
+  imageUrl    String?            @map("image_url")
+  videoUrl    String?            @map("video_url")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+
+  sessionExercises SessionExercise[]
+
+  @@index([trainerId])
+  @@map("exercises")
+}
+
+model TrainingPlan {
+  id          String     @id @default(cuid())
+  trainerId   String     @map("trainer_id")
+  trainer     User       @relation("TrainerPlans", fields: [trainerId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  status      PlanStatus @default(DRAFT)
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+
+  sessions    TrainingSession[]
+  assignments TrainingPlanAssignment[]
+
+  @@map("training_plans")
+}
+
+model TrainingSession {
+  id             String          @id @default(cuid())
+  trainingPlanId String          @map("training_plan_id")
+  trainingPlan   TrainingPlan    @relation(fields: [trainingPlanId], references: [id], onDelete: Cascade)
+  title          String
+  order          Int
+  recurrenceDays RecurrenceDay[] @map("recurrence_days")
+  startDate      DateTime        @map("start_date")
+  endDate        DateTime        @map("end_date")
+
+  exercises   SessionExercise[]
+  completions SessionCompletion[]
+  feedback    TrainingFeedback[]
+
+  @@index([trainingPlanId])
+  @@map("training_sessions")
+}
+
+model SessionExercise {
+  id                  String          @id @default(cuid())
+  sessionId           String          @map("session_id")
+  session             TrainingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exerciseId          String          @map("exercise_id")
+  exercise            Exercise        @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  order               Int
+  repetitionsOverride String?         @map("repetitions_override")
+
+  @@unique([sessionId, exerciseId])
+  @@map("session_exercises")
+}
+
+model TrainingPlanAssignment {
+  id             String       @id @default(cuid())
+  trainingPlanId String       @map("training_plan_id")
+  trainingPlan   TrainingPlan @relation(fields: [trainingPlanId], references: [id], onDelete: Cascade)
+  playerId       String       @map("player_id")
+  player         User         @relation("PlayerPlanAssignments", fields: [playerId], references: [id], onDelete: Cascade)
+  sentAt         DateTime     @default(now()) @map("sent_at")
+
+  planFeedback TrainingFeedback[]
+  notifications Notification[] @relation("NotificationTrainingPlanAssignment")
+
+  @@unique([trainingPlanId, playerId])
+  @@index([playerId])
+  @@map("training_plan_assignments")
+}
+
+model SessionCompletion {
+  id            String          @id @default(cuid())
+  sessionId     String          @map("session_id")
+  session       TrainingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  playerId      String          @map("player_id")
+  player         User            @relation("PlayerSessionCompletions", fields: [playerId], references: [id], onDelete: Cascade)
+  scheduledDate DateTime        @map("scheduled_date")
+  completedAt   DateTime        @default(now()) @map("completed_at")
+
+  @@unique([sessionId, playerId, scheduledDate])
+  @@map("session_completions")
+}
+
+model TrainingFeedback {
+  id           String                  @id @default(cuid())
+  playerId     String                  @map("player_id")
+  player       User                    @relation("PlayerTrainingFeedback", fields: [playerId], references: [id], onDelete: Cascade)
+  sessionId    String?                 @map("session_id")
+  session      TrainingSession?        @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  assignmentId String?                 @map("assignment_id")
+  assignment   TrainingPlanAssignment? @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  comment      String?
+  videoUrl     String?                 @map("video_url")
+  isReviewed   Boolean                 @default(false) @map("is_reviewed")
+  reviewedAt   DateTime?               @map("reviewed_at")
+  createdAt    DateTime                @default(now()) @map("created_at")
+
+  notifications Notification[] @relation("NotificationTrainingFeedback")
+
+  @@index([sessionId])
+  @@index([assignmentId])
+  @@map("training_feedbacks")
 }

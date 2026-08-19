@@ -12,6 +12,7 @@ import {
   defineQuestionnaire,
   duplicateQuestionnaire,
 } from "@/actions/questionnaires";
+import { QuestionnaireType } from "@prisma/client";
 
 interface QuestionInput {
   id: string; // db id or temp unique key
@@ -33,6 +34,7 @@ export default function QuestionnaireDetailPage({ params }: { params: Promise<{ 
 
   // Editor State (for Draft mode)
   const [title, setTitle] = useState("");
+  const [type, setType] = useState<QuestionnaireType>("ANALYSIS_VIDEO");
   const [description, setDescription] = useState("");
   const [questions, setQuestions] = useState<QuestionInput[]>([]);
 
@@ -47,6 +49,7 @@ export default function QuestionnaireDetailPage({ params }: { params: Promise<{ 
       if (res.success && res.questionnaire) {
         setTemplate(res.questionnaire);
         setTitle(res.questionnaire.title);
+        setType(res.questionnaire.type);
         setDescription(res.questionnaire.description || "");
         setQuestions(
           res.questionnaire.questions.map((q: any) => ({
@@ -179,6 +182,7 @@ export default function QuestionnaireDetailPage({ params }: { params: Promise<{ 
         const res = await updateQuestionnaire(id, {
           title,
           description,
+          type,
           questions: questions.map((q) => ({
             text: q.text,
             type: q.type,
@@ -211,6 +215,7 @@ export default function QuestionnaireDetailPage({ params }: { params: Promise<{ 
         const saveRes = await updateQuestionnaire(id, {
           title,
           description,
+          type,
           questions: questions.map((q) => ({
             text: q.text,
             type: q.type,
@@ -353,6 +358,21 @@ export default function QuestionnaireDetailPage({ params }: { params: Promise<{ 
                     onChange={(e) => setTitle(e.target.value)}
                     required
                   />
+                </div>
+
+                <div className="form-control w-full mt-4">
+                  <label className="label">
+                    <span className="label-text font-semibold">Tipus de Qüestionari *</span>
+                  </label>
+                  <select
+                    className="select select-bordered w-full"
+                    value={type}
+                    onChange={(e) => setType(e.target.value as QuestionnaireType)}
+                  >
+                    <option value="ANALYSIS_VIDEO">Anàlisi de Vídeo</option>
+                    <option value="PHYSICAL">Preparació Física</option>
+                    <option value="NUTRITION">Nutrició</option>
+                  </select>
                 </div>
 
                 <div className="form-control w-full mt-4">

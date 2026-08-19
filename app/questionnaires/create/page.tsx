@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/components/LanguageProvider";
 import PageContainer from "@/components/ui/PageContainer";
 import { createQuestionnaire } from "@/actions/questionnaires";
-import { QuestionType, QuestionnaireStatus } from "@prisma/client";
+import { QuestionType, QuestionnaireStatus, QuestionnaireType } from "@prisma/client";
 
 interface LocalQuestion {
   text: string;
@@ -23,6 +23,7 @@ export default function CreateQuestionnairePage() {
 
   // Form states
   const [title, setTitle] = useState("");
+  const [type, setType] = useState<QuestionnaireType>("ANALYSIS_VIDEO");
   const [description, setDescription] = useState("");
   const [questions, setQuestions] = useState<LocalQuestion[]>([
     { text: "", type: QuestionType.OPEN, options: ["", ""] },
@@ -155,6 +156,7 @@ export default function CreateQuestionnairePage() {
         description: description.trim() || undefined,
         questions: cleanedQuestions,
         status,
+        type,
       });
 
       if (res.success) {
@@ -218,6 +220,21 @@ export default function CreateQuestionnairePage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
             />
+          </div>
+
+          <div className="form-control w-full">
+            <label className="label">
+              <span className="label-text font-bold text-base-content">Tipus de Qüestionari *</span>
+            </label>
+            <select
+              className="select select-bordered w-full"
+              value={type}
+              onChange={(e) => setType(e.target.value as QuestionnaireType)}
+            >
+              <option value="ANALYSIS_VIDEO">Anàlisi de Vídeo</option>
+              <option value="PHYSICAL">Preparació Física</option>
+              <option value="NUTRITION">Nutrició</option>
+            </select>
           </div>
 
           <div className="form-control w-full">

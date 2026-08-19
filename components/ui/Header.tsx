@@ -49,6 +49,14 @@ export default function Header() {
                     <li><Link href="/trainer/my-players">{t("header.my_players")}</Link></li>
                     <li><Link href="/trainer/players">{t("header.all_players")}</Link></li>
                     <li><Link href="/questionnaires">{t("questionnaires.title")}</Link></li>
+                    <li>
+                      <Link href="/trainer/physical-prep" className="font-semibold text-primary">{t("header.physical_prep")}</Link>
+                      <ul className="pl-4">
+                        <li><Link href="/trainer/exercises">{t("header.exercises")}</Link></li>
+                        <li><Link href="/trainer/training-plans">{t("header.training_plans")}</Link></li>
+                        <li><Link href="/trainer/training-feedback">{t("header.training_feedback")}</Link></li>
+                      </ul>
+                    </li>
                   </>
                 )}
                 {(user?.role === "PLAYER" || user?.role === "GOAL_KEEPER") && (
@@ -88,6 +96,16 @@ export default function Header() {
                   <li><Link href="/trainer/my-players">{t("header.my_players")}</Link></li>
                   <li><Link href="/trainer/players">{t("header.all_players")}</Link></li>
                   <li><Link href="/questionnaires">{t("questionnaires.title")}</Link></li>
+                  <li className="dropdown dropdown-hover z-[50]">
+                    <Link href="/trainer/physical-prep" className="flex items-center gap-1">
+                      {t("header.physical_prep")} <span className="text-[10px] opacity-60">▼</span>
+                    </Link>
+                    <ul tabIndex={0} className="dropdown-content menu p-2 shadow-xl bg-base-100 rounded-box w-52 border border-base-content/10 mt-1">
+                      <li><Link href="/trainer/exercises">{t("header.exercises")}</Link></li>
+                      <li><Link href="/trainer/training-plans">{t("header.training_plans")}</Link></li>
+                      <li><Link href="/trainer/training-feedback">{t("header.training_feedback")}</Link></li>
+                    </ul>
+                  </li>
                 </>
               )}
               {(user?.role === "PLAYER" || user?.role === "GOAL_KEEPER") && (
@@ -210,6 +228,14 @@ export default function Header() {
                   <li><Link href="/notifications">{t("header.notifications")}</Link></li>
                   <li><Link href="/trainer/players">{t("header.all_players")}</Link></li>
                   <li><Link href="/questionnaires">{t("questionnaires.title")}</Link></li>
+                  <li>
+                    <Link href="/trainer/physical-prep" className="font-semibold text-primary">{t("header.physical_prep")}</Link>
+                    <ul className="pl-4">
+                      <li><Link href="/trainer/exercises">{t("header.exercises")}</Link></li>
+                      <li><Link href="/trainer/training-plans">{t("header.training_plans")}</Link></li>
+                      <li><Link href="/trainer/training-feedback">{t("header.training_feedback")}</Link></li>
+                    </ul>
+                  </li>
                 </>
               )}
 

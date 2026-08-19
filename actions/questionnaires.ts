@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { QuestionnaireStatus, AssignmentStatus, QuestionType, UserRole } from "@prisma/client";
+import { QuestionnaireStatus, AssignmentStatus, QuestionType, UserRole, QuestionnaireType } from "@prisma/client";
 
 // HELPER: Validate if caller is a Trainer or Admin
 async function checkTrainerOrAdmin() {
@@ -25,6 +25,7 @@ export async function createQuestionnaire(data: {
   description?: string;
   questions: Array<{ text: string; type: QuestionType; options: string[] }>;
   status?: QuestionnaireStatus;
+  type?: QuestionnaireType;
 }) {
   try {
     const currentUser = await checkTrainerOrAdmin();
@@ -43,12 +44,14 @@ export async function createQuestionnaire(data: {
     }
 
     const status = data.status || QuestionnaireStatus.DRAFT;
+    const type = data.type || QuestionnaireType.ANALYSIS_VIDEO;
 
     const questionnaire = await prisma.questionnaire.create({
       data: {
         title: data.title,
         description: data.description || null,
         status,
+        type,
         trainerId: currentUser.userId,
         questions: {
           create: data.questions.map((q, index) => ({
@@ -80,6 +83,7 @@ export async function updateQuestionnaire(
     description?: string;
     questions: Array<{ text: string; type: QuestionType; options: string[] }>;
     status?: QuestionnaireStatus;
+    type?: QuestionnaireType;
   }
 ) {
   try {
@@ -116,6 +120,7 @@ export async function updateQuestionnaire(
     }
 
     const updatedStatus = data.status || existing.status;
+    const updatedType = data.type || existing.type;
 
     // Use a transaction to delete old questions and create new ones
     const result = await prisma.$transaction(async (tx) => {
@@ -131,6 +136,7 @@ export async function updateQuestionnaire(
           title: data.title,
           description: data.description || null,
           status: updatedStatus,
+          type: updatedType,
           questions: {
             create: data.questions.map((q, index) => ({
               text: q.text,
@@ -292,6 +298,7 @@ export async function duplicateQuestionnaire(id: string) {
         title: `${existing.title} (copia)`,
         description: existing.description,
         status: QuestionnaireStatus.DRAFT,
+        type: existing.type,
         trainerId: currentUser.userId,
         questions: {
           create: existing.questions.map((q) => ({
@@ -534,15 +541,20 @@ export async function getQuestionnairesByTrainer(trainerId: string) {
 }
 
 // 10. GET ASSIGNMENTS BY PLAYER
-export async function getAssignmentsByPlayer(playerId: string) {
+export async function getAssignmentsByPlayer(playerId: string, type?: QuestionnaireType) {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser || currentUser.userId !== playerId) {
       return { success: false, error: "Unauthorized" };
     }
 
+    const whereClause: any = { playerId };
+    if (type) {
+      whereClause.questionnaire = { type };
+    }
+
     const assignments = await prisma.questionnaireAssignment.findMany({
-      where: { playerId },
+      where: whereClause,
       orderBy: { sentAt: "desc" },
       include: {
         questionnaire: {

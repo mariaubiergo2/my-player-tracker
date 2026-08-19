@@ -155,8 +155,76 @@ export async function getNotifications(
               },
             },
           },
+        trainingPlanAssignment: {
+          include: {
+            player: {
+              select: {
+                id: true,
+                name: true,
+                surname: true,
+                avatarUrl: true,
+              },
+            },
+            trainingPlan: {
+              include: {
+                trainer: {
+                  select: {
+                    id: true,
+                    name: true,
+                    surname: true,
+                    avatarUrl: true,
+                  },
+                },
+              },
+            },
+          },
         },
-      }),
+        trainingFeedback: {
+          include: {
+            player: {
+              select: {
+                id: true,
+                name: true,
+                surname: true,
+                avatarUrl: true,
+              },
+            },
+            session: {
+              include: {
+                trainingPlan: {
+                  include: {
+                    trainer: {
+                      select: {
+                        id: true,
+                        name: true,
+                        surname: true,
+                        avatarUrl: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+            assignment: {
+              include: {
+                trainingPlan: {
+                  include: {
+                    trainer: {
+                      select: {
+                        id: true,
+                        name: true,
+                        surname: true,
+                        avatarUrl: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    }),
       prisma.notification.count({
         where: whereClause,
       }),

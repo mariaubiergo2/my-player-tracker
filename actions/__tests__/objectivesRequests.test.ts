@@ -139,7 +139,7 @@ describe("Objectives Requests Server Actions - End to End Flow", () => {
     expect(createRes.success).toBe(true);
     expect(createRes.data).toBeDefined();
 
-    const requestId = createRes.data[0].id;
+    const requestId = createRes.data![0].id;
 
     // Verify notification was sent to trainer1
     const trainer1Notifications = await prisma.notification.findMany({

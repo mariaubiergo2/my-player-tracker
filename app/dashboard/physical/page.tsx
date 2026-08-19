@@ -2,33 +2,99 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/components/LanguageProvider";
 import PageContainer from "@/components/ui/PageContainer";
+import { getPlayerActivePlans, toggleSessionCompletion } from "@/actions/training-plans";
+import { getActiveObjectives, getObjectivesHistory } from "@/actions/objectives";
+import { getAssignmentsByPlayer } from "@/actions/questionnaires";
+import { submitTrainingFeedback } from "@/actions/training-feedback";
+import { ObjectiveCategory, QuestionnaireType } from "@prisma/client";
 
-interface WorkoutLog {
+interface TrainingSession {
   id: string;
-  date: string;
-  type: string;
-  rpe: number;
-  fatigue: number;
-  soreness: number;
-  duration: number;
+  title: string;
+  recurrenceDays: string[];
+  startDate: string;
+  endDate: string;
+  exercises: {
+    id: string;
+    repetitionsOverride: string | null;
+    exercise: {
+      id: string;
+      title: string;
+      description: string | null;
+      repetitions: string;
+      mediaType: "IMAGE" | "VIDEO_LINK" | null;
+      imageUrl: string | null;
+      videoUrl: string | null;
+    };
+  }[];
+  completions: {
+    id: string;
+    scheduledDate: string;
+    completedAt: string;
+  }[];
+  feedback: {
+    id: string;
+    comment: string | null;
+    videoUrl: string | null;
+    isReviewed: boolean;
+    createdAt: string;
+  }[];
 }
 
-interface PhysicalMetrics {
-  vo2max: number;
-  restingHr: number;
-  weight: number;
-  sleep: number;
+interface TrainingPlanAssignment {
+  id: string;
+  sentAt: string;
+  trainingPlan: {
+    id: string;
+    title: string;
+    description: string | null;
+    trainer: {
+      id: string;
+      name: string;
+      surname: string;
+      avatarUrl: string | null;
+    };
+    sessions: TrainingSession[];
+  };
+  planFeedback: {
+    id: string;
+    comment: string | null;
+    videoUrl: string | null;
+    isReviewed: boolean;
+    createdAt: string;
+  }[];
 }
 
 export default function PhysicalPrepPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
-  const { t, locale } = useTranslation();
+  const { t } = useTranslation();
 
-  // Route protection
+  const [assignments, setAssignments] = useState<TrainingPlanAssignment[]>([]);
+  const [activeObjective, setActiveObjective] = useState<any>(null);
+  const [objectivesHistory, setObjectivesHistory] = useState<any[]>([]);
+  const [questionnaires, setQuestionnaires] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Week offset state for calendar browsing
+  const [weekOffset, setWeekOffset] = useState(0);
+
+  // Tabs for the page
+  const [activeTab, setActiveTab] = useState<"checklist" | "objectives" | "questionnaires">("checklist");
+
+  // Feedback states
+  const [feedbackSessionId, setFeedbackSessionId] = useState<string | null>(null);
+  const [feedbackAssignmentId, setFeedbackAssignmentId] = useState<string | null>(null);
+  const [feedbackComment, setFeedbackComment] = useState("");
+  const [feedbackVideoUrl, setFeedbackVideoUrl] = useState("");
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+  const [feedbackSuccessMsg, setFeedbackSuccessMsg] = useState("");
+  const [feedbackErrorMsg, setFeedbackErrorMsg] = useState("");
+
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
@@ -37,169 +103,196 @@ export default function PhysicalPrepPage() {
         router.push("/admin/users");
       } else if (user?.role === "TRAINER") {
         router.push("/trainer/my-players");
+      } else {
+        fetchData();
       }
     }
   }, [isLoading, isAuthenticated, user, router]);
 
-  // State for Weekly Plan Checkbox
-  const [completedDays, setCompletedDays] = useState<Record<string, boolean>>({});
+  const fetchData = async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const [plansRes, activeObjRes, historyObjRes, questRes] = await Promise.all([
+        getPlayerActivePlans(user.id),
+        getActiveObjectives(user.id, ObjectiveCategory.PHYSICAL),
+        getObjectivesHistory(user.id, ObjectiveCategory.PHYSICAL),
+        getAssignmentsByPlayer(user.id, QuestionnaireType.PHYSICAL),
+      ]);
 
-  // State for Physical Metrics
-  const [metrics, setMetrics] = useState<PhysicalMetrics>({
-    vo2max: 52.4,
-    restingHr: 54,
-    weight: 73.5,
-    sleep: 7.8,
-  });
-  
-  // State for Metric Editing Panels
-  const [editingMetric, setEditingMetric] = useState<string | null>(null);
-  const [metricValue, setMetricValue] = useState<string>("");
-
-  // State for Workout Logs List
-  const [workoutLogs, setWorkoutLogs] = useState<WorkoutLog[]>([]);
-
-  // State for Workout Logger Form
-  const [formType, setFormType] = useState<string>("Strength");
-  const [formRpe, setFormRpe] = useState<number>(6);
-  const [formFatigue, setFormFatigue] = useState<number>(5);
-  const [formSoreness, setFormSoreness] = useState<number>(4);
-  const [formDuration, setFormDuration] = useState<number>(45);
-
-  // Load localStorage data on mount
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      // 1. Weekly completed days
-      const savedDays = localStorage.getItem("weekly_completed_days");
-      if (savedDays) {
-        try {
-          setCompletedDays(JSON.parse(savedDays));
-        } catch (e) {
-          console.error(e);
-        }
+      if (plansRes.success && plansRes.data) {
+        setAssignments(plansRes.data as any[]);
       }
-
-      // 2. Physical metrics
-      const savedMetrics = localStorage.getItem("physical_metrics");
-      if (savedMetrics) {
-        try {
-          setMetrics(JSON.parse(savedMetrics));
-        } catch (e) {
-          console.error(e);
-        }
-      }
-
-      // 3. Workout logs
-      const savedLogs = localStorage.getItem("workout_logs");
-      if (savedLogs) {
-        try {
-          setWorkoutLogs(JSON.parse(savedLogs));
-        } catch (e) {
-          console.error(e);
-        }
+      if (activeObjRes.success && activeObjRes.data) {
+        setActiveObjective(activeObjRes.data);
       } else {
-        // Seed default logs if empty
-        const defaultLogs: WorkoutLog[] = [
-          {
-            id: "1",
-            date: new Date(Date.now() - 24 * 60 * 60 * 1000 * 2).toLocaleDateString(),
-            type: "Cardio",
-            rpe: 8,
-            fatigue: 7,
-            soreness: 6,
-            duration: 30,
-          },
-          {
-            id: "2",
-            date: new Date(Date.now() - 24 * 60 * 60 * 1000).toLocaleDateString(),
-            type: "Strength",
-            rpe: 6,
-            fatigue: 5,
-            soreness: 4,
-            duration: 50,
-          },
-        ];
-        setWorkoutLogs(defaultLogs);
-        localStorage.setItem("workout_logs", JSON.stringify(defaultLogs));
+        setActiveObjective(null);
+      }
+      if (historyObjRes.success && historyObjRes.data) {
+        setObjectivesHistory(historyObjRes.data.history || []);
+      }
+      if (questRes.success && questRes.pending) {
+        // Show pending questionnaires
+        setQuestionnaires(questRes.pending);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Helper: Get dates for the selected week offset
+  const getWeekDays = () => {
+    const current = new Date();
+    const day = current.getDay(); // 0 is Sunday, 1 is Monday, etc.
+    const distanceToMonday = day === 0 ? -6 : 1 - day; // distance to Monday
+    const monday = new Date(current);
+    monday.setDate(current.getDate() + distanceToMonday + weekOffset * 7);
+    monday.setHours(0, 0, 0, 0);
+
+    const days: { date: Date; label: string; key: string }[] = [];
+    const dayLabels = ["Dilluns", "Dimarts", "Dimecres", "Dijous", "Divendres", "Dissabte", "Diumenge"];
+    const dayKeys = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      days.push({
+        date: d,
+        label: dayLabels[i],
+        key: dayKeys[i],
+      });
+    }
+    return days;
+  };
+
+  const weekDays = getWeekDays();
+
+  // Helper: Calculate occurrences for a session during the current week offset
+  const getSessionOccurrences = (assignment: TrainingPlanAssignment, session: TrainingSession) => {
+    const occurrences: { date: Date; key: string; label: string; isCompleted: boolean }[] = [];
+    const startDate = new Date(session.startDate);
+    const endDate = new Date(session.endDate);
+
+    // Normalize start/end dates
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
+
+    for (const day of weekDays) {
+      if (day.date >= startDate && day.date <= endDate) {
+        if (session.recurrenceDays.includes(day.key)) {
+          // Check completion
+          const isCompleted = session.completions.some(
+            (c) => new Date(c.scheduledDate).toDateString() === day.date.toDateString()
+          );
+
+          occurrences.push({
+            date: day.date,
+            key: day.key,
+            label: day.label,
+            isCompleted,
+          });
+        }
       }
     }
-  }, []);
-
-  const handleToggleDay = (day: string) => {
-    const updated = { ...completedDays, [day]: !completedDays[day] };
-    setCompletedDays(updated);
-    localStorage.setItem("weekly_completed_days", JSON.stringify(updated));
+    return occurrences;
   };
 
-  const handleUpdateMetric = (metricKey: keyof PhysicalMetrics) => {
-    const value = parseFloat(metricValue);
-    if (!isNaN(value) && value > 0) {
-      const updatedMetrics = { ...metrics, [metricKey]: value };
-      setMetrics(updatedMetrics);
-      localStorage.setItem("physical_metrics", JSON.stringify(updatedMetrics));
-      setEditingMetric(null);
-      setMetricValue("");
+  const handleToggleCompletion = async (
+    sessionId: string,
+    scheduledDate: Date,
+    currentlyCompleted: boolean
+  ) => {
+    if (!user) return;
+    const nextVal = !currentlyCompleted;
+
+    // Optimistic UI update
+    setAssignments((prev) =>
+      prev.map((a) => {
+        const updatedSessions = a.trainingPlan.sessions.map((s) => {
+          if (s.id !== sessionId) return s;
+
+          let updatedCompletions = [...s.completions];
+          if (nextVal) {
+            updatedCompletions.push({
+              id: `temp_${Date.now()}`,
+              scheduledDate: scheduledDate.toISOString(),
+              completedAt: new Date().toISOString(),
+            });
+          } else {
+            updatedCompletions = updatedCompletions.filter(
+              (c) => new Date(c.scheduledDate).toDateString() !== scheduledDate.toDateString()
+            );
+          }
+          return { ...s, completions: updatedCompletions };
+        });
+        return {
+          ...a,
+          trainingPlan: { ...a.trainingPlan, sessions: updatedSessions },
+        };
+      })
+    );
+
+    const res = await toggleSessionCompletion(sessionId, user.id, scheduledDate, nextVal);
+    if (!res.success) {
+      alert("Error al guardar l'estat. Si us plau, torna a provar.");
+      fetchData(); // Rollback on error
     }
   };
 
-  const handleAddWorkoutLog = (e: React.FormEvent) => {
+  const handleOpenFeedback = (type: "session" | "plan", id: string) => {
+    setFeedbackComment("");
+    setFeedbackVideoUrl("");
+    setFeedbackSuccessMsg("");
+    setFeedbackErrorMsg("");
+
+    if (type === "session") {
+      setFeedbackSessionId(id);
+      setFeedbackAssignmentId(null);
+    } else {
+      setFeedbackSessionId(null);
+      setFeedbackAssignmentId(id);
+    }
+  };
+
+  const handleSubmitFeedback = async (e: React.FormEvent) => {
     e.preventDefault();
-    const newLog: WorkoutLog = {
-      id: Math.random().toString(36).substring(2, 9),
-      date: new Date().toLocaleDateString(),
-      type: formType,
-      rpe: formRpe,
-      fatigue: formFatigue,
-      soreness: formSoreness,
-      duration: formDuration,
-    };
-    const updatedLogs = [newLog, ...workoutLogs];
-    setWorkoutLogs(updatedLogs);
-    localStorage.setItem("workout_logs", JSON.stringify(updatedLogs));
-    
-    // Reset form states
-    setFormRpe(6);
-    setFormFatigue(5);
-    setFormSoreness(4);
-    setFormDuration(45);
+    if (!feedbackComment.trim()) {
+      setFeedbackErrorMsg("El comentari és obligatori.");
+      return;
+    }
+
+    setSubmittingFeedback(true);
+    setFeedbackSuccessMsg("");
+    setFeedbackErrorMsg("");
+
+    const res = await submitTrainingFeedback({
+      sessionId: feedbackSessionId,
+      assignmentId: feedbackAssignmentId,
+      comment: feedbackComment,
+      videoUrl: feedbackVideoUrl || null,
+    });
+
+    if (res.success) {
+      setFeedbackSuccessMsg("Feedback enviat correctament!");
+      setFeedbackComment("");
+      setFeedbackVideoUrl("");
+      // Refresh to load new feedback in view
+      fetchData();
+      // Auto close modal after 1.5s
+      setTimeout(() => {
+        setFeedbackSessionId(null);
+        setFeedbackAssignmentId(null);
+        setFeedbackSuccessMsg("");
+      }, 1500);
+    } else {
+      setFeedbackErrorMsg(res.error || "Error al enviar el feedback.");
+    }
+    setSubmittingFeedback(false);
   };
 
-  const handleDeleteLog = (id: string) => {
-    const updatedLogs = workoutLogs.filter((log) => log.id !== id);
-    setWorkoutLogs(updatedLogs);
-    localStorage.setItem("workout_logs", JSON.stringify(updatedLogs));
-  };
-
-  // Helper translations for RPE scale descriptions
-  const getRpeDescription = (rpe: number) => {
-    if (rpe <= 2) return locale === "ca" ? "Molt suau" : locale === "es" ? "Muy suave" : "Very light";
-    if (rpe <= 4) return locale === "ca" ? "Moderat" : locale === "es" ? "Moderado" : "Moderate";
-    if (rpe <= 6) return locale === "ca" ? "Un poc dur" : locale === "es" ? "Algo duro" : "Somewhat hard";
-    if (rpe <= 8) return locale === "ca" ? "Vigorós / Dur" : locale === "es" ? "Vigoroso / Duro" : "Vigorous / Hard";
-    return locale === "ca" ? "Esforç Màxim" : locale === "es" ? "Esfuerzo Máximo" : "Maximum effort";
-  };
-
-  // Compute Averages
-  const totalDuration = workoutLogs.reduce((acc, log) => acc + log.duration, 0);
-  const avgRpe = workoutLogs.length > 0
-    ? (workoutLogs.reduce((acc, log) => acc + log.rpe, 0) / workoutLogs.length).toFixed(1)
-    : "0.0";
-  const avgFatigue = workoutLogs.length > 0
-    ? (workoutLogs.reduce((acc, log) => acc + log.fatigue, 0) / workoutLogs.length).toFixed(1)
-    : "0.0";
-
-  // Mock weekly routines schedule
-  const weeklyWorkouts = [
-    { key: "mon", label: locale === "ca" ? "Dilluns" : locale === "es" ? "Lunes" : "Monday", title: locale === "ca" ? "Entrenament de Força (Core & Tren Superior)" : locale === "es" ? "Entrenamiento de Fuerza (Core y Tren Superior)" : "Strength Training (Core & Upper Body)", duration: "45 min", badge: "Strength", badgeClass: "badge-primary" },
-    { key: "tue", label: locale === "ca" ? "Dimarts" : locale === "es" ? "Martes" : "Tuesday", title: locale === "ca" ? "Sessió HIIT de Cardio" : locale === "es" ? "Sesión HIIT de Cardio" : "Cardio HIIT Session", duration: "30 min", badge: "Cardio", badgeClass: "badge-secondary" },
-    { key: "wed", label: locale === "ca" ? "Dimecres" : locale === "es" ? "Miércoles" : "Wednesday", title: locale === "ca" ? "Exercicis d'Agilitat i Velocitat Tàctica" : locale === "es" ? "Ejercicios de Agilidad y Velocidad Táctica" : "Tactical Speed & Agility Drills", duration: "40 min", badge: "Agility", badgeClass: "badge-accent" },
-    { key: "thu", label: locale === "ca" ? "Dijous" : locale === "es" ? "Jueves" : "Thursday", title: locale === "ca" ? "Recuperació Activa (Ioga i Estiraments)" : locale === "es" ? "Recuperación Activa (Yoga y Estiramientos)" : "Active Recovery (Yoga & Stretching)", duration: "30 min", badge: "Recovery", badgeClass: "badge-ghost" },
-    { key: "fri", label: locale === "ca" ? "Divendres" : locale === "es" ? "Viernes" : "Friday", title: locale === "ca" ? "Entrenament de Força (Tren Inferior i Potència)" : locale === "es" ? "Entrenamiento de Fuerza (Tren Inferior y Potencia)" : "Strength Training (Lower Body & Power)", duration: "45 min", badge: "Strength", badgeClass: "badge-primary" },
-    { key: "sat", label: locale === "ca" ? "Dissabte" : locale === "es" ? "Sábado" : "Saturday", title: locale === "ca" ? "Cursa d'Endurància i Ritme" : locale === "es" ? "Carrera de Resistencia y Ritmo" : "Endurance Run & Match Prep", duration: "25 min", badge: "Cardio", badgeClass: "badge-secondary" },
-    { key: "sun", label: locale === "ca" ? "Diumenge" : locale === "es" ? "Domingo" : "Sunday", title: locale === "ca" ? "Descans Setmanal / Recuperació Plena" : locale === "es" ? "Descanso Semanal / Recuperación Plena" : "Weekly Rest / Full Recovery", duration: "-", badge: "Rest", badgeClass: "badge-outline" },
-  ];
-
-  if (isLoading) {
+  if (isLoading || loading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
         <span className="loading loading-spinner loading-lg"></span>
@@ -207,463 +300,341 @@ export default function PhysicalPrepPage() {
     );
   }
 
-  if (!isAuthenticated || (user?.role !== "PLAYER" && user?.role !== "GOAL_KEEPER")) {
-    return null;
-  }
-
   return (
     <PageContainer className="py-10">
-      {/* Header Banner */}
-      <div className="mb-10">
-        <h1 className="text-4xl font-bold text-primary">
-          {t("physical_prep_page.title")}
-        </h1>
-        <p className="text-base-content/70 mt-2">
-          {t("physical_prep_page.subtitle")}
-        </p>
-      </div>
-
-      {/* Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        {/* Left Side: Weekly Program & Fitness Indicators */}
-        <div className="lg:col-span-7 space-y-8">
-          
-          {/* Weekly Program Card */}
-          <div className="card bg-base-100 shadow-md border border-base-200">
-            <div className="card-body">
-              <h2 className="card-title text-2xl font-bold text-secondary mb-1">
-                {t("physical_prep_page.weekly_plan")}
-              </h2>
-              <p className="text-sm text-base-content/60 mb-6">
-                {t("physical_prep_page.weekly_plan_desc")}
-              </p>
-
-              <div className="space-y-4">
-                {weeklyWorkouts.map((workout) => {
-                  const isDone = completedDays[workout.key];
-                  return (
-                    <div
-                      key={workout.key}
-                      className={`flex items-center justify-between p-4 rounded-xl border transition-all ${
-                        isDone
-                          ? "bg-success/5 border-success/30 text-base-content/60"
-                          : "bg-base-200/50 border-base-content/5"
-                      }`}
-                    >
-                      <div className="flex items-center gap-4 flex-1">
-                        <input
-                          type="checkbox"
-                          checked={!!isDone}
-                          onChange={() => handleToggleDay(workout.key)}
-                          className="checkbox checkbox-success checkbox-md"
-                        />
-                        <div>
-                          <p className="text-xs font-bold text-base-content/40 uppercase tracking-wide">
-                            {workout.label}
-                          </p>
-                          <p className={`font-semibold ${isDone ? "line-through" : ""}`}>
-                            {workout.title}
-                          </p>
-                          <span className="text-xs text-base-content/50">
-                            {workout.duration}
-                          </span>
-                        </div>
-                      </div>
-                      <div className={`badge ${workout.badgeClass} badge-sm md:badge-md uppercase font-bold text-[10px]`}>
-                        {workout.badge}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Fitness Indicators Card */}
-          <div className="card bg-base-100 shadow-md border border-base-200">
-            <div className="card-body">
-              <h2 className="card-title text-2xl font-bold text-secondary mb-6">
-                {t("physical_prep_page.metrics_title")}
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                
-                {/* VO2 Max Card */}
-                <div className="bg-base-200/50 rounded-2xl p-5 border border-base-content/5 flex flex-col justify-between">
-                  <div>
-                    <div className="flex justify-between items-start">
-                      <span className="text-sm text-base-content/60 font-medium">
-                        {t("physical_prep_page.vo2max")}
-                      </span>
-                      <span className="text-xs text-success bg-success/10 px-2 py-0.5 rounded-full font-bold">
-                        ▲ Good
-                      </span>
-                    </div>
-                    <div className="text-3xl font-extrabold text-primary mt-2">
-                      {metrics.vo2max} <span className="text-xs font-normal text-base-content/50">ml/kg/min</span>
-                    </div>
-                  </div>
-                  {editingMetric === "vo2max" ? (
-                    <div className="flex gap-2 mt-4">
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={metricValue}
-                        onChange={(e) => setMetricValue(e.target.value)}
-                        placeholder="VO2 Max"
-                        className="input input-bordered input-sm w-full"
-                        autoFocus
-                      />
-                      <button onClick={() => handleUpdateMetric("vo2max")} className="btn btn-primary btn-sm">
-                        ✓
-                      </button>
-                      <button onClick={() => setEditingMetric(null)} className="btn btn-ghost btn-sm">
-                        ✕
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setEditingMetric("vo2max");
-                        setMetricValue(metrics.vo2max.toString());
-                      }}
-                      className="btn btn-outline btn-xs mt-4 w-fit"
-                    >
-                      {t("physical_prep_page.update")}
-                    </button>
-                  )}
-                </div>
-
-                {/* Resting Heart Rate Card */}
-                <div className="bg-base-200/50 rounded-2xl p-5 border border-base-content/5 flex flex-col justify-between">
-                  <div>
-                    <div className="flex justify-between items-start">
-                      <span className="text-sm text-base-content/60 font-medium">
-                        {t("physical_prep_page.resting_hr")}
-                      </span>
-                      <span className="text-xs text-success bg-success/10 px-2 py-0.5 rounded-full font-bold">
-                        ▼ -2 bpm
-                      </span>
-                    </div>
-                    <div className="text-3xl font-extrabold text-primary mt-2">
-                      {metrics.restingHr} <span className="text-xs font-normal text-base-content/50">bpm</span>
-                    </div>
-                  </div>
-                  {editingMetric === "restingHr" ? (
-                    <div className="flex gap-2 mt-4">
-                      <input
-                        type="number"
-                        value={metricValue}
-                        onChange={(e) => setMetricValue(e.target.value)}
-                        placeholder="BPM"
-                        className="input input-bordered input-sm w-full"
-                        autoFocus
-                      />
-                      <button onClick={() => handleUpdateMetric("restingHr")} className="btn btn-primary btn-sm">
-                        ✓
-                      </button>
-                      <button onClick={() => setEditingMetric(null)} className="btn btn-ghost btn-sm">
-                        ✕
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setEditingMetric("restingHr");
-                        setMetricValue(metrics.restingHr.toString());
-                      }}
-                      className="btn btn-outline btn-xs mt-4 w-fit"
-                    >
-                      {t("physical_prep_page.update")}
-                    </button>
-                  )}
-                </div>
-
-                {/* Weight Card */}
-                <div className="bg-base-200/50 rounded-2xl p-5 border border-base-content/5 flex flex-col justify-between">
-                  <div>
-                    <div className="flex justify-between items-start">
-                      <span className="text-sm text-base-content/60 font-medium">
-                        {t("physical_prep_page.weight")}
-                      </span>
-                      <span className="text-xs text-base-content/40 bg-base-content/5 px-2 py-0.5 rounded-full font-bold">
-                        Stable
-                      </span>
-                    </div>
-                    <div className="text-3xl font-extrabold text-primary mt-2">
-                      {metrics.weight} <span className="text-xs font-normal text-base-content/50">kg</span>
-                    </div>
-                  </div>
-                  {editingMetric === "weight" ? (
-                    <div className="flex gap-2 mt-4">
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={metricValue}
-                        onChange={(e) => setMetricValue(e.target.value)}
-                        placeholder="Weight (kg)"
-                        className="input input-bordered input-sm w-full"
-                        autoFocus
-                      />
-                      <button onClick={() => handleUpdateMetric("weight")} className="btn btn-primary btn-sm">
-                        ✓
-                      </button>
-                      <button onClick={() => setEditingMetric(null)} className="btn btn-ghost btn-sm">
-                        ✕
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setEditingMetric("weight");
-                        setMetricValue(metrics.weight.toString());
-                      }}
-                      className="btn btn-outline btn-xs mt-4 w-fit"
-                    >
-                      {t("physical_prep_page.update")}
-                    </button>
-                  )}
-                </div>
-
-                {/* Sleep Card */}
-                <div className="bg-base-200/50 rounded-2xl p-5 border border-base-content/5 flex flex-col justify-between">
-                  <div>
-                    <div className="flex justify-between items-start">
-                      <span className="text-sm text-base-content/60 font-medium">
-                        {t("physical_prep_page.sleep")}
-                      </span>
-                      <span className="text-xs text-info bg-info/10 px-2 py-0.5 rounded-full font-bold">
-                        Optimal
-                      </span>
-                    </div>
-                    <div className="text-3xl font-extrabold text-primary mt-2">
-                      {metrics.sleep} <span className="text-xs font-normal text-base-content/50">hours</span>
-                    </div>
-                  </div>
-                  {editingMetric === "sleep" ? (
-                    <div className="flex gap-2 mt-4">
-                      <input
-                        type="number"
-                        step="0.1"
-                        value={metricValue}
-                        onChange={(e) => setMetricValue(e.target.value)}
-                        placeholder="Sleep hours"
-                        className="input input-bordered input-sm w-full"
-                        autoFocus
-                      />
-                      <button onClick={() => handleUpdateMetric("sleep")} className="btn btn-primary btn-sm">
-                        ✓
-                      </button>
-                      <button onClick={() => setEditingMetric(null)} className="btn btn-ghost btn-sm">
-                        ✕
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => {
-                        setEditingMetric("sleep");
-                        setMetricValue(metrics.sleep.toString());
-                      }}
-                      className="btn btn-outline btn-xs mt-4 w-fit"
-                    >
-                      {t("physical_prep_page.update")}
-                    </button>
-                  )}
-                </div>
-
-              </div>
-            </div>
-          </div>
-
+      {/* Header banner */}
+      <div className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div>
+          <h1 className="text-4xl font-bold text-primary">{t("physical_prep_page.title") || "Preparació Física"}</h1>
+          <p className="text-base-content/70 mt-2">
+            {t("physical_prep_page.subtitle") || "Controla els teus entrenaments setmanals i segueix els consells de l'entrenador."}
+          </p>
         </div>
 
-        {/* Right Side: RPE Logger Form & Recent Logs */}
-        <div className="lg:col-span-5 space-y-8">
-          
-          {/* Summary Statistics Panel */}
-          <div className="stats shadow w-full bg-base-100 border border-base-200">
-            <div className="stat text-center p-4">
-              <div className="stat-title text-xs font-bold uppercase">{t("physical_prep_page.stats_avg_rpe")}</div>
-              <div className="stat-value text-primary text-2xl mt-1">{avgRpe}</div>
-              <div className="stat-desc text-[10px]">Scale 1-10</div>
+        {/* Tab Selector */}
+        <div className="tabs tabs-boxed shadow-sm border border-base-200 p-1">
+          <button
+            className={`tab font-semibold text-xs ${activeTab === "checklist" ? "tab-active bg-accent text-white" : ""}`}
+            onClick={() => setActiveTab("checklist")}
+          >
+            📋 Rutines
+          </button>
+          <button
+            className={`tab font-semibold text-xs ${activeTab === "objectives" ? "tab-active bg-accent text-white" : ""}`}
+            onClick={() => setActiveTab("objectives")}
+          >
+            🎯 Objectius
+          </button>
+          <button
+            className={`tab font-semibold text-xs ${activeTab === "questionnaires" ? "tab-active bg-accent text-white" : ""}`}
+            onClick={() => setActiveTab("questionnaires")}
+          >
+            📝 Qüestionaris ({questionnaires.length})
+          </button>
+        </div>
+      </div>
+
+      {activeTab === "checklist" && (
+        <div className="space-y-8">
+          {/* Week offset controls */}
+          <div className="flex justify-between items-center bg-base-100 p-4 rounded-xl border border-base-200 shadow-sm">
+            <button className="btn btn-sm btn-outline btn-secondary" onClick={() => setWeekOffset((o) => o - 1)}>
+              ← Setmana anterior
+            </button>
+            <div className="text-center font-bold text-secondary">
+              Setmana del {weekDays[0].date.toLocaleDateString()} al {weekDays[6].date.toLocaleDateString()}
+              {weekOffset === 0 && <span className="badge badge-accent ml-2 text-xs">Actual</span>}
             </div>
-            <div className="stat text-center p-4">
-              <div className="stat-title text-xs font-bold uppercase">{t("physical_prep_page.stats_avg_fatigue")}</div>
-              <div className="stat-value text-secondary text-2xl mt-1">{avgFatigue}</div>
-              <div className="stat-desc text-[10px]">Fatigue Average</div>
-            </div>
-            <div className="stat text-center p-4">
-              <div className="stat-title text-xs font-bold uppercase">{t("physical_prep_page.stats_total_time")}</div>
-              <div className="stat-value text-accent text-2xl mt-1">{totalDuration}m</div>
-              <div className="stat-desc text-[10px]">Minutes Trained</div>
-            </div>
+            <button className="btn btn-sm btn-outline btn-secondary" onClick={() => setWeekOffset((o) => o + 1)}>
+              Setmana següent →
+            </button>
           </div>
 
-          {/* RPE Workload Logger Form */}
-          <div className="card bg-base-100 shadow-md border border-base-200">
-            <div className="card-body">
-              <h2 className="card-title text-2xl font-bold text-secondary mb-4">
-                {t("physical_prep_page.workout_logger")}
-              </h2>
-
-              <form onSubmit={handleAddWorkoutLog} className="space-y-5">
-                
-                {/* Workout Type */}
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-bold">Workout Type</span>
-                  </label>
-                  <select
-                    value={formType}
-                    onChange={(e) => setFormType(e.target.value)}
-                    className="select select-bordered w-full"
-                  >
-                    <option value="Strength">Strength</option>
-                    <option value="Cardio">Cardio</option>
-                    <option value="Agility">Agility / Speed</option>
-                    <option value="Recovery">Recovery</option>
-                    <option value="Game">Match / Game</option>
-                  </select>
-                </div>
-
-                {/* Duration */}
-                <div className="form-control">
-                  <label className="label">
-                    <span className="label-text font-bold">{t("physical_prep_page.duration_label")}</span>
-                  </label>
-                  <input
-                    type="number"
-                    value={formDuration}
-                    onChange={(e) => setFormDuration(parseInt(e.target.value) || 0)}
-                    min="1"
-                    className="input input-bordered w-full"
-                    required
-                  />
-                </div>
-
-                {/* RPE Slider */}
-                <div className="form-control">
-                  <div className="flex justify-between items-center label">
-                    <span className="label-text font-bold">{t("physical_prep_page.rpe_label")}</span>
-                    <span className="badge badge-primary font-bold">{formRpe}/10</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={formRpe}
-                    onChange={(e) => setFormRpe(parseInt(e.target.value))}
-                    className="range range-primary"
-                  />
-                  <div className="flex justify-between text-[10px] px-1 mt-1 text-base-content/50">
-                    <span>1</span>
-                    <span>3</span>
-                    <span>5</span>
-                    <span>7</span>
-                    <span>10</span>
-                  </div>
-                  <p className="text-xs text-primary font-semibold mt-1">
-                    {getRpeDescription(formRpe)}
-                  </p>
-                </div>
-
-                {/* Fatigue Slider */}
-                <div className="form-control">
-                  <div className="flex justify-between items-center label">
-                    <span className="label-text font-bold">{t("physical_prep_page.fatigue_label")}</span>
-                    <span className="badge badge-secondary font-bold">{formFatigue}/10</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={formFatigue}
-                    onChange={(e) => setFormFatigue(parseInt(e.target.value))}
-                    className="range range-secondary"
-                  />
-                  <div className="flex justify-between text-[10px] px-1 mt-1 text-base-content/50">
-                    <span>Low</span>
-                    <span>Medium</span>
-                    <span>High</span>
-                  </div>
-                </div>
-
-                {/* Soreness Slider */}
-                <div className="form-control">
-                  <div className="flex justify-between items-center label">
-                    <span className="label-text font-bold">{t("physical_prep_page.soreness_label")}</span>
-                    <span className="badge badge-accent font-bold">{formSoreness}/10</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={formSoreness}
-                    onChange={(e) => setFormSoreness(parseInt(e.target.value))}
-                    className="range range-accent"
-                  />
-                  <div className="flex justify-between text-[10px] px-1 mt-1 text-base-content/50">
-                    <span>None</span>
-                    <span>Mild</span>
-                    <span>Severe</span>
-                  </div>
-                </div>
-
-                {/* Submit Button */}
-                <button type="submit" className="btn btn-primary w-full mt-4">
-                  {t("physical_prep_page.log_btn")}
-                </button>
-
-              </form>
+          {assignments.length === 0 ? (
+            <div className="card bg-base-100 shadow border border-base-200 p-10 text-center">
+              <p className="text-base-content/50">
+                No tens cap plan de preparació física actiu o assignat en aquest moment.
+              </p>
             </div>
-          </div>
-
-          {/* Recent Sessions List */}
-          <div className="card bg-base-100 shadow-md border border-base-200">
-            <div className="card-body">
-              <h2 className="card-title text-2xl font-bold text-secondary mb-4">
-                {t("physical_prep_page.recent_logs")}
-              </h2>
-
-              {workoutLogs.length === 0 ? (
-                <p className="text-sm text-base-content/60 text-center py-4">
-                  {t("physical_prep_page.no_logs")}
-                </p>
-              ) : (
-                <div className="space-y-3 max-h-80 overflow-y-auto pr-1">
-                  {workoutLogs.map((log) => (
-                    <div
-                      key={log.id}
-                      className="bg-base-200/50 rounded-xl p-3 border border-base-content/5 flex items-center justify-between"
+          ) : (
+            assignments.map((assignment) => (
+              <div key={assignment.id} className="card bg-base-100 shadow-md border border-base-200 overflow-hidden">
+                <div className="bg-base-200/60 px-6 py-5 border-b border-base-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-secondary">{assignment.trainingPlan.title}</h2>
+                    {assignment.trainingPlan.description && (
+                      <p className="text-sm text-base-content/75 mt-1">{assignment.trainingPlan.description}</p>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-base-content/60">Preparador:</span>
+                    <div className="flex items-center gap-1.5 bg-base-100 px-3 py-1 rounded-full border border-base-200 text-xs font-bold">
+                      {assignment.trainingPlan.trainer.avatarUrl && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={assignment.trainingPlan.trainer.avatarUrl}
+                          alt={assignment.trainingPlan.trainer.name}
+                          className="w-4 h-4 rounded-full"
+                        />
+                      )}
+                      <span>{assignment.trainingPlan.trainer.name} {assignment.trainingPlan.trainer.surname}</span>
+                    </div>
+                    <button
+                      className="btn btn-xs btn-outline btn-primary ml-2 font-medium"
+                      onClick={() => handleOpenFeedback("plan", assignment.id)}
                     >
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-sm text-primary">{log.type}</span>
-                          <span className="text-xs text-base-content/50">• {log.date}</span>
+                      Feedback General
+                    </button>
+                  </div>
+                </div>
+
+                <div className="card-body p-6 space-y-6">
+                  {assignment.trainingPlan.sessions.map((session) => {
+                    const occurrences = getSessionOccurrences(assignment, session);
+                    return (
+                      <div key={session.id} className="border border-base-100 p-4 rounded-xl bg-base-50/50 space-y-4">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-base-200/80 pb-3 gap-2">
+                          <div>
+                            <h3 className="font-bold text-lg text-secondary">{session.title}</h3>
+                            <p className="text-xs text-base-content/50">
+                              Vigent del {new Date(session.startDate).toLocaleDateString()} al{" "}
+                              {new Date(session.endDate).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <button
+                            className="btn btn-xs btn-outline btn-secondary"
+                            onClick={() => handleOpenFeedback("session", session.id)}
+                          >
+                            Feedback sessió
+                          </button>
                         </div>
-                        <div className="flex gap-3 text-xs text-base-content/70 mt-1">
-                          <span>{log.duration} mins</span>
-                          <span>RPE: <strong>{log.rpe}</strong></span>
-                          <span>Fatigue: <strong>{log.fatigue}</strong></span>
+
+                        {/* Occurrence checklist */}
+                        {occurrences.length === 0 ? (
+                          <p className="text-xs text-base-content/40 italic">
+                            No programada per a aquesta setmana dins del rang de vigència.
+                          </p>
+                        ) : (
+                          <div className="flex flex-wrap gap-3">
+                            {occurrences.map((occ, idx) => (
+                              <label
+                                key={idx}
+                                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition select-none ${
+                                  occ.isCompleted
+                                    ? "bg-success/5 border-success/30 text-success font-semibold"
+                                    : "bg-base-100 border-base-200 hover:bg-base-50 text-base-content"
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  className="checkbox checkbox-success checkbox-sm"
+                                  checked={occ.isCompleted}
+                                  onChange={() =>
+                                    handleToggleCompletion(session.id, occ.date, occ.isCompleted)
+                                  }
+                                />
+                                <div className="text-xs flex flex-col">
+                                  <span className="font-bold">{occ.label}</span>
+                                  <span className="text-[10px] opacity-80">{occ.date.toLocaleDateString()}</span>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* Session exercises list */}
+                        <div className="bg-base-100 p-4 rounded-lg border border-base-150 space-y-3">
+                          <h4 className="font-bold text-xs text-base-content/65 uppercase tracking-wider mb-2">
+                            Exercicis a realitzar:
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {session.exercises.map((se) => (
+                              <div
+                                key={se.id}
+                                className="p-3 border border-base-200 rounded-lg flex flex-col justify-between"
+                              >
+                                <div>
+                                  <div className="flex justify-between items-start mb-1">
+                                    <h5 className="font-bold text-sm text-secondary">{se.exercise.title}</h5>
+                                    <span className="badge badge-accent badge-sm font-semibold">
+                                      {se.repetitionsOverride || se.exercise.repetitions}
+                                    </span>
+                                  </div>
+                                  {se.exercise.description && (
+                                    <p className="text-xs text-base-content/70 line-clamp-2 mt-1">
+                                      {se.exercise.description}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="mt-3 pt-2 border-t border-base-100 flex items-center justify-between text-[11px] font-medium text-primary">
+                                  {se.exercise.mediaType === "IMAGE" && se.exercise.imageUrl && (
+                                    <a href={se.exercise.imageUrl} target="_blank" rel="noopener noreferrer">
+                                      🖼️ Imatge demostrativa
+                                    </a>
+                                  )}
+                                  {se.exercise.mediaType === "VIDEO_LINK" && se.exercise.videoUrl && (
+                                    <a href={se.exercise.videoUrl} target="_blank" rel="noopener noreferrer">
+                                      🎥 Vídeo demostratiu
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
-                      <button
-                        onClick={() => handleDeleteLog(log.id)}
-                        className="btn btn-ghost btn-sm text-error hover:bg-error/15"
-                      >
-                        ✕
-                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {activeTab === "objectives" && (
+        <div className="space-y-6">
+          <div className="card bg-base-100 shadow border border-base-200 p-6">
+            <h2 className="text-2xl font-bold text-secondary mb-2">Objectiu Físic Actiu</h2>
+            {activeObjective ? (
+              <div className="bg-primary/5 border border-primary/20 p-5 rounded-xl space-y-4">
+                <p className="font-medium text-base-content">{activeObjective.summary}</p>
+                <div className="divider text-xs text-base-content/40 font-bold m-0 uppercase tracking-wider">
+                  Detall de fites
+                </div>
+                <ul className="space-y-2">
+                  {activeObjective.items.map((item: string, index: number) => (
+                    <li key={index} className="flex gap-2 text-sm text-base-content/85">
+                      <span className="text-primary font-bold">✓</span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                <p className="text-[10px] text-base-content/50 pt-2 border-t border-base-200/50">
+                  Assignat el {new Date(activeObjective.effectiveFrom).toLocaleDateString()}
+                </p>
+              </div>
+            ) : (
+              <p className="text-sm text-base-content/50 italic py-4">
+                No tens cap objectiu físic actiu actualment. El teu entrenador els definirà properament.
+              </p>
+            )}
+          </div>
+
+          <div className="card bg-base-100 shadow border border-base-200 p-6">
+            <h3 className="text-xl font-bold text-secondary mb-4">Historial d'Objectius Físics</h3>
+            {objectivesHistory.length <= 1 ? (
+              <p className="text-sm text-base-content/50 italic">No hi ha historial disponible.</p>
+            ) : (
+              <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+                {objectivesHistory
+                  .filter((o) => o.id !== activeObjective?.id)
+                  .map((obj) => (
+                    <div key={obj.id} className="p-4 border border-base-200 rounded-lg text-sm bg-base-50/30">
+                      <p className="font-semibold text-base-content/80 mb-2">{obj.summary}</p>
+                      <ul className="space-y-1 pl-4 list-disc text-xs text-base-content/65 mb-3">
+                        {obj.items.map((item: string, idx: number) => (
+                          <li key={idx}>{item}</li>
+                        ))}
+                      </ul>
+                      <p className="text-[9px] text-base-content/50">
+                        Vigent del {new Date(obj.effectiveFrom).toLocaleDateString()}{" "}
+                        {obj.effectiveTo ? `al ${new Date(obj.effectiveTo).toLocaleDateString()}` : "(Actiu)"}
+                      </p>
                     </div>
                   ))}
-                </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
-
         </div>
+      )}
 
-      </div>
+      {activeTab === "questionnaires" && (
+        <div className="card bg-base-100 shadow border border-base-200 p-6 space-y-4">
+          <h2 className="text-2xl font-bold text-secondary">Qüestionaris Físics Pendents</h2>
+          {questionnaires.length === 0 ? (
+            <p className="text-sm text-base-content/50 italic py-4">
+              Estàs al dia! No tens cap qüestionari físic pendent de respondre.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {questionnaires.map((q) => (
+                <div key={q.id} className="p-4 border border-base-200 rounded-xl bg-base-50/50 flex flex-col justify-between items-start">
+                  <div>
+                    <h3 className="font-bold text-lg text-secondary mb-1">{q.questionnaire.title}</h3>
+                    {q.questionnaire.description && (
+                      <p className="text-xs text-base-content/70 mb-3">{q.questionnaire.description}</p>
+                    )}
+                    <span className="text-[10px] text-base-content/50">
+                      Enviat per {q.questionnaire.trainer.name} el {new Date(q.sentAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <Link
+                    href={`/questionnaires/assignments/${q.id}`}
+                    className="btn btn-sm btn-primary mt-4 font-semibold w-full"
+                  >
+                    Respondre Ara
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Feedback Modal */}
+      {(feedbackSessionId || feedbackAssignmentId) && (
+        <div className="modal modal-open">
+          <div className="modal-box">
+            <h3 className="font-bold text-xl mb-4">
+              {feedbackSessionId ? "Enviar Feedback de Sessió" : "Enviar Feedback General del Pla"}
+            </h3>
+            <form onSubmit={handleSubmitFeedback} className="space-y-4">
+              {feedbackSuccessMsg && <div className="alert alert-success">{feedbackSuccessMsg}</div>}
+              {feedbackErrorMsg && <div className="alert alert-error">{feedbackErrorMsg}</div>}
+
+              <div className="form-control">
+                <label className="label font-medium text-sm">Comentaris</label>
+                <textarea
+                  className="textarea textarea-bordered h-28 text-sm"
+                  placeholder="Escull la teva fatiga, problemes amb els exercicis o dubtes..."
+                  value={feedbackComment}
+                  onChange={(e) => setFeedbackComment(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-control">
+                <label className="label font-medium text-sm">Enllaç de vídeo (opcional)</label>
+                <input
+                  type="url"
+                  className="input input-bordered input-sm"
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  value={feedbackVideoUrl}
+                  onChange={(e) => setFeedbackVideoUrl(e.target.value)}
+                />
+              </div>
+
+              <div className="modal-action">
+                <button
+                  type="button"
+                  className="btn btn-sm btn-outline"
+                  onClick={() => {
+                    setFeedbackSessionId(null);
+                    setFeedbackAssignmentId(null);
+                  }}
+                  disabled={submittingFeedback}
+                >
+                  Tancar
+                </button>
+                <button type="submit" className="btn btn-sm btn-primary" disabled={submittingFeedback}>
+                  {submittingFeedback ? "Enviant..." : "Enviar Feedback"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </PageContainer>
   );
 }

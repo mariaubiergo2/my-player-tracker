@@ -25,6 +25,7 @@ import {
   getPlayerTrainers,
 } from "@/actions/objectivesRequests";
 import { formatRelativeTime } from "@/lib/utils/dates";
+import { ObjectiveCategory } from "@prisma/client";
 
 interface TrainerQuestionnaire {
   id: string;
@@ -71,6 +72,8 @@ export default function QuestionnairesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [summary, setSummary] = useState("");
   const [items, setItems] = useState<string[]>([""]);
+  const [category, setCategory] = useState<ObjectiveCategory>("MATCH");
+  const [objectivesCategory, setObjectivesCategory] = useState<ObjectiveCategory>("MATCH");
   const [isSavingObjectives, setIsSavingObjectives] = useState(false);
 
   // Trainer Answers Filtering & Search States
@@ -151,6 +154,16 @@ export default function QuestionnairesPage() {
   };
 
   useEffect(() => {
+    if (isAuthenticated && (isTrainer || isAdmin)) {
+      getTrainerPlayersObjectivesData(objectivesCategory).then((res) => {
+        if (res.success && res.players) {
+          setTrainerPlayersObjectives(res.players);
+        }
+      });
+    }
+  }, [objectivesCategory, isAuthenticated, isTrainer, isAdmin]);
+
+  useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const tab = params.get("tab");
@@ -196,9 +209,11 @@ export default function QuestionnairesPage() {
     if (activeObj) {
       setSummary(activeObj.summary);
       setItems(activeObj.items.length > 0 ? activeObj.items : [""]);
+      setCategory(activeObj.category || "MATCH");
     } else {
       setSummary("");
       setItems([""]);
+      setCategory(objectivesCategory);
     }
     setIsModalOpen(true);
   };
@@ -217,7 +232,7 @@ export default function QuestionnairesPage() {
 
     setIsSavingObjectives(true);
     try {
-      const res = await defineObjectives(selectedPlayer.id, summary, clean);
+      const res = await defineObjectives(selectedPlayer.id, summary, clean, category);
       if (res.success) {
         showSuccess(t("questionnaires.objectives_success_save"));
         setIsModalOpen(false);
@@ -687,7 +702,24 @@ export default function QuestionnairesPage() {
           )}
 
           {trainerTab === "objectives" && (
-            trainerPlayersObjectives.length === 0 ? (
+            <div className="space-y-6">
+              <div className="flex justify-end mb-2">
+                <div className="join border border-base-200 shadow-sm bg-base-100">
+                  <button
+                    className={`btn btn-xs join-item ${objectivesCategory === "MATCH" ? "btn-primary text-white" : "btn-ghost"}`}
+                    onClick={() => setObjectivesCategory("MATCH")}
+                  >
+                    Tàctic / Partits
+                  </button>
+                  <button
+                    className={`btn btn-xs join-item ${objectivesCategory === "PHYSICAL" ? "btn-primary text-white" : "btn-ghost"}`}
+                    onClick={() => setObjectivesCategory("PHYSICAL")}
+                  >
+                    Preparació Física
+                  </button>
+                </div>
+              </div>
+              {trainerPlayersObjectives.length === 0 ? (
               <div className="hero bg-base-200 rounded-2xl p-10 text-center shadow-inner border border-base-content/5">
                 <div className="max-w-md">
                   <span className="text-5xl">🎯</span>
@@ -799,7 +831,9 @@ export default function QuestionnairesPage() {
                 })}
               </div>
             )
-          )}
+          }
+        </div>
+      )}
 
           {/* Modal for defining objectives */}
           {isModalOpen && selectedPlayer && (
@@ -813,6 +847,18 @@ export default function QuestionnairesPage() {
                 <p className="text-sm text-base-content/60 mb-6">
                   Jugador: <strong>{selectedPlayer.name} {selectedPlayer.surname}</strong>
                 </p>
+
+                <div className="form-control mb-4">
+                  <label className="label font-semibold">Categoria de l'objectiu *</label>
+                  <select
+                    className="select select-bordered w-full"
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value as ObjectiveCategory)}
+                  >
+                    <option value="MATCH">Tàctic / Partits</option>
+                    <option value="PHYSICAL">Preparació Física</option>
+                  </select>
+                </div>
 
                 <div className="form-control mb-4">
                   <label className="label font-semibold">{t("questionnaires.objectives_form_summary")}</label>

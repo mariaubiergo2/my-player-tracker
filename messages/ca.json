@@ -17,7 +17,10 @@
     "theme_dark": "Canviar a tema fosc",
     "theme_light_short": "CLAR",
     "theme_dark_short": "FOSC",
-    "notifications": "Notificacions"
+    "notifications": "Notificacions",
+    "exercises": "Biblioteca d'exercicis",
+    "training_plans": "Plans d'entrenament",
+    "training_feedback": "Bústia de feedback"
   },
   "footer": {
     "text": "Creat amb Next.js 16 + DaisyUI — Demostrant patrons SSG, SSR, ISR i CSR"
@@ -572,7 +575,21 @@
     "resting_hr": "Freqüència Cardíaca en repòs",
     "weight": "Pes",
     "sleep": "Hores de son",
-    "update": "Actualitzar"
+    "update": "Actualitzar",
+    "active_plans": "Els teus Plans d'Entrenament",
+    "no_active_plans": "No tens plans d'entrenament actius assignats pel teu entrenador.",
+    "session_checklist": "Sessions programades per a aquesta setmana",
+    "objectives_title": "Objectius Físics",
+    "feedback_session_title": "Enviar feedback de la sessió",
+    "feedback_plan_title": "Enviar feedback del pla complet",
+    "comment_placeholder": "Escriu aquí com t'has sentit, les teves sensacions o dificultats...",
+    "video_placeholder": "Enllaç extern de vídeo (opcional)",
+    "send_feedback": "Enviar Feedback",
+    "completed": "Completada",
+    "trainer_desc": "Dissenya i assigna plans d'entrenament personalitzats, gestiona la teva biblioteca d'exercicis i revisa la càrrega d'esforç (RPE) i comentaris dels teus jugadors.",
+    "exercises_card_desc": "Gestiona el catàleg d'exercicis pràctics, incloent repeticions, vídeos de demostració i imatges il·lustratives.",
+    "plans_card_desc": "Construeix plans setmanals, programa recurrències i assigna'ls directament als jugadors de la teva plantilla.",
+    "feedback_card_desc": "Revisa els nivells de fatiga, dolor muscular i l'esforç percebut (RPE) reportats pels teus jugadors al completar sessions."
   },
   "nutrition_page": {
     "title": "Nutrició i Hidratació",
@@ -656,7 +673,11 @@
     "questionnaire_responded": "{playerName} ha respost al qüestionari: {title}",
     "questionnaire_reclaimed": "{playerName} ha reclamat el qüestionari per a redefinició: {title}",
     "objectives_request_created": "{playerName} ha sol·licitat nous objectius",
-    "objectives_request_replied": "{trainerName} ha respost a la teva sol·licitud d'objectius: {reply}"
+    "objectives_request_replied": "L'entrenador {trainerName} ha respost a la teva sol·licitud d'objectius: {reply}",
+    "TRAINING_PLAN_SENT": "L'entrenador {trainerName} t'ha enviat un nou pla d'entrenament: {planTitle}",
+    "TRAINING_PLAN_UPDATED": "L'entrenador {trainerName} ha actualitzat el teu pla d'entrenament",
+    "SESSION_FEEDBACK_RECEIVED": "El jugador {playerName} ha enviat feedback de la sessió: {sessionTitle}",
+    "PLAN_FEEDBACK_RECEIVED": "El jugador {playerName} ha enviat feedback del pla: {planTitle}"
   },
   "questionnaires": {
     "title": "Qüestionaris",
@@ -769,5 +790,27 @@
     "request_quick_reply_incoming": "Objectius nous en camí",
     "request_quick_reply_next_training": "Ho parlem al proper entrenament",
     "define_objectives_from_request": "Definir objectius ara"
+  },
+  "trainer_training_plans": {
+    "title": "Plans d'Entrenament",
+    "subtitle": "Crea, dissenya i envia plans d'entrenament personalitzats als teus jugadors.",
+    "create_plan_btn": "Crear Pla",
+    "draft": "Esborrador",
+    "sent": "Enviat",
+    "sessions_count": "{count} sessions",
+    "send_plan": "Enviar Pla",
+    "select_players": "Seleccionar jugadors per assignar el pla",
+    "send_confirm": "Estàs segur que vols enviar aquest pla d'entrenament? Els jugadors seleccionats rebran una notificació.",
+    "delete_confirm": "Estàs segur que vols eliminar aquest pla d'entrenament?"
+  },
+  "trainer_exercises": {
+    "title": "Biblioteca d'Exercicis",
+    "subtitle": "Gestiona els exercicis que utilitzes per dissenyar les teves sessions d'entrenament.",
+    "add_exercise_btn": "Afegir Exercici",
+    "exercise_title": "Títol de l'exercici",
+    "repetitions": "Repeticions (ex. 3x12)",
+    "video_link": "Enllaç de vídeo de demostració (YouTube/Vimeo...)",
+    "upload_image": "Pujar imatge il·lustrativa",
+    "delete_confirm": "Estàs segur que vols eliminar aquest exercici?"
   }
 }
