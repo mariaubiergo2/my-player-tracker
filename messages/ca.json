@@ -654,7 +654,9 @@
     "filter_last_3_months": "Mostrar només últims 3 mesos",
     "questionnaire_sent": "Has rebut un nou qüestionari de {trainerName}: {title}",
     "questionnaire_responded": "{playerName} ha respost al qüestionari: {title}",
-    "questionnaire_reclaimed": "{playerName} ha reclamat el qüestionari per a redefinició: {title}"
+    "questionnaire_reclaimed": "{playerName} ha reclamat el qüestionari per a redefinició: {title}",
+    "objectives_request_created": "{playerName} ha sol·licitat nous objectius",
+    "objectives_request_replied": "{trainerName} ha respost a la teva sol·licitud d'objectius: {reply}"
   },
   "questionnaires": {
     "title": "Qüestionaris",
@@ -745,6 +747,27 @@
     "objectives_history_period": "Vigència: del {from} al {to}",
     "objectives_history_active": "Actiu des del {from}",
     "objectives_history_back": "Tornar al llistat",
-    "objectives_success_save": "Objectius definits correctament."
+    "objectives_success_save": "Objectius definits correctament.",
+    "request_objectives_btn": "Sol·licitar renovació d'objectius",
+    "request_objectives_modal_title": "Sol·licitar objectius nous",
+    "request_objectives_reason_label": "Motiu de la sol·licitud",
+    "request_objectives_reason_placeholder": "Explica breument per què vols objectius nous o una renovació...",
+    "request_objectives_select_trainer": "A quin entrenador va dirigida?",
+    "request_objectives_all_trainers": "A tots els meus entrenadors",
+    "request_objectives_send": "Enviar sol·licitud",
+    "request_objectives_success": "Sol·licitud enviada correctament",
+    "request_objectives_no_trainers": "No tens cap entrenador assignat. No pots sol·licitar objectius.",
+    "tab_requests": "Sol·licituds",
+    "requests_empty_player": "Encara no has fet cap sol·licitud d'objectius.",
+    "requests_empty_trainer": "No tens sol·licituds pendents dels teus jugadors.",
+    "request_status_pending": "Pendent",
+    "request_status_acknowledged": "Responent-hi",
+    "request_status_resolved": "Resolt",
+    "request_reply_placeholder_hint": "Resposta ràpida",
+    "request_quick_reply_looking": "Ho estic mirant",
+    "request_quick_reply_working": "Treballant-hi",
+    "request_quick_reply_incoming": "Objectius nous en camí",
+    "request_quick_reply_next_training": "Ho parlem al proper entrenament",
+    "define_objectives_from_request": "Definir objectius ara"
   }
 }

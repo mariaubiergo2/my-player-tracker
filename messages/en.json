@@ -654,7 +654,9 @@
     "filter_last_3_months": "Show only last 3 months",
     "questionnaire_sent": "You have received a new questionnaire from {trainerName}: {title}",
     "questionnaire_responded": "{playerName} responded to the questionnaire: {title}",
-    "questionnaire_reclaimed": "{playerName} reclaimed the questionnaire for redefinition: {title}"
+    "questionnaire_reclaimed": "{playerName} reclaimed the questionnaire for redefinition: {title}",
+    "objectives_request_created": "{playerName} has requested new objectives",
+    "objectives_request_replied": "{trainerName} replied to your objectives request: {reply}"
   },
   "questionnaires": {
     "title": "Questionnaires",
@@ -745,6 +747,27 @@
     "objectives_history_period": "Validity: from {from} to {to}",
     "objectives_history_active": "Active since {from}",
     "objectives_history_back": "Back to list",
-    "objectives_success_save": "Objectives defined successfully."
+    "objectives_success_save": "Objectives defined successfully.",
+    "request_objectives_btn": "Request objectives renewal",
+    "request_objectives_modal_title": "Request new objectives",
+    "request_objectives_reason_label": "Reason for the request",
+    "request_objectives_reason_placeholder": "Briefly explain why you want new or renewed objectives...",
+    "request_objectives_select_trainer": "Which coach is this for?",
+    "request_objectives_all_trainers": "All my coaches",
+    "request_objectives_send": "Send request",
+    "request_objectives_success": "Request sent successfully",
+    "request_objectives_no_trainers": "You do not have any trainers assigned. You cannot request objectives.",
+    "tab_requests": "Requests",
+    "requests_empty_player": "You haven't made any objectives requests yet.",
+    "requests_empty_trainer": "You have no pending requests from your players.",
+    "request_status_pending": "Pending",
+    "request_status_acknowledged": "In progress",
+    "request_status_resolved": "Resolved",
+    "request_reply_placeholder_hint": "Quick reply",
+    "request_quick_reply_looking": "Looking into it",
+    "request_quick_reply_working": "Working on it",
+    "request_quick_reply_incoming": "New objectives coming",
+    "request_quick_reply_next_training": "Let's discuss at the next training session",
+    "define_objectives_from_request": "Define objectives now"
   }
 }

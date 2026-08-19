@@ -135,6 +135,26 @@ export async function getNotifications(
               },
             },
           },
+          objectivesRequest: {
+            include: {
+              player: {
+                select: {
+                  id: true,
+                  name: true,
+                  surname: true,
+                  avatarUrl: true,
+                },
+              },
+              trainer: {
+                select: {
+                  id: true,
+                  name: true,
+                  surname: true,
+                  avatarUrl: true,
+                },
+              },
+            },
+          },
         },
       }),
       prisma.notification.count({
@@ -319,6 +339,17 @@ export async function getNotificationPlayers(recipientId: string) {
             },
           },
         },
+        objectivesRequest: {
+          select: {
+            player: {
+              select: {
+                id: true,
+                name: true,
+                surname: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -330,6 +361,9 @@ export async function getNotificationPlayers(recipientId: string) {
       }
       if (n.assignment?.player) {
         playerMap.set(n.assignment.player.id, n.assignment.player);
+      }
+      if (n.objectivesRequest?.player) {
+        playerMap.set(n.objectivesRequest.player.id, n.objectivesRequest.player);
       }
     }
     const players = Array.from(playerMap.values()).sort((a, b) => a.name.localeCompare(b.name));

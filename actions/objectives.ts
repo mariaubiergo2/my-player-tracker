@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { UserRole, AssignmentStatus } from "@prisma/client";
+import { UserRole, AssignmentStatus, ObjectivesRequestStatus } from "@prisma/client";
 
 // Helper helper to verify if trainer owns player or user is admin/self
 async function checkAccess(playerId: string) {
@@ -74,6 +74,18 @@ export async function defineObjectives(playerId: string, summary: string, items:
           data: { effectiveTo: now },
         });
       }
+
+      // Update any PENDING or ACKNOWLEDGED objectives requests from this player to this trainer to RESOLVED
+      await tx.objectivesRequest.updateMany({
+        where: {
+          playerId,
+          trainerId: currentUser.userId,
+          status: { in: [ObjectivesRequestStatus.PENDING, ObjectivesRequestStatus.ACKNOWLEDGED] },
+        },
+        data: {
+          status: ObjectivesRequestStatus.RESOLVED,
+        },
+      });
 
       // Create new objectives
       return await tx.playerObjectives.create({

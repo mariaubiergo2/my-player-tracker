@@ -16,9 +16,10 @@ import { formatRelativeTime } from "@/lib/utils/dates";
 interface NotificationItem {
   id: string;
   recipientId: string;
-  type: "MATCH_CREATED" | "MATCH_UPDATED" | "MATCH_UPDATED_BY_TRAINER" | "FEEDBACK_MESSAGE_FROM_PLAYER" | "FEEDBACK_MESSAGE_FROM_TRAINER" | "QUESTIONNAIRE_SENT" | "QUESTIONNAIRE_RESPONDED" | "QUESTIONNAIRE_RECLAIMED";
+  type: "MATCH_CREATED" | "MATCH_UPDATED" | "MATCH_UPDATED_BY_TRAINER" | "FEEDBACK_MESSAGE_FROM_PLAYER" | "FEEDBACK_MESSAGE_FROM_TRAINER" | "QUESTIONNAIRE_SENT" | "QUESTIONNAIRE_RESPONDED" | "QUESTIONNAIRE_RECLAIMED" | "OBJECTIVES_REQUEST_CREATED" | "OBJECTIVES_REQUEST_REPLIED";
   matchId?: string | null;
   assignmentId?: string | null;
+  objectivesRequestId?: string | null;
   isRead: boolean;
   createdAt: Date;
   match?: {
@@ -60,6 +61,27 @@ interface NotificationItem {
         surname: string;
         avatarUrl?: string | null;
       };
+    };
+  } | null;
+  objectivesRequest?: {
+    id: string;
+    playerId: string;
+    trainerId: string;
+    reason: string;
+    status: string;
+    trainerReply?: string | null;
+    repliedAt?: string | Date | null;
+    player: {
+      id: string;
+      name: string;
+      surname: string;
+      avatarUrl?: string | null;
+    };
+    trainer: {
+      id: string;
+      name: string;
+      surname: string;
+      avatarUrl?: string | null;
     };
   } | null;
 }
@@ -261,13 +283,18 @@ export default function NotificationBell() {
           ) : (
             notifications.map((n) => {
               const isQuestionnaire = ["QUESTIONNAIRE_SENT", "QUESTIONNAIRE_RESPONDED", "QUESTIONNAIRE_RECLAIMED"].includes(n.type);
+              const isObjectivesRequest = ["OBJECTIVES_REQUEST_CREATED", "OBJECTIVES_REQUEST_REPLIED"].includes(n.type);
 
               const playerName = isQuestionnaire
                 ? (n.assignment?.player ? `${n.assignment.player.name} ${n.assignment.player.surname}` : "")
+                : isObjectivesRequest
+                ? (n.objectivesRequest?.player ? `${n.objectivesRequest.player.name} ${n.objectivesRequest.player.surname}` : "")
                 : (n.match?.player ? `${n.match.player.name} ${n.match.player.surname}` : "");
 
               const trainerName = isQuestionnaire
                 ? (n.assignment?.questionnaire?.trainer ? `${n.assignment.questionnaire.trainer.name} ${n.assignment.questionnaire.trainer.surname}` : "")
+                : isObjectivesRequest
+                ? (n.objectivesRequest?.trainer ? `${n.objectivesRequest.trainer.name} ${n.objectivesRequest.trainer.surname}` : "")
                 : (n.match?.trainer
                   ? `${n.match.trainer.name} ${n.match.trainer.surname}`
                   : n.match?.player?.trainers?.[0]
@@ -294,6 +321,10 @@ export default function NotificationBell() {
                 messageText = t("notifications.questionnaire_responded", { playerName, title: qTitle });
               } else if (n.type === "QUESTIONNAIRE_RECLAIMED") {
                 messageText = t("notifications.questionnaire_reclaimed", { playerName, title: qTitle });
+              } else if (n.type === "OBJECTIVES_REQUEST_CREATED") {
+                messageText = t("notifications.objectives_request_created", { playerName });
+              } else if (n.type === "OBJECTIVES_REQUEST_REPLIED") {
+                messageText = t("notifications.objectives_request_replied", { trainerName, reply: n.objectivesRequest?.trainerReply || "" });
               }
 
               return (
@@ -304,7 +335,13 @@ export default function NotificationBell() {
                   }`}
                 >
                   <Link
-                    href={isQuestionnaire ? `/questionnaires/assignments/${n.assignmentId}` : `/matches/${n.matchId}`}
+                    href={
+                      isQuestionnaire
+                        ? `/questionnaires/assignments/${n.assignmentId}`
+                        : isObjectivesRequest
+                        ? `/questionnaires?tab=requests`
+                        : `/matches/${n.matchId}`
+                    }
                     onClick={() => handleNotificationClick(n.id, n.isRead)}
                     className="flex gap-3 px-3.5 py-3 pr-10 items-start select-none"
                   >

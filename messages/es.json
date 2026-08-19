@@ -654,7 +654,9 @@
     "filter_last_3_months": "Mostrar solo últimos 3 meses",
     "questionnaire_sent": "Has recibido un nuevo cuestionario de {trainerName}: {title}",
     "questionnaire_responded": "{playerName} ha respondido al cuestionario: {title}",
-    "questionnaire_reclaimed": "{playerName} ha reclamado el cuestionario para redefinición: {title}"
+    "questionnaire_reclaimed": "{playerName} ha reclamado el cuestionario para redefinición: {title}",
+    "objectives_request_created": "{playerName} ha solicitado nuevos objetivos",
+    "objectives_request_replied": "{trainerName} ha respondido a tu solicitud de objetivos: {reply}"
   },
   "questionnaires": {
     "title": "Cuestionarios",
@@ -745,6 +747,27 @@
     "objectives_history_period": "Vigencia: del {from} al {to}",
     "objectives_history_active": "Activo desde el {from}",
     "objectives_history_back": "Volver al listado",
-    "objectives_success_save": "Objetivos definidos correctamente."
+    "objectives_success_save": "Objetivos definidos correctamente.",
+    "request_objectives_btn": "Solicitar renovación de objetivos",
+    "request_objectives_modal_title": "Solicitar objetivos nuevos",
+    "request_objectives_reason_label": "Motivo de la solicitud",
+    "request_objectives_reason_placeholder": "Explica brevemente por qué quieres objetivos nuevos o una renovación...",
+    "request_objectives_select_trainer": "¿A qué entrenador va dirigida?",
+    "request_objectives_all_trainers": "A todos mis entrenadores",
+    "request_objectives_send": "Enviar solicitud",
+    "request_objectives_success": "Solicitud enviada correctamente",
+    "request_objectives_no_trainers": "No tienes ningún entrenador asignado. No puedes solicitar objetivos.",
+    "tab_requests": "Solicitudes",
+    "requests_empty_player": "Aún no has hecho ninguna solicitud de objetivos.",
+    "requests_empty_trainer": "No tienes solicitudes pendientes de tus jugadores.",
+    "request_status_pending": "Pendiente",
+    "request_status_acknowledged": "Respondiendo",
+    "request_status_resolved": "Resuelto",
+    "request_reply_placeholder_hint": "Respuesta rápida",
+    "request_quick_reply_looking": "Lo estoy mirando",
+    "request_quick_reply_working": "Trabajando en ello",
+    "request_quick_reply_incoming": "Objetivos nuevos en camino",
+    "request_quick_reply_next_training": "Lo hablamos en el próximo entrenamiento",
+    "define_objectives_from_request": "Definir objetivos ahora"
   }
 }

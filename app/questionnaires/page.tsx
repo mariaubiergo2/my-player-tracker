@@ -16,6 +16,14 @@ import {
   getTrainerPlayersObjectivesData,
   defineObjectives,
 } from "@/actions/objectives";
+import {
+  createObjectivesRequest,
+  createObjectivesRequestForAllTrainers,
+  getObjectivesRequestsForPlayer,
+  getObjectivesRequestsForTrainer,
+  replyToObjectivesRequest,
+  getPlayerTrainers,
+} from "@/actions/objectivesRequests";
 import { formatRelativeTime } from "@/lib/utils/dates";
 
 interface TrainerQuestionnaire {
@@ -55,7 +63,7 @@ export default function QuestionnairesPage() {
 
   const [trainerTemplates, setTrainerTemplates] = useState<TrainerQuestionnaire[]>([]);
   const [trainerAssignments, setTrainerAssignments] = useState<any[]>([]);
-  const [trainerTab, setTrainerTab] = useState<"templates" | "answers" | "objectives">("templates");
+  const [trainerTab, setTrainerTab] = useState<"templates" | "answers" | "objectives" | "requests">("templates");
   const [trainerPlayersObjectives, setTrainerPlayersObjectives] = useState<any[]>([]);
 
   // Objectives Modal States
@@ -75,10 +83,18 @@ export default function QuestionnairesPage() {
   const [playerCompleted, setPlayerCompleted] = useState<PlayerAssignment[]>([]);
 
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"pending" | "completed">("pending");
+  const [activeTab, setActiveTab] = useState<"pending" | "completed" | "requests">("pending");
 
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+
+  // ObjectivesRequest States
+  const [trainerRequests, setTrainerRequests] = useState<any[]>([]);
+  const [playerRequests, setPlayerRequests] = useState<any[]>([]);
+  const [playerTrainers, setPlayerTrainers] = useState<any[]>([]);
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [requestReason, setRequestReason] = useState("");
+  const [isSendingRequest, setIsSendingRequest] = useState(false);
 
   const isTrainer = user?.role === "TRAINER";
   const isPlayer = user?.role === "PLAYER" || user?.role === "GOAL_KEEPER";
@@ -89,9 +105,10 @@ export default function QuestionnairesPage() {
     setLoading(true);
     try {
       if (isTrainer || isAdmin) {
-        const [templatesRes, objRes] = await Promise.all([
+        const [templatesRes, objRes, requestsRes] = await Promise.all([
           getQuestionnairesByTrainer(user.id),
           getTrainerPlayersObjectivesData(),
+          getObjectivesRequestsForTrainer(),
         ]);
 
         if (templatesRes.success && templatesRes.questionnaires) {
@@ -104,12 +121,26 @@ export default function QuestionnairesPage() {
         if (objRes.success && objRes.players) {
           setTrainerPlayersObjectives(objRes.players);
         }
+
+        if (requestsRes.success && requestsRes.data) {
+          setTrainerRequests(requestsRes.data);
+        }
       }
       if (isPlayer) {
-        const res = await getAssignmentsByPlayer(user.id);
+        const [res, requestsRes, trainersRes] = await Promise.all([
+          getAssignmentsByPlayer(user.id),
+          getObjectivesRequestsForPlayer(user.id),
+          getPlayerTrainers(user.id),
+        ]);
         if (res.success && res.pending && res.completed) {
           setPlayerPending(res.pending as unknown as PlayerAssignment[]);
           setPlayerCompleted(res.completed as unknown as PlayerAssignment[]);
+        }
+        if (requestsRes.success && requestsRes.data) {
+          setPlayerRequests(requestsRes.data);
+        }
+        if (trainersRes.success && trainersRes.trainers) {
+          setPlayerTrainers(trainersRes.trainers);
         }
       }
     } catch (error) {
@@ -118,6 +149,20 @@ export default function QuestionnairesPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab");
+      if (tab === "requests") {
+        if (isTrainer || isAdmin) {
+          setTrainerTab("requests");
+        } else if (isPlayer) {
+          setActiveTab("requests");
+        }
+      }
+    }
+  }, [user, isTrainer, isPlayer, isAdmin]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -230,6 +275,62 @@ export default function QuestionnairesPage() {
     setErrorMessage(msg);
     setSuccessMessage("");
     setTimeout(() => setErrorMessage(""), 5000);
+  };
+
+  const quickReplies = [
+    { emoji: "👀", text: t("questionnaires.request_quick_reply_looking") },
+    { emoji: "🛠️", text: t("questionnaires.request_quick_reply_working") },
+    { emoji: "✅", text: t("questionnaires.request_quick_reply_incoming") },
+    { emoji: "📅", text: t("questionnaires.request_quick_reply_next_training") }
+  ];
+
+  const handleReplyToRequest = async (requestId: string, replyText: string) => {
+    try {
+      const res = await replyToObjectivesRequest(requestId, replyText);
+      if (res.success) {
+        showSuccess(t("common.success"));
+        fetchData();
+      } else {
+        showError(res.error || t("common.error"));
+      }
+    } catch (err) {
+      console.error(err);
+      showError(t("common.error"));
+    }
+  };
+
+  const handleSendRequest = async () => {
+    if (!requestReason.trim()) {
+      showError("Por favor, introduce un motivo para tu solicitud.");
+      return;
+    }
+    if (requestReason.trim().length < 5) {
+      showError("El motiu ha de tenir almenys 5 caràcters.");
+      return;
+    }
+
+    setIsSendingRequest(true);
+    try {
+      const res = await createObjectivesRequestForAllTrainers(requestReason);
+
+      if (res.success) {
+        showSuccess(t("questionnaires.request_objectives_success"));
+        setIsRequestModalOpen(false);
+        setRequestReason("");
+        fetchData();
+      } else {
+        if (res.error === "no_trainers_assigned") {
+          showError(t("questionnaires.request_objectives_no_trainers") || "No tens cap entrenador assignat. No pots sol·licitar objectius.");
+        } else {
+          showError(res.error || t("common.error"));
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      showError(t("common.error"));
+    } finally {
+      setIsSendingRequest(false);
+    }
   };
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
@@ -357,6 +458,14 @@ export default function QuestionnairesPage() {
               }`}
             >
               {t("questionnaires.tab_objectives")} ({trainerPlayersObjectives.length})
+            </button>
+            <button
+              onClick={() => setTrainerTab("requests")}
+              className={`tab flex-1 font-semibold transition-all ${
+                trainerTab === "requests" ? "tab-active bg-primary text-primary-content" : ""
+              }`}
+            >
+              {t("questionnaires.tab_requests")} ({trainerRequests.length})
             </button>
           </div>
 
@@ -773,23 +882,155 @@ export default function QuestionnairesPage() {
               </div>
             </div>
           )}
+
+          {trainerTab === "requests" && (
+            trainerRequests.length === 0 ? (
+              <div className="hero bg-base-200 rounded-2xl p-10 text-center shadow-inner border border-base-content/5">
+                <div className="max-w-md">
+                  <span className="text-5xl">📨</span>
+                  <h3 className="text-2xl font-bold mt-4">
+                    {t("questionnaires.requests_empty_trainer")}
+                  </h3>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {trainerRequests.map((request) => {
+                  const fullName = `${request.player.name} ${request.player.surname}`;
+                  return (
+                    <div
+                      key={request.id}
+                      className="card bg-base-100 shadow border border-base-200 hover:shadow-md transition-all duration-200"
+                    >
+                      <div className="card-body p-6">
+                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+                          {/* Player info & Request Details */}
+                          <div className="flex-1 space-y-3">
+                            <div className="flex items-center gap-3">
+                              <div className="avatar placeholder">
+                                <div className="bg-neutral text-neutral-content rounded-full w-10 h-10 overflow-hidden flex items-center justify-center">
+                                  {request.player.avatarUrl ? (
+                                    <img src={request.player.avatarUrl} alt={fullName} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <span className="text-sm font-semibold">{fullName.charAt(0).toUpperCase()}</span>
+                                  )}
+                                </div>
+                              </div>
+                              <div>
+                                <h3 className="font-bold text-base text-base-content">{fullName}</h3>
+                                <p className="text-[11px] text-base-content/50">
+                                  {formatRelativeTime(request.createdAt, locale)}
+                                </p>
+                              </div>
+                              <div className="ml-auto md:ml-0">
+                                {request.status === "PENDING" && (
+                                  <span className="badge badge-warning text-white font-semibold text-xs">
+                                    {t("questionnaires.request_status_pending")}
+                                  </span>
+                                )}
+                                {request.status === "ACKNOWLEDGED" && (
+                                  <span className="badge badge-info text-white font-semibold text-xs">
+                                    {t("questionnaires.request_status_acknowledged")}
+                                  </span>
+                                )}
+                                {request.status === "RESOLVED" && (
+                                  <span className="badge badge-success text-white font-semibold text-xs">
+                                    {t("questionnaires.request_status_resolved")}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="bg-base-200/50 p-4 rounded-xl border border-base-content/5">
+                              <p className="text-sm font-medium text-base-content/80 italic">
+                                &ldquo;{request.reason}&rdquo;
+                              </p>
+                            </div>
+                            
+                            {/* Reply info */}
+                            {request.status !== "PENDING" && request.trainerReply && (
+                              <div className="flex items-start gap-2 text-xs bg-primary/5 p-3 rounded-xl border border-primary/10">
+                                <span className="text-base">💬</span>
+                                <div>
+                                  <p className="font-bold text-primary">El teu missatge:</p>
+                                  <p className="text-base-content/85 mt-0.5 font-medium">{request.trainerReply}</p>
+                                  {request.repliedAt && (
+                                    <p className="text-[10px] text-base-content/40 mt-1">
+                                      Respost el {new Date(request.repliedAt).toLocaleDateString(locale)}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Quick replies or Actions */}
+                          <div className="w-full md:w-80 shrink-0 flex flex-col justify-between self-stretch gap-4 border-t md:border-t-0 md:border-l border-base-200/80 pt-4 md:pt-0 md:pl-6">
+                            <div>
+                              {request.status === "PENDING" ? (
+                                <>
+                                  <h4 className="font-bold text-xs uppercase tracking-wider text-base-content/50 mb-3">
+                                    {t("questionnaires.request_reply_placeholder_hint")}
+                                  </h4>
+                                  <div className="grid grid-cols-1 gap-2">
+                                    {quickReplies.map((qr, idx) => (
+                                      <button
+                                        key={idx}
+                                        onClick={() => handleReplyToRequest(request.id, `${qr.emoji} ${qr.text}`)}
+                                        className="btn btn-outline btn-xs justify-start hover:scale-[1.02] active:scale-95 transition-all py-1.5 h-auto text-left font-medium"
+                                      >
+                                        <span className="mr-1.5">{qr.emoji}</span>
+                                        <span className="truncate">{qr.text}</span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                </>
+                              ) : (
+                                <div className="text-xs text-base-content/50 py-2 italic">
+                                  Sol·licitud gestionada.
+                                </div>
+                              )}
+                            </div>
+
+                            <button
+                              onClick={() => handleOpenModal(request.player)}
+                              className="btn btn-primary btn-sm w-full mt-auto"
+                            >
+                              🎯 {t("questionnaires.define_objectives_from_request")}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )
+          )}
         </div>
       )}
 
       {/* PLAYER VIEW */}
       {isPlayer && (
         <div>
-          <div className="mb-8">
-            <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              {t("questionnaires.player_title")}
-            </h1>
-            <p className="text-base-content/70 mt-2">
-              {t("notifications.bell_tooltip")}
-            </p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <div>
+              <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                {t("questionnaires.player_title")}
+              </h1>
+              <p className="text-base-content/70 mt-2">
+                {t("notifications.bell_tooltip")}
+              </p>
+            </div>
+            <button
+              onClick={() => setIsRequestModalOpen(true)}
+              className="btn btn-outline btn-primary shadow-md hover:scale-105 active:scale-95 transition-all self-start sm:self-auto"
+            >
+              🎯 {t("questionnaires.request_objectives_btn")}
+            </button>
           </div>
 
-          {/* Pending / Completed Tabs */}
-          <div className="tabs tabs-boxed bg-base-200/80 p-0.5 w-full max-w-md mb-8">
+          {/* Pending / Completed / Requests Tabs */}
+          <div className="tabs tabs-boxed bg-base-200/80 p-0.5 w-full max-w-lg mb-8">
             <button
               onClick={() => setActiveTab("pending")}
               className={`tab flex-1 font-semibold transition-all ${
@@ -805,6 +1046,14 @@ export default function QuestionnairesPage() {
               }`}
             >
               {t("questionnaires.completed")} ({playerCompleted.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("requests")}
+              className={`tab flex-1 font-semibold transition-all ${
+                activeTab === "requests" ? "tab-active bg-primary text-primary-content" : ""
+              }`}
+            >
+              {t("questionnaires.tab_requests")} ({playerRequests.length})
             </button>
           </div>
 
@@ -850,45 +1099,173 @@ export default function QuestionnairesPage() {
                 ))}
               </div>
             )
-          ) : playerCompleted.length === 0 ? (
-            <div className="hero bg-base-200 rounded-2xl p-10 text-center shadow-inner border border-base-content/5">
-              <div className="max-w-md">
-                <span className="text-5xl">📋</span>
-                <h3 className="text-2xl font-bold mt-4">{t("questionnaires.no_assignments")}</h3>
-                <p className="py-2 text-base-content/60">{t("questionnaires.no_assignments")}</p>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {playerCompleted.map((assignment) => (
-                <div
-                  key={assignment.id}
-                  className="card bg-base-100 shadow border border-base-200 hover:shadow-md transition-all duration-200"
-                >
-                  <div className="card-body p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2 flex-wrap mb-1">
-                        <h2 className="text-lg font-bold text-base-content leading-tight truncate">
-                          {assignment.questionnaire.title}
-                        </h2>
-                        {getAssignmentStatusBadge(assignment.status)}
-                      </div>
-                      <p className="text-sm text-base-content/75 line-clamp-1">
-                        {assignment.questionnaire.description || <span className="italic opacity-60">{t("common.no_description")}</span>}
-                      </p>
-                      <span className="text-xs text-base-content/50 mt-1 block">
-                        {t("questionnaires.sent_at")}: {formatRelativeTime(assignment.sentAt, locale)} &middot; {t("questionnaires.player")}: {assignment.questionnaire.trainer.name} {assignment.questionnaire.trainer.surname}
-                      </span>
-                    </div>
-                    <Link
-                      href={`/questionnaires/assignments/${assignment.id}`}
-                      className="btn btn-outline btn-sm shrink-0 self-end sm:self-auto"
-                    >
-                      {t("questionnaires.view_answers")}
-                    </Link>
-                  </div>
+          ) : activeTab === "completed" ? (
+            playerCompleted.length === 0 ? (
+              <div className="hero bg-base-200 rounded-2xl p-10 text-center shadow-inner border border-base-content/5">
+                <div className="max-w-md">
+                  <span className="text-5xl">📋</span>
+                  <h3 className="text-2xl font-bold mt-4">{t("questionnaires.no_assignments")}</h3>
+                  <p className="py-2 text-base-content/60">{t("questionnaires.no_assignments")}</p>
                 </div>
-              ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {playerCompleted.map((assignment) => (
+                  <div
+                    key={assignment.id}
+                    className="card bg-base-100 shadow border border-base-200 hover:shadow-md transition-all duration-200"
+                  >
+                    <div className="card-body p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <h2 className="text-lg font-bold text-base-content leading-tight truncate">
+                            {assignment.questionnaire.title}
+                          </h2>
+                          {getAssignmentStatusBadge(assignment.status)}
+                        </div>
+                        <p className="text-sm text-base-content/75 line-clamp-1">
+                          {assignment.questionnaire.description || <span className="italic opacity-60">{t("common.no_description")}</span>}
+                        </p>
+                        <span className="text-xs text-base-content/50 mt-1 block">
+                          {t("questionnaires.sent_at")}: {formatRelativeTime(assignment.sentAt, locale)} &middot; {t("questionnaires.player")}: {assignment.questionnaire.trainer.name} {assignment.questionnaire.trainer.surname}
+                        </span>
+                      </div>
+                      <Link
+                        href={`/questionnaires/assignments/${assignment.id}`}
+                        className="btn btn-outline btn-sm shrink-0 self-end sm:self-auto"
+                      >
+                        {t("questionnaires.view_answers")}
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )
+          ) : (
+            playerRequests.length === 0 ? (
+              <div className="hero bg-base-200 rounded-2xl p-10 text-center shadow-inner border border-base-content/5">
+                <div className="max-w-md">
+                  <span className="text-5xl">🎯</span>
+                  <h3 className="text-2xl font-bold mt-4">
+                    {t("questionnaires.requests_empty_player")}
+                  </h3>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {playerRequests.map((request) => {
+                  const trainerName = `${request.trainer.name} ${request.trainer.surname}`;
+                  return (
+                    <div
+                      key={request.id}
+                      className="card bg-base-100 shadow border border-base-200 hover:shadow-md transition-all duration-200"
+                    >
+                      <div className="card-body p-6">
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 flex-wrap mb-1">
+                              <h2 className="text-lg font-bold text-base-content leading-tight">
+                                Sol·licitud per a {trainerName}
+                              </h2>
+                              {request.status === "PENDING" && (
+                                <span className="badge badge-warning text-white font-semibold text-xs">
+                                  {t("questionnaires.request_status_pending")}
+                                </span>
+                              )}
+                              {request.status === "ACKNOWLEDGED" && (
+                                <span className="badge badge-info text-white font-semibold text-xs">
+                                  {t("questionnaires.request_status_acknowledged")}
+                                </span>
+                              )}
+                              {request.status === "RESOLVED" && (
+                                <span className="badge badge-success text-white font-semibold text-xs">
+                                  {t("questionnaires.request_status_resolved")}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-base-content/50">
+                              Enviada el {new Date(request.createdAt).toLocaleDateString(locale)} ({formatRelativeTime(request.createdAt, locale)})
+                            </p>
+                            
+                            <div className="mt-3 p-3 bg-base-200/50 rounded-xl border border-base-content/5 text-sm text-base-content/80 font-medium italic">
+                              &ldquo;{request.reason}&rdquo;
+                            </div>
+
+                            {request.status !== "PENDING" && request.trainerReply && (
+                              <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 mt-4 flex items-start gap-3">
+                                <div className="avatar placeholder flex-shrink-0">
+                                  <div className="bg-primary text-primary-content rounded-full w-8 h-8 overflow-hidden flex items-center justify-center font-bold text-sm">
+                                    {request.trainer.avatarUrl ? (
+                                      <img src={request.trainer.avatarUrl} alt="Trainer" className="w-full h-full object-cover" />
+                                    ) : (
+                                      request.trainer.name.charAt(0).toUpperCase()
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-xs font-bold text-primary">{trainerName}</p>
+                                  <p className="text-sm font-semibold text-base-content/95 mt-0.5 break-words">&ldquo;{request.trainerReply}&rdquo;</p>
+                                  {request.repliedAt && (
+                                    <p className="text-[10px] text-base-content/40 mt-1">
+                                      Respost el {new Date(request.repliedAt).toLocaleDateString(locale)}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )
+          )}
+
+          {/* Modal for Player Request Objectives */}
+          {isRequestModalOpen && (
+            <div className="modal modal-open">
+              <div className="modal-box max-w-lg rounded-3xl border border-base-200">
+                <h3 className="font-bold text-2xl mb-4 text-primary">
+                  {t("questionnaires.request_objectives_modal_title")}
+                </h3>
+                
+                <div className="form-control mb-6">
+                  <label className="label font-semibold">
+                    {t("questionnaires.request_objectives_reason_label")}
+                  </label>
+                  <textarea
+                    className="textarea textarea-bordered h-28"
+                    placeholder={t("questionnaires.request_objectives_reason_placeholder")}
+                    value={requestReason}
+                    onChange={(e) => setRequestReason(e.target.value)}
+                  />
+                </div>
+
+                <div className="modal-action">
+                  <button
+                    className="btn btn-ghost"
+                    onClick={() => {
+                      setIsRequestModalOpen(false);
+                      setRequestReason("");
+                    }}
+                  >
+                    {t("common.cancel")}
+                  </button>
+                  <button
+                    className="btn btn-primary"
+                    onClick={handleSendRequest}
+                    disabled={isSendingRequest}
+                  >
+                    {isSendingRequest ? (
+                      <span className="loading loading-spinner loading-sm"></span>
+                    ) : (
+                      t("questionnaires.request_objectives_send")
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>

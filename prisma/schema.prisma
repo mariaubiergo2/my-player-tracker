@@ -49,6 +49,8 @@ model User {
   playerObjectivesReceived PlayerObjectives[] @relation("PlayerObjectives")
   playerObjectivesDefined  PlayerObjectives[] @relation("TrainerDefinedObjectives")
   verificationCodes EmailVerificationCode[]
+  objectivesRequestsAsPlayer  ObjectivesRequest[] @relation("ObjectivesRequestsAsPlayer")
+  objectivesRequestsAsTrainer ObjectivesRequest[] @relation("ObjectivesRequestsAsTrainer")
 
   @@map("users")
 }
@@ -250,6 +252,8 @@ enum NotificationType {
   QUESTIONNAIRE_SENT
   QUESTIONNAIRE_RESPONDED
   QUESTIONNAIRE_RECLAIMED
+  OBJECTIVES_REQUEST_CREATED
+  OBJECTIVES_REQUEST_REPLIED
 }
 
 model Notification {
@@ -258,15 +262,18 @@ model Notification {
   type          NotificationType
   matchId       String?                  @map("match_id")
   assignmentId  String?                  @map("assignment_id")
+  objectivesRequestId String?            @map("objectives_request_id")
   isRead        Boolean                  @default(false) @map("is_read")
   createdAt     DateTime                 @default(now()) @map("created_at")
 
   recipient     User                     @relation("UserNotifications", fields: [recipientId], references: [id], onDelete: Cascade)
   match         Match?                   @relation("MatchNotifications", fields: [matchId], references: [id], onDelete: Cascade)
   assignment    QuestionnaireAssignment? @relation("AssignmentNotifications", fields: [assignmentId], references: [id], onDelete: Cascade)
+  objectivesRequest ObjectivesRequest?   @relation("ObjectivesRequestNotifications", fields: [objectivesRequestId], references: [id], onDelete: Cascade)
 
   @@index([recipientId, isRead])
   @@index([recipientId, createdAt(sort: Desc)])
+  @@index([objectivesRequestId])
   @@map("notifications")
 }
 
@@ -290,4 +297,29 @@ model PlayerObjectives {
   @@index([playerId, effectiveFrom])
   @@index([playerId, effectiveTo])
   @@map("player_objectives")
+}
+
+enum ObjectivesRequestStatus {
+  PENDING
+  ACKNOWLEDGED   // el trainer ha respondido con un mensaje/icono ("lo estoy mirando")
+  RESOLVED       // el trainer ha definido/redefinido objetivos como consecuencia (opcional, ligar a PlayerObjectives si se detecta)
+}
+
+model ObjectivesRequest {
+  id          String   @id @default(cuid())
+  playerId    String   @map("player_id")
+  trainerId   String   @map("trainer_id")   // a qué entrenador concreto va dirigida
+  reason      String                        // descripción corta escrita por el jugador
+  status      ObjectivesRequestStatus @default(PENDING)
+  trainerReply String? @map("trainer_reply") // mensaje/icono predefinido del trainer
+  repliedAt   DateTime? @map("replied_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  player      User @relation("ObjectivesRequestsAsPlayer", fields: [playerId], references: [id], onDelete: Cascade)
+  trainer     User @relation("ObjectivesRequestsAsTrainer", fields: [trainerId], references: [id], onDelete: Cascade)
+  notifications Notification[] @relation("ObjectivesRequestNotifications")
+
+  @@index([playerId, createdAt(sort: Desc)])
+  @@index([trainerId, status, createdAt(sort: Desc)])
+  @@map("objectives_requests")
 }
