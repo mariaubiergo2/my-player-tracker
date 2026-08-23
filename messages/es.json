@@ -6,6 +6,9 @@
     "players": "Jugadores",
     "all_players": "Asignar jugadores",
     "my_players": "Mis jugadores",
+    "video_analysis": "Análisis de vídeo",
+    "match_feedback": "Feedback de partidos",
+    "all_matches": "Todos los partidos",
     "dashboard": "Análisis de vídeo",
     "physical_prep": "Preparación física",
     "nutrition": "Nutrición",
@@ -478,7 +481,10 @@
   },
   "trainer_my_players": {
     "title": "Mis jugadores asignados",
-    "subtitle": "Revisa, evalúa y sigue los partidos de los jugadores asignados a ti.",
+    "subtitle": "Consulta la ficha, los datos de contacto y los objetivos de los jugadores que tienes asignados.",
+    "sort_label": "Ordenar por:",
+    "sort_by_name": "Nombre",
+    "sort_by_matches": "Nº de partidos",
     "no_assigned_title": "Aún no tienes jugadores asignados",
     "no_assigned_desc": "No te has asignado ningún jugador. Ve al directorio de jugadores para añadir a tu lista.",
     "go_directory": "Ir al directorio de jugadores",
@@ -506,7 +512,13 @@
     "key_strengths": "🔥 Puntos fuertes",
     "weaknesses": "⚠️ Debilidades",
     "improvement_areas": "📈 Áreas de mejora",
-    "none_logged": "Ninguno registrado."
+    "none_logged": "Ninguno registrado.",
+    "contact_title": "Datos de Contacto",
+    "email_label": "Correo electrónico",
+    "phone_label": "Teléfono",
+    "active_objectives_title": "Objetivos Activos",
+    "objectives_history_title": "Historial de Objetivos",
+    "no_active_objectives": "Aún no has definido objetivos activos para este jugador."
   },
   "admin_users": {
     "title": "Gestión de usuarios",
@@ -850,5 +862,30 @@
     "video_link": "Enlace de vídeo de demostración (YouTube/Vimeo...)",
     "upload_image": "Subir imagen ilustrativa",
     "delete_confirm": "¿Estás seguro de que deseas eliminar este ejercicio?"
+  },
+  "video_analysis_page": {
+    "title": "Análisis de vídeo",
+    "subtitle": "Analiza los partidos de tus jugadores, califica su rendimiento y añade comentarios tácticos.",
+    "feedback_card_desc": "Revisa los partidos jugados por tus jugadores asignados y registra valoraciones técnicas.",
+    "pending_reviews_label": "partidos pendientes de revisar",
+    "view_only_warning": "ℹ️ Nota: Esta página es de solo lectura. Para realizar la valoración técnica de los partidos, ve al módulo de Análisis de vídeo.",
+    "all_matches_title": "Todos los partidos",
+    "all_matches_subtitle": "Lista completa de todos los partidos de tus jugadores asignados.",
+    "pending_reviews_tooltip": "{count} partido(s) pendiente(s) de revisar",
+    "all_matches_card_desc": "Consulta y edita el historial completo de partidos de tus jugadores.",
+    "stat_total_matches": "Total partidos",
+    "stat_reviewed_matches": "Partidos revisados",
+    "stat_pending_matches": "Partidos pendientes de revisar",
+    "filter_status": "Estado",
+    "filter_status_all": "Todos",
+    "filter_status_reviewed": "Revisados",
+    "filter_status_pending": "Pendientes de revisar",
+    "filter_player": "Jugador",
+    "filter_player_all": "Todos los jugadores",
+    "filter_date_from": "Desde",
+    "filter_date_to": "Hasta",
+    "filter_match_type": "Tipo de partido",
+    "filter_match_type_all": "Todos",
+    "filter_clear": "Limpiar filtros"
   }
 }

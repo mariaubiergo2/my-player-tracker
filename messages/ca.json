@@ -6,6 +6,9 @@
     "players": "Jugadors",
     "all_players": "Assignar jugadors",
     "my_players": "Els meus jugadors",
+    "video_analysis": "Anàlisi de vídeo",
+    "match_feedback": "Feedback de partits",
+    "all_matches": "Tots els partits",
     "dashboard": "Anàlisi de vídeo",
     "physical_prep": "Preparació física",
     "nutrition": "Nutrició",
@@ -478,7 +481,10 @@
   },
   "trainer_my_players": {
     "title": "Els meus jugadors assignats",
-    "subtitle": "Revisa, avalua i segueix els partits dels jugadors assignats a tu.",
+    "subtitle": "Consulta la fitxa, les dades de contacte i els objectius dels jugadors que tens assignats.",
+    "sort_label": "Ordena per:",
+    "sort_by_name": "Nom",
+    "sort_by_matches": "Nre. de partits",
     "no_assigned_title": "Encara no tens jugadors assignats",
     "no_assigned_desc": "No t'has assignat cap jugador. Ves al directori de jugadors per afegir-ne a la teva llista.",
     "go_directory": "Anar al directori de jugadors",
@@ -506,7 +512,13 @@
     "key_strengths": "🔥 Punts forts",
     "weaknesses": "⚠️ Feblees",
     "improvement_areas": "📈 Àrees de millora",
-    "none_logged": "Cap registrat."
+    "none_logged": "Cap registrat.",
+    "contact_title": "Dades de Contacte",
+    "email_label": "Correu electrònic",
+    "phone_label": "Telèfon",
+    "active_objectives_title": "Objectius Actius",
+    "objectives_history_title": "Historial d'Objectius",
+    "no_active_objectives": "Encara no has definit objectius actius per a aquest jugador."
   },
   "admin_users": {
     "title": "Gestió d'usuaris",
@@ -850,5 +862,30 @@
     "video_link": "Enllaç de vídeo de demostració (YouTube/Vimeo...)",
     "upload_image": "Pujar imatge il·lustrativa",
     "delete_confirm": "Estàs segur que vols eliminar aquest exercici?"
+  },
+  "video_analysis_page": {
+    "title": "Anàlisi de vídeo",
+    "subtitle": "Analitza els partits dels teus jugadors, qualifica el seu rendiment i afegeix comentaris tàctics.",
+    "feedback_card_desc": "Revisa els partits jugats pels teus jugadors assignats i registra valoracions tècniques.",
+    "pending_reviews_label": "partits pendents de revisar",
+    "view_only_warning": "ℹ️ Nota: Aquesta pàgina és de només lectura. Per realitzar la valoració tècnica dels partits, vés al mòdul d'Anàlisi de vídeo.",
+    "all_matches_title": "Tots els partits",
+    "all_matches_subtitle": "Llista completa de tots els partits dels teus jugadors assignats.",
+    "pending_reviews_tooltip": "{count} partit(s) pendent(s) de revisar",
+    "all_matches_card_desc": "Consulta i edita l'historial complet de partits dels teus jugadors.",
+    "stat_total_matches": "Total partits",
+    "stat_reviewed_matches": "Partits revisats",
+    "stat_pending_matches": "Partits pendents de revisar",
+    "filter_status": "Estat",
+    "filter_status_all": "Tots",
+    "filter_status_reviewed": "Revisats",
+    "filter_status_pending": "Pendents de revisar",
+    "filter_player": "Jugador",
+    "filter_player_all": "Tots els jugadors",
+    "filter_date_from": "Des de",
+    "filter_date_to": "Fins a",
+    "filter_match_type": "Tipus de partit",
+    "filter_match_type_all": "Tots",
+    "filter_clear": "Netejar filtres"
   }
 }

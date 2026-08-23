@@ -33,13 +33,14 @@ export default async function EditMatchPage({
 
   if (!match) notFound()
 
+  if (payload.role === "TRAINER") {
+    redirect("/trainer/video-analysis/feedback")
+  }
+
   const isPlayer = match.playerId === payload.userId
-  const isTrainer =
-    match.trainerId === payload.userId ||
-    (match.player?.trainers && match.player.trainers.some((t: any) => t.id === payload.userId))
   const isAdmin = payload.role === "ADMIN"
 
-  if (!isPlayer && !isTrainer && !isAdmin) {
+  if (!isPlayer && !isAdmin) {
     redirect("/dashboard")
   }
 
@@ -53,10 +54,7 @@ export default async function EditMatchPage({
       currentUserId={payload.userId}
       matchTrainerId={
         match.trainerId ||
-        (payload.role === "TRAINER" &&
-        match.player?.trainers?.some((t: any) => t.id === payload.userId)
-          ? payload.userId
-          : match.player?.trainers?.[0]?.id || "")
+        (match.player?.trainers?.[0]?.id || "")
       }
     />
   )

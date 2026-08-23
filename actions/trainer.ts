@@ -129,6 +129,8 @@ export async function assignPlayerToTrainer(playerId: string) {
     revalidatePath("/trainer/players");
     revalidatePath("/trainer/players/assign");
     revalidatePath("/trainer/players/my-players");
+    revalidatePath("/trainer/video-analysis/feedback");
+    revalidatePath("/trainer/video-analysis/matches");
 
     return { success: true };
   } catch (error) {
@@ -173,7 +175,11 @@ export async function getMyPlayersWithMatches() {
       id: p.id,
       name: p.name,
       surname: p.surname,
-      birthDate: p.birthDate ? new Date(p.birthDate).toISOString().split("T")[0] : null,
+      email: p.email,
+      phone: p.phone,
+      birthDate: p.birthDate
+        ? `${p.birthDate.getUTCFullYear()}-${String(p.birthDate.getUTCMonth() + 1).padStart(2, "0")}-${String(p.birthDate.getUTCDate()).padStart(2, "0")}`
+        : null,
       avatarUrl: p.avatarUrl,
       matches: p.playerMatches,
     }));
@@ -216,6 +222,8 @@ export async function unassignPlayerFromTrainer(playerId: string) {
     revalidatePath("/trainer/players");
     revalidatePath("/trainer/players/assign");
     revalidatePath("/trainer/players/my-players");
+    revalidatePath("/trainer/video-analysis/feedback");
+    revalidatePath("/trainer/video-analysis/matches");
 
     return { success: true };
   } catch (error) {
@@ -266,3 +274,127 @@ export async function getPlayerDashboardStats() {
     };
   }
 }
+
+/**
+ * READ: Get stats for the trainer video analysis dashboard landing page
+ */
+export async function getVideoAnalysisStats() {
+  try {
+    const trainerId = await checkTrainer();
+
+    const [pendingReviewsCount, totalMatchesCount] = await Promise.all([
+      prisma.match.count({
+        where: {
+          isReviewed: false,
+          player: {
+            trainers: {
+              some: {
+                id: trainerId,
+              },
+            },
+          },
+        },
+      }),
+      prisma.match.count({
+        where: {
+          player: {
+            trainers: {
+              some: {
+                id: trainerId,
+              },
+            },
+          },
+        },
+      }),
+    ]);
+
+    return {
+      success: true,
+      stats: {
+        pendingReviewsCount,
+        totalMatchesCount,
+      },
+    };
+  } catch (error) {
+    console.error("getVideoAnalysisStats error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to load video analysis stats",
+    };
+  }
+}
+
+/**
+ * READ: Return logged-in trainer's assigned players' matches, flattened and sorted
+ */
+export async function getAssignedPlayersMatches() {
+  try {
+    const trainerId = await checkTrainer();
+
+    const players = await prisma.user.findMany({
+      where: {
+        role: { in: [UserRole.PLAYER, UserRole.GOAL_KEEPER] },
+        trainers: {
+          some: {
+            id: trainerId,
+          },
+        },
+      },
+      select: {
+        id: true,
+        name: true,
+        surname: true,
+        avatarUrl: true,
+        playerMatches: {
+          include: {
+            _count: {
+              select: { feedbackMessages: true },
+            },
+          },
+        },
+      },
+    });
+
+    // Flatten matches and attach player info to each match
+    const allMatches: any[] = [];
+    for (const player of players) {
+      for (const match of player.playerMatches) {
+        allMatches.push({
+          ...match,
+          player: {
+            id: player.id,
+            name: player.name,
+            surname: player.surname,
+            avatarUrl: player.avatarUrl,
+          },
+        });
+      }
+    }
+
+    // Sort matches: isReviewed === false first, then by date descending
+    allMatches.sort((a, b) => {
+      if (a.isReviewed !== b.isReviewed) {
+        return a.isReviewed ? 1 : -1;
+      }
+      return new Date(b.date).getTime() - new Date(a.date).getTime();
+    });
+
+    return {
+      success: true,
+      matches: allMatches,
+      players: players.map((p) => ({
+        id: p.id,
+        name: p.name,
+        surname: p.surname,
+        avatarUrl: p.avatarUrl,
+      })),
+    };
+  } catch (error) {
+    console.error("getAssignedPlayersMatches error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to load matches list",
+    };
+  }
+}
+

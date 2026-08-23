@@ -18,21 +18,25 @@ export default function EditMatchForm({
   match, 
   currentUserRole,
   currentUserId,
-  matchTrainerId
+  matchTrainerId,
+  returnTo
 }: { 
   match: CompleteMatch
   currentUserRole?: string 
   currentUserId?: string
   matchTrainerId?: string
+  returnTo?: string
 }) {
   const router = useRouter()
   const { t } = useTranslation()
   const isPlayerLike = currentUserRole === "PLAYER" || currentUserRole === "GOAL_KEEPER"
-  const redirectUrl = currentUserRole === "TRAINER"
-    ? "/trainer/players/my-players"
-    : currentUserRole === "ADMIN"
-      ? "/admin/users"
-      : "/dashboard"
+  const redirectUrl = returnTo || (
+    currentUserRole === "TRAINER"
+      ? "/trainer/video-analysis/feedback"
+      : currentUserRole === "ADMIN"
+        ? "/admin/users"
+        : "/dashboard"
+  )
 
   // State hooks for all Match fields
   const [name, setName] = useState(match.name ?? "")

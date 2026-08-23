@@ -13,6 +13,12 @@ enum UserRole {
   ADMIN
 }
 
+enum TrainerSpecialty {
+  VIDEO_ANALYSIS
+  PHYSICAL_PREP
+  NUTRITION
+}
+
 
 enum MatchType {
   FRIENDLY
@@ -28,6 +34,7 @@ model User {
   email     String   @unique
   password  String
   role      UserRole @default(PLAYER)
+  trainerSpecialty TrainerSpecialty? @map("trainer_specialty")
 
   phone     String?
   avatarUrl String?

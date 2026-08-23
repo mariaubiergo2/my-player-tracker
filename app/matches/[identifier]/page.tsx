@@ -44,7 +44,7 @@ export default async function MatchPage({
   const isPlayer = currentUser && match.playerId === currentUser.userId
   const isTrainer = currentUser && (match.trainerId === currentUser.userId || match.player?.trainers?.some((t: any) => t.id === currentUser.userId))
   const isAdmin = currentUser?.role === "ADMIN"
-  const canEdit = isPlayer || isTrainer || isAdmin
+  const canEdit = isPlayer || isAdmin
 
   return (
     <PageContainer className="py-10">

@@ -466,6 +466,9 @@ export async function updateMatch(matchId: string, updates: UpdateMatchInput) {
     revalidatePath("/dashboard");
     revalidatePath("/matches");
     revalidatePath(`/matches/${matchId}`);
+    revalidatePath("/trainer/players/my-players");
+    revalidatePath("/trainer/video-analysis/feedback");
+    revalidatePath("/trainer/video-analysis/matches");
 
     return { success: true, match: updated };
   } catch (error) {

@@ -501,6 +501,8 @@ export async function updateTrainerAssignments(
     revalidatePath("/trainer/players");
     revalidatePath("/trainer/players/assign");
     revalidatePath("/trainer/players/my-players");
+    revalidatePath("/trainer/video-analysis/feedback");
+    revalidatePath("/trainer/video-analysis/matches");
 
     return { success: true };
   } catch (error) {

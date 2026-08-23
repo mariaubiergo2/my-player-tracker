@@ -53,6 +53,13 @@ export default function Header() {
                         <li><Link href="/trainer/players/assign">{t("header.all_players")}</Link></li>
                       </ul>
                     </li>
+                    <li>
+                      <Link href="/trainer/video-analysis" className="font-semibold text-primary">{t("header.video_analysis")}</Link>
+                      <ul className="pl-4">
+                        <li><Link href="/trainer/video-analysis/feedback">{t("header.match_feedback")}</Link></li>
+                        <li><Link href="/trainer/video-analysis/matches">{t("header.all_matches")}</Link></li>
+                      </ul>
+                    </li>
                     <li><Link href="/questionnaires">{t("questionnaires.title")}</Link></li>
                     <li>
                       <Link href="/trainer/physical-prep" className="font-semibold text-primary">{t("header.physical_prep")}</Link>
@@ -105,6 +112,15 @@ export default function Header() {
                     <ul tabIndex={0} className="dropdown-content menu p-2 shadow-xl bg-base-100 rounded-box w-52 border border-base-content/10 mt-1">
                       <li><Link href="/trainer/players/my-players">{t("header.my_players")}</Link></li>
                       <li><Link href="/trainer/players/assign">{t("header.all_players")}</Link></li>
+                    </ul>
+                  </li>
+                  <li className="dropdown dropdown-hover z-[50]">
+                    <Link href="/trainer/video-analysis" className="flex items-center gap-1">
+                      {t("header.video_analysis")} <span className="text-[10px] opacity-60">▼</span>
+                    </Link>
+                    <ul tabIndex={0} className="dropdown-content menu p-2 shadow-xl bg-base-100 rounded-box w-52 border border-base-content/10 mt-1">
+                      <li><Link href="/trainer/video-analysis/feedback">{t("header.match_feedback")}</Link></li>
+                      <li><Link href="/trainer/video-analysis/matches">{t("header.all_matches")}</Link></li>
                     </ul>
                   </li>
                   <li><Link href="/questionnaires">{t("questionnaires.title")}</Link></li>
@@ -241,6 +257,13 @@ export default function Header() {
                     <ul className="pl-4">
                       <li><Link href="/trainer/players/my-players">{t("header.my_players")}</Link></li>
                       <li><Link href="/trainer/players/assign">{t("header.all_players")}</Link></li>
+                    </ul>
+                  </li>
+                  <li>
+                    <Link href="/trainer/video-analysis" className="font-semibold text-primary">{t("header.video_analysis")}</Link>
+                    <ul className="pl-4">
+                      <li><Link href="/trainer/video-analysis/feedback">{t("header.match_feedback")}</Link></li>
+                      <li><Link href="/trainer/video-analysis/matches">{t("header.all_matches")}</Link></li>
                     </ul>
                   </li>
                   <li><Link href="/notifications">{t("header.notifications")}</Link></li>

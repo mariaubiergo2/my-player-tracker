@@ -7,10 +7,13 @@ import EditMatchForm from "@/matches/[identifier]/edit/EditMatchForm"
 
 export default async function EditFeedbackPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ identifier: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
   const { identifier } = await params
+  const { returnTo } = await searchParams
   const cookieStore = await cookies()
   const token = cookieStore.get("auth_token")?.value
 
@@ -32,14 +35,21 @@ export default async function EditFeedbackPage({
 
   if (!match) notFound()
 
-  // Only the trainer of the match, the trainer assigned to the player, or an admin can access this page
-  const isTrainer =
-    match.trainerId === payload.userId ||
-    (match.player?.trainers && match.player.trainers.some((t: any) => t.id === payload.userId))
-  const isAdmin = payload.role === "ADMIN"
-
-  if (!isTrainer && !isAdmin) {
-    redirect("/dashboard")
+  if (payload.role === "TRAINER") {
+    if (!returnTo) {
+      redirect("/trainer/video-analysis/feedback")
+    }
+    const isAssigned =
+      match.trainerId === payload.userId ||
+      (match.player?.trainers && match.player.trainers.some((t: any) => t.id === payload.userId))
+    if (!isAssigned) {
+      redirect("/trainer/video-analysis/feedback")
+    }
+  } else {
+    const isAdmin = payload.role === "ADMIN"
+    if (!isAdmin) {
+      redirect("/dashboard")
+    }
   }
 
   // Omit the player relation from the object passed to EditMatchForm to avoid typescript compilation issues if it expects only CompleteMatch or similar
@@ -52,11 +62,9 @@ export default async function EditFeedbackPage({
       currentUserId={payload.userId}
       matchTrainerId={
         match.trainerId ||
-        (payload.role === "TRAINER" &&
-        match.player?.trainers?.some((t: any) => t.id === payload.userId)
-          ? payload.userId
-          : match.player?.trainers?.[0]?.id || "")
+        (match.player?.trainers?.[0]?.id || "")
       }
+      returnTo={typeof returnTo === "string" ? returnTo : undefined}
     />
   )
 }

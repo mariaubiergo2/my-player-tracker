@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { getMyPlayersWithMatches } from "@/actions/trainer";
-import { getActiveObjectives, getObjectivesHistory } from "@/actions/objectives";
 import { useTranslation } from "@/components/LanguageProvider";
 import MatchCard from "@/components/matches/MatchCard";
 import type { Match } from "@/types/match";
@@ -15,14 +14,11 @@ interface PlayerWithMatches {
   id: string;
   name: string;
   surname: string;
-  email?: string;
-  phone?: string | null;
-  birthDate: string | null;
   avatarUrl: string | null;
   matches: Match[];
 }
 
-export default function MyPlayersPage() {
+export default function VideoAnalysisFeedbackPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
   const { t } = useTranslation();
@@ -37,14 +33,9 @@ export default function MyPlayersPage() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [sortBy, setSortBy] = useState<"name" | "matches">("name");
 
-  // Objectives State
-  const [activeObjective, setActiveObjective] = useState<any | null>(null);
-  const [objectivesHistory, setObjectivesHistory] = useState<any[]>([]);
-  const [loadingObjectives, setLoadingObjectives] = useState(false);
-
   // Sync collapsed state with localStorage on mount
   useEffect(() => {
-    const saved = localStorage.getItem("my-players-list-collapsed");
+    const saved = localStorage.getItem("video-analysis-list-collapsed");
     if (saved !== null) {
       setIsCollapsed(saved === "true");
     }
@@ -60,7 +51,7 @@ export default function MyPlayersPage() {
   const handleToggleCollapse = () => {
     setIsCollapsed((prev) => {
       const next = !prev;
-      localStorage.setItem("my-players-list-collapsed", String(next));
+      localStorage.setItem("video-analysis-list-collapsed", String(next));
       return next;
     });
   };
@@ -107,45 +98,12 @@ export default function MyPlayersPage() {
     }
   }, [isLoading, isAuthenticated, user, router]);
 
-  // Load player objectives on selection change
-  useEffect(() => {
-    if (selectedPlayerId) {
-      const loadObjectives = async () => {
-        setLoadingObjectives(true);
-        try {
-          const [activeRes, historyRes] = await Promise.all([
-            getActiveObjectives(selectedPlayerId),
-            getObjectivesHistory(selectedPlayerId),
-          ]);
-          if (activeRes.success) {
-            setActiveObjective(activeRes.data);
-          } else {
-            setActiveObjective(null);
-          }
-          if (historyRes.success && historyRes.data) {
-            setObjectivesHistory(historyRes.data.history);
-          } else {
-            setObjectivesHistory([]);
-          }
-        } catch (err) {
-          console.error("Error loading objectives:", err);
-        } finally {
-          setLoadingObjectives(false);
-        }
-      };
-      loadObjectives();
-    } else {
-      setActiveObjective(null);
-      setObjectivesHistory([]);
-    }
-  }, [selectedPlayerId]);
-
   const filteredPlayers = players.filter((p) => {
     const fullName = `${p.name} ${p.surname}`.toLowerCase();
     return fullName.includes(searchQuery.toLowerCase());
   });
 
-  // Client-side sorting
+  // Client-side sorting (consistent with my-players)
   const sortedPlayers = [...filteredPlayers].sort((a, b) => {
     if (sortBy === "name") {
       return `${a.name} ${a.surname}`.localeCompare(`${b.name} ${b.surname}`);
@@ -186,12 +144,12 @@ export default function MyPlayersPage() {
       )}
 
       {/* Title */}
-      <div className="mb-8">
+      <div className="mb-10">
         <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-          {t("trainer_my_players.title")}
+          {t("video_analysis_page.title")}
         </h1>
         <p className="text-base-content/70 mt-2">
-          {t("trainer_my_players.subtitle")}
+          {t("video_analysis_page.subtitle")}
         </p>
       </div>
 
@@ -203,14 +161,11 @@ export default function MyPlayersPage() {
             <p className="py-4 text-base-content/60">
               {t("trainer_my_players.no_assigned_desc")}
             </p>
-            <Link href="/trainer/players/assign" className="btn btn-primary shadow-md hover:scale-105 active:scale-95 transition-all">
-              {t("trainer_my_players.go_directory")}
-            </Link>
           </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Sidebar - Players Selector */}
+          {/* Sidebar - Players Selector (Asymmetric Span 4) */}
           <div className={`transition-all duration-300 ${isCollapsed ? "lg:col-span-1" : "lg:col-span-4"} space-y-4`}>
             {/* Title / Collapsible Toggle Header */}
             <div
@@ -273,166 +228,73 @@ export default function MyPlayersPage() {
               </div>
 
               {/* Scrollable list */}
-              <ul className="menu w-full bg-base-100 rounded-box border border-base-200 shadow-md p-2 space-y-1 max-h-[380px] overflow-y-auto overflow-x-hidden scrollbar-thin">
+              <div className="menu w-full bg-base-100 rounded-box border border-base-200 shadow-md p-1.5 space-y-1 max-h-[380px] overflow-y-auto overflow-x-hidden scrollbar-thin">
                 {sortedPlayers.length === 0 ? (
-                  <div className="text-center py-6 text-sm text-base-content/50">
+                  <div className="text-center py-6 text-xs text-base-content/50">
                     {t("trainer_my_players.no_players_found")}
                   </div>
                 ) : (
-                  sortedPlayers.map((p) => (
-                    <li key={p.id} className="w-full">
-                      <button
+                  sortedPlayers.map((p) => {
+                    const pendingReviews = p.matches.filter((m) => !m.isReviewed).length;
+                    return (
+                      <div
+                        key={p.id}
                         onClick={() => {
                           setSelectedPlayerId(p.id);
                           setExpandedMatchId(null);
                         }}
-                        className={`group w-full flex items-center justify-between gap-2 p-3 rounded-lg text-left transition-all ${
+                        className={`group w-full flex items-center justify-between gap-2 p-2.5 rounded-lg text-left transition-all cursor-pointer ${
                           selectedPlayerId === p.id
-                            ? "active bg-primary text-primary-content shadow-md font-semibold"
-                            : "hover:bg-base-200 text-base-content/80"
+                            ? "bg-primary text-primary-content shadow-md font-semibold"
+                            : "hover:bg-base-200 text-base-content/85"
                         }`}
                       >
-                        <div className="flex items-center gap-3 flex-1 min-w-0 w-full">
-                          <div className={`avatar placeholder ${selectedPlayerId === p.id ? "" : "bg-neutral text-neutral-content"} rounded-full w-8 h-8 flex items-center justify-center overflow-hidden flex-shrink-0`}>
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
+                          <div className={`avatar placeholder ${selectedPlayerId === p.id ? "" : "bg-neutral text-neutral-content"} rounded-full w-7 h-7 flex items-center justify-center overflow-hidden flex-shrink-0`}>
                             {p.avatarUrl ? (
                               <img src={p.avatarUrl} alt={p.name} className="w-full h-full object-cover" />
                             ) : (
-                              <span className="text-xs font-semibold text-neutral-content">
+                              <span className="text-[10px] font-bold text-neutral-content">
                                 {p.name.charAt(0).toUpperCase()}{p.surname.charAt(0).toUpperCase()}
                               </span>
                             )}
                           </div>
-                          <div className="flex-1 truncate font-medium min-w-0">
-                            <span className="truncate block">{p.name} {p.surname}</span>
+                          <div className="flex-1 truncate text-xs font-semibold flex items-center justify-between min-w-0">
+                            <span className="truncate">{p.name} {p.surname}</span>
+                            {pendingReviews > 0 && (
+                              <span
+                                title={t("video_analysis_page.pending_reviews_tooltip", { count: pendingReviews })}
+                                className={`badge badge-xs font-black ${selectedPlayerId === p.id ? "badge-secondary text-secondary-content" : "badge-warning text-white"} flex-shrink-0 ml-1`}
+                              >
+                                {pendingReviews}
+                              </span>
+                            )}
                           </div>
                         </div>
-                      </button>
-                    </li>
-                  ))
+                      </div>
+                    );
+                  })
                 )}
-              </ul>
-
-              {/* Add more players link button */}
-              <Link href="/trainer/players/assign" className="btn btn-outline btn-block text-xs mt-2 border-dashed">
-                {t("trainer_my_players.assign_more")}
-              </Link>
+              </div>
             </div>
           </div>
 
-          {/* Main Area - Selected Player Profile & Matches */}
+          {/* Main Area - Selected Player Profile & Matches (Asymmetric Span 8) */}
           <div className={`transition-all duration-300 ${isCollapsed ? "lg:col-span-11" : "lg:col-span-8"} space-y-8`}>
             {selectedPlayer && (
               <>
-                {/* Player Profile Card */}
-                <div className="card bg-base-100 shadow-md border border-base-200">
-                  <div className="card-body space-y-6">
-                    {/* General Bio */}
-                    <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                      <div className="avatar placeholder">
-                        <div className="bg-primary text-primary-content rounded-2xl w-24 h-24 flex items-center justify-center text-3xl font-bold shadow-lg overflow-hidden flex-shrink-0">
-                          {selectedPlayer.avatarUrl ? (
-                            <img src={selectedPlayer.avatarUrl} alt={selectedPlayer.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <span>
-                              {selectedPlayer.name.charAt(0).toUpperCase()}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex-1 text-center sm:text-left space-y-2">
-                        <h2 className="text-3xl font-bold">
-                          {selectedPlayer.name} {selectedPlayer.surname}
-                        </h2>
-                        
-                        <div className="text-sm text-base-content/70">
-                          📅 {t("trainer_my_players.birth_label")}: <span className="font-semibold text-base-content/90">{selectedPlayer.birthDate || t("common.not_specified")}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Contact Details */}
-                    <div className="border-t border-base-200 pt-6">
-                      <h3 className="font-bold text-lg text-primary mb-3">
-                        📞 {t("trainer_my_players.contact_title")}
-                      </h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-base-content/60">{t("trainer_my_players.email_label")}: </span>
-                          <span className="font-semibold text-base-content/85">{selectedPlayer.email || t("common.not_specified")}</span>
-                        </div>
-                        <div>
-                          <span className="text-base-content/60">{t("trainer_my_players.phone_label")}: </span>
-                          <span className="font-semibold text-base-content/85">{selectedPlayer.phone || t("common.not_specified")}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Active Objectives & Collapsible History */}
-                    <div className="border-t border-base-200 pt-6">
-                      <h3 className="font-bold text-lg text-primary mb-3">
-                        🎯 {t("trainer_my_players.active_objectives_title")}
-                      </h3>
-                      
-                      {loadingObjectives ? (
-                        <div className="flex flex-col gap-2">
-                          <div className="skeleton h-4 w-full"></div>
-                          <div className="skeleton h-4 w-5/6"></div>
-                        </div>
-                      ) : activeObjective ? (
-                        <div className="bg-base-200/50 p-4 rounded-xl border border-base-content/5 space-y-2">
-                          <p className="font-semibold text-sm text-base-content/80">{activeObjective.summary}</p>
-                          <ul className="list-disc list-inside text-sm text-base-content/70 space-y-1">
-                            {activeObjective.items.map((item: string, idx: number) => (
-                              <li key={idx}>{item}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      ) : (
-                        <p className="text-sm text-base-content/50 italic">
-                          {t("trainer_my_players.no_active_objectives")}
-                        </p>
-                      )}
-
-                      {/* Collapsible History */}
-                      {!loadingObjectives && objectivesHistory.length > 0 && (
-                        <details className="collapse collapse-arrow bg-base-100 border border-base-200 mt-4 rounded-2xl shadow-sm">
-                          <summary className="collapse-title text-sm font-bold text-base-content/70 py-3">
-                            📋 {t("trainer_my_players.objectives_history_title")} ({objectivesHistory.length})
-                          </summary>
-                          <div className="collapse-content space-y-4 pt-2">
-                            {objectivesHistory.map((obj, idx) => (
-                              <div key={obj.id} className="text-sm border-b border-base-200 pb-3 last:border-0 last:pb-0 space-y-1">
-                                <div className="flex justify-between text-xs text-base-content/50">
-                                  <span>#{objectivesHistory.length - idx}</span>
-                                  <span>
-                                    {obj.effectiveTo 
-                                      ? `${new Date(obj.effectiveFrom).toLocaleDateString()} - ${new Date(obj.effectiveTo).toLocaleDateString()}`
-                                      : `${new Date(obj.effectiveFrom).toLocaleDateString()} (Active)`
-                                    }
-                                  </span>
-                                </div>
-                                <p className="font-medium text-base-content/80">{obj.summary}</p>
-                                <ul className="list-disc list-inside text-xs text-base-content/60 space-y-0.5 pl-2">
-                                  {obj.items.map((item: string, iIdx: number) => (
-                                    <li key={iIdx}>{item}</li>
-                                  ))}
-                                </ul>
-                              </div>
-                            ))}
-                          </div>
-                        </details>
-                      )}
-                    </div>
+                {/* Header showing current selected player name */}
+                <div className="border-b border-base-200 pb-3 flex items-center justify-between">
+                  <h3 className="text-2xl font-extrabold text-base-content/80">
+                    👤 {selectedPlayer.name} {selectedPlayer.surname}
+                  </h3>
+                  <div className="badge badge-primary gap-1">
+                    {selectedPlayer.matches.length} {t("trainer_my_players.history_title").toLowerCase()}
                   </div>
                 </div>
 
                 {/* Match History */}
                 <div>
-                  <h3 className="text-2xl font-bold mb-4 px-2 text-base-content/70">
-                    {t("trainer_my_players.history_title")} ({selectedPlayer.matches.length})
-                  </h3>
-                  
                   {selectedPlayer.matches.length === 0 ? (
                     <div className="card bg-base-100 shadow-md border border-base-200 p-8 text-center">
                       <span className="text-4xl mb-2 block">📝</span>
@@ -450,7 +312,8 @@ export default function MyPlayersPage() {
                           role="TRAINER"
                           isExpanded={expandedMatchId === match.id}
                           onToggleExpand={() => toggleMatchExpansion(match.id)}
-                          readOnly={true}
+                          readOnly={false}
+                          returnTo="/trainer/video-analysis/feedback"
                         />
                       ))}
                     </div>

@@ -2,68 +2,47 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth";
-import { getPlayerDashboardStats } from "@/actions/trainer";
+import { getVideoAnalysisStats } from "@/actions/trainer";
 import { useTranslation } from "@/components/LanguageProvider";
 import PageContainer from "@/components/ui/PageContainer";
 
-export default function PlayersDashboardPage() {
+export default function VideoAnalysisDashboardPage() {
   const { t } = useTranslation();
-  const { user, isAuthenticated, isLoading } = useAuth();
-  const router = useRouter();
-
   const [stats, setStats] = useState<{
-    ownPlayersCount: number;
-    totalPlayersCount: number;
+    pendingReviewsCount: number;
+    totalMatchesCount: number;
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Route protection
   useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        router.push("/login");
-      } else if (user?.role !== "TRAINER") {
-        router.push("/dashboard");
-      } else {
-        loadStats();
+    async function loadStats() {
+      try {
+        const res = await getVideoAnalysisStats();
+        if (res.success && res.stats) {
+          setStats(res.stats);
+        } else {
+          setError(res.error || "Failed to load stats");
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load stats");
+      } finally {
+        setLoading(false);
       }
     }
-  }, [isLoading, isAuthenticated, user, router]);
-
-  async function loadStats() {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await getPlayerDashboardStats();
-      if (res.success && res.stats) {
-        setStats(res.stats);
-      } else {
-        setError(res.error || "Failed to load stats");
-      }
-    } catch (err) {
-      console.error(err);
-      setError("Failed to load stats");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  if (isLoading || (user && user.role !== "TRAINER")) {
-    return null;
-  }
+    loadStats();
+  }, []);
 
   return (
     <PageContainer className="py-10 animate-fade-in">
       {/* Title */}
       <div className="mb-10">
         <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-          {t("trainer_players_dashboard.title")}
+          {t("video_analysis_page.title")}
         </h1>
         <p className="text-base-content/70 mt-2 max-w-2xl leading-relaxed">
-          {t("trainer_players_dashboard.subtitle")}
+          {t("video_analysis_page.subtitle")}
         </p>
       </div>
 
@@ -77,65 +56,75 @@ export default function PlayersDashboardPage() {
 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {/* My Players Card */}
+        {/* Match Feedback Card */}
         <div className="card bg-base-100 shadow-xl border border-base-200 hover:shadow-2xl transition-all duration-300 rounded-3xl overflow-hidden group">
           <div className="card-body p-8 flex flex-col justify-between h-full">
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-4xl p-3 bg-primary/10 rounded-2xl group-hover:scale-110 transition-transform duration-300">👥</span>
+                <span className="text-4xl p-3 bg-primary/10 rounded-2xl group-hover:scale-110 transition-transform duration-300">📹</span>
                 {loading ? (
                   <div className="skeleton w-12 h-8 rounded-lg"></div>
                 ) : (
-                  <div className="text-4xl font-black text-primary">
-                    {stats?.ownPlayersCount ?? 0}
+                  <div className="flex flex-col items-end">
+                    <div className="text-4xl font-black text-primary">
+                      {stats?.pendingReviewsCount ?? 0}
+                    </div>
+                    <span className="text-[10px] text-base-content/50 uppercase font-bold tracking-wider mt-1">
+                      {t("video_analysis_page.pending_reviews_label")}
+                    </span>
                   </div>
                 )}
               </div>
               <h2 className="card-title text-2xl font-bold text-base-content mt-6">
-                {t("header.my_players")}
+                {t("header.match_feedback")}
               </h2>
               <p className="text-sm text-base-content/60 leading-relaxed mt-2">
-                {t("trainer_players_dashboard.my_players_desc")}
+                {t("video_analysis_page.feedback_card_desc")}
               </p>
             </div>
             <div className="card-actions justify-end mt-8">
               <Link
-                href="/trainer/players/my-players"
+                href="/trainer/video-analysis/feedback"
                 className="btn btn-primary btn-md rounded-2xl shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 w-full md:w-auto"
               >
-                {t("common.manage")} &rarr;
+                {t("common.manage") || "Manage"} &rarr;
               </Link>
             </div>
           </div>
         </div>
 
-        {/* Assign Players Card */}
+        {/* All Matches Card */}
         <div className="card bg-base-100 shadow-xl border border-base-200 hover:shadow-2xl transition-all duration-300 rounded-3xl overflow-hidden group">
           <div className="card-body p-8 flex flex-col justify-between h-full">
             <div>
               <div className="flex items-center justify-between">
-                <span className="text-4xl p-3 bg-secondary/10 rounded-2xl group-hover:scale-110 transition-transform duration-300">🔍</span>
+                <span className="text-4xl p-3 bg-accent/10 rounded-2xl group-hover:scale-110 transition-transform duration-300">📅</span>
                 {loading ? (
                   <div className="skeleton w-12 h-8 rounded-lg"></div>
                 ) : (
-                  <div className="text-4xl font-black text-secondary">
-                    {stats?.totalPlayersCount ?? 0}
+                  <div className="flex flex-col items-end">
+                    <div className="text-4xl font-black text-accent">
+                      {stats?.totalMatchesCount ?? 0}
+                    </div>
+                    <span className="text-[10px] text-base-content/50 uppercase font-bold tracking-wider mt-1">
+                      {t("video_analysis_page.stat_total_matches") || "Total Matches"}
+                    </span>
                   </div>
                 )}
               </div>
               <h2 className="card-title text-2xl font-bold text-base-content mt-6">
-                {t("header.all_players")}
+                {t("header.all_matches") || "All Matches"}
               </h2>
               <p className="text-sm text-base-content/60 leading-relaxed mt-2">
-                {t("trainer_players_dashboard.assign_players_desc")}
+                {t("video_analysis_page.all_matches_card_desc")}
               </p>
             </div>
             <div className="card-actions justify-end mt-8">
               <Link
-                href="/trainer/players/assign"
-                className="btn btn-secondary btn-md rounded-2xl shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 w-full md:w-auto text-secondary-content"
+                href="/trainer/video-analysis/matches"
+                className="btn btn-accent btn-md rounded-2xl shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 w-full md:w-auto text-accent-content"
               >
-                {t("common.manage")} &rarr;
+                {t("common.manage") || "Manage"} &rarr;
               </Link>
             </div>
           </div>

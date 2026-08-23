@@ -5,12 +5,22 @@ import { useTranslation } from "@/components/LanguageProvider";
 import type { Match } from "@/types/match";
 
 interface MatchCardProps {
-  match: Match;
+  match: Match & {
+    player?: {
+      id: string;
+      name: string;
+      surname: string;
+      avatarUrl: string | null;
+    } | null;
+  };
   role: "PLAYER" | "GOAL_KEEPER" | "TRAINER";
   isExpanded: boolean;
   onToggleExpand: () => void;
   onDelete?: (id: string) => void;
   isDeleting?: boolean;
+  readOnly?: boolean;
+  disableTitleLink?: boolean;
+  returnTo?: string;
 }
 
 export default function MatchCard({
@@ -20,6 +30,9 @@ export default function MatchCard({
   onToggleExpand,
   onDelete,
   isDeleting = false,
+  readOnly = false,
+  disableTitleLink = false,
+  returnTo,
 }: MatchCardProps) {
   const { t } = useTranslation();
 
@@ -67,11 +80,17 @@ export default function MatchCard({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex-1 cursor-pointer" onClick={onToggleExpand}>
             <div className="flex flex-wrap items-center gap-2 mb-2.5">
-              <Link href={`/matches/${match.id}`} className="flex-1 min-w-[200px]" onClick={(e) => e.stopPropagation()}>
-                <h4 className="font-extrabold text-lg hover:underline hover:text-primary transition-colors inline-block cursor-pointer">
+              {disableTitleLink ? (
+                <h4 className="font-extrabold text-lg text-base-content flex-1 min-w-[200px]">
                   {match.name}
                 </h4>
-              </Link>
+              ) : (
+                <Link href={`/matches/${match.id}`} className="flex-1 min-w-[200px]" onClick={(e) => e.stopPropagation()}>
+                  <h4 className="font-extrabold text-lg hover:underline hover:text-primary transition-colors inline-block cursor-pointer">
+                    {match.name}
+                  </h4>
+                </Link>
+              )}
               {getMatchTypeBadge(match.matchType)}
               {match.isReviewed && (
                 <span className="badge badge-success badge-sm font-semibold text-white">
@@ -79,7 +98,19 @@ export default function MatchCard({
                 </span>
               )}
             </div>
-            <div className="text-xs text-base-content/60 flex flex-wrap items-center gap-x-4 gap-y-1">
+            <div className="text-xs text-base-content/60 flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-1">
+              {match.player && (
+                <div className="flex items-center gap-1.5 bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded-full mr-1">
+                  <div className="avatar placeholder w-4 h-4 rounded-full overflow-hidden flex items-center justify-center bg-primary text-primary-content text-[8px] font-bold">
+                    {match.player.avatarUrl ? (
+                      <img src={match.player.avatarUrl} alt={match.player.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <span>{match.player.name.charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
+                  <span>{match.player.name} {match.player.surname}</span>
+                </div>
+              )}
               <span>📅 {matchDateFormatted} {match.startTime ? `@ ${match.startTime}` : ""}</span>
               {match.location && <span>📍 {match.location}</span>}
               {match.opponent && <span>⚔️ vs {match.opponent}</span>}
@@ -124,12 +155,14 @@ export default function MatchCard({
                   )}
                 </>
               ) : (
-                <Link
-                  href={`/matches/${match.id}/edit-feedback`}
-                  className="btn btn-ghost btn-sm text-primary hover:bg-primary/10 font-medium"
-                >
-                  {t("trainer_my_players.edit_feedback")}
-                </Link>
+                !readOnly && (
+                  <Link
+                    href={`/matches/${match.id}/edit-feedback${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ""}`}
+                    className="btn btn-ghost btn-sm text-primary hover:bg-primary/10 font-medium"
+                  >
+                    {t("trainer_my_players.edit_feedback")}
+                  </Link>
+                )
               )}
               <button
                 onClick={onToggleExpand}
