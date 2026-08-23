@@ -3,7 +3,8 @@
     "brand": "Foot-Tracker",
     "about": "Com funciona",
     "users": "Usuaris",
-    "all_players": "Tots els jugadors",
+    "players": "Jugadors",
+    "all_players": "Assignar jugadors",
     "my_players": "Els meus jugadors",
     "dashboard": "Anàlisi de vídeo",
     "physical_prep": "Preparació física",
@@ -27,6 +28,7 @@
   },
   "common": {
     "save": "Desar",
+    "manage": "Gestionar",
     "cancel": "Cancel·lar",
     "delete": "Eliminar",
     "edit": "Editar",
@@ -447,7 +449,7 @@
     "error_email_collision": "Aquesta adreça de correu ja està en ús per un altre compte."
   },
   "trainer_players": {
-    "title": "Directori de jugadors",
+    "title": "Assignar jugadors",
     "subtitle": "Consulta tots els jugadors del sistema i assigna'ls a la teva plantilla per fer el seguiment.",
     "search_placeholder": "Cercar jugadors per nom o correu...",
     "no_players": "No s'han trobat jugadors",
@@ -467,6 +469,12 @@
     "unassign_from_me": "Desassignar",
     "success_assign": "Jugador assignat correctament!",
     "success_unassign": "Jugador desassignat correctament!"
+  },
+  "trainer_players_dashboard": {
+    "title": "Jugadors",
+    "subtitle": "Gestió de la teva plantilla de jugadors i assignació de nous perfils al teu equip.",
+    "my_players_desc": "Fes el seguiment, consulta l'historial de partits i gestiona el dia a dia de la teva plantilla.",
+    "assign_players_desc": "Consulta tots els jugadors del club registrats al sistema i autoassigna'ls a la teva plantilla."
   },
   "trainer_my_players": {
     "title": "Els meus jugadors assignats",

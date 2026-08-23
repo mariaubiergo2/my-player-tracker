@@ -3,7 +3,8 @@
     "brand": "Foot-Tracker",
     "about": "How it works",
     "users": "Users",
-    "all_players": "All Players",
+    "players": "Players",
+    "all_players": "Assign players",
     "my_players": "My Players",
     "dashboard": "Video Analysis",
     "physical_prep": "Physical Prep",
@@ -27,6 +28,7 @@
   },
   "common": {
     "save": "Save",
+    "manage": "Manage",
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
@@ -447,7 +449,7 @@
     "error_email_collision": "This email address is already in use by another account."
   },
   "trainer_players": {
-    "title": "All Players Directory",
+    "title": "Assign players",
     "subtitle": "View all players in the system and assign them to your roster for match tracking.",
     "search_placeholder": "Search players by name or email...",
     "no_players": "No players found",
@@ -467,6 +469,12 @@
     "unassign_from_me": "Unassign",
     "success_assign": "Player successfully assigned to you!",
     "success_unassign": "Player successfully unassigned!"
+  },
+  "trainer_players_dashboard": {
+    "title": "Players",
+    "subtitle": "Manage your roster of players and assign new player profiles to your team.",
+    "my_players_desc": "Track performance, view match history, and manage the day-to-day of your current roster.",
+    "assign_players_desc": "View all club players registered in the system and self-assign them to your roster."
   },
   "trainer_my_players": {
     "title": "My Assigned Players",

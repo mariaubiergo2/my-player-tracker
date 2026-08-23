@@ -127,7 +127,8 @@ export async function assignPlayerToTrainer(playerId: string) {
     await connectPlayerToTrainerShared(trainerId, playerId);
 
     revalidatePath("/trainer/players");
-    revalidatePath("/trainer/my-players");
+    revalidatePath("/trainer/players/assign");
+    revalidatePath("/trainer/players/my-players");
 
     return { success: true };
   } catch (error) {
@@ -213,7 +214,8 @@ export async function unassignPlayerFromTrainer(playerId: string) {
     await disconnectPlayerFromTrainerShared(trainerId, playerId);
 
     revalidatePath("/trainer/players");
-    revalidatePath("/trainer/my-players");
+    revalidatePath("/trainer/players/assign");
+    revalidatePath("/trainer/players/my-players");
 
     return { success: true };
   } catch (error) {
@@ -221,6 +223,46 @@ export async function unassignPlayerFromTrainer(playerId: string) {
     return {
       success: false,
       error: error instanceof Error ? error.message : "Failed to unassign player",
+    };
+  }
+}
+
+/**
+ * READ: Get stats for the trainer players dashboard landing page
+ */
+export async function getPlayerDashboardStats() {
+  try {
+    const trainerId = await checkTrainer();
+
+    const ownPlayersCount = await prisma.user.count({
+      where: {
+        role: { in: [UserRole.PLAYER, UserRole.GOAL_KEEPER] },
+        trainers: {
+          some: {
+            id: trainerId,
+          },
+        },
+      },
+    });
+
+    const totalPlayersCount = await prisma.user.count({
+      where: {
+        role: { in: [UserRole.PLAYER, UserRole.GOAL_KEEPER] },
+      },
+    });
+
+    return {
+      success: true,
+      stats: {
+        ownPlayersCount,
+        totalPlayersCount,
+      },
+    };
+  } catch (error) {
+    console.error("getPlayerDashboardStats error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to load players dashboard stats",
     };
   }
 }

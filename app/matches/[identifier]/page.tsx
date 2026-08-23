@@ -53,7 +53,7 @@ export default async function MatchPage({
       )}
       <div className="mb-10">
         <Link 
-          href={currentUser?.role === "TRAINER" ? "/trainer/my-players" : "/dashboard"} 
+          href={currentUser?.role === "TRAINER" ? "/trainer/players/my-players" : "/dashboard"} 
           className="btn btn-ghost mb-4"
         >
           {t("match_details.back_dashboard")}

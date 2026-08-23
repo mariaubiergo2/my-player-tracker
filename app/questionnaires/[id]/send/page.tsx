@@ -169,7 +169,7 @@ export default function SendQuestionnairePage({ params }: { params: Promise<{ id
               {players.length === 0 ? (
                 <div className="text-center py-10">
                   <p className="text-base-content/50">{t("questionnaires.no_players_available")}</p>
-                  <Link href="/trainer/players" className="btn btn-neutral btn-outline btn-sm mt-4">
+                  <Link href="/trainer/players/assign" className="btn btn-neutral btn-outline btn-sm mt-4">
                     Asignar jugadores
                   </Link>
                 </div>

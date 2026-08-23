@@ -29,7 +29,7 @@ export default function EditMatchForm({
   const { t } = useTranslation()
   const isPlayerLike = currentUserRole === "PLAYER" || currentUserRole === "GOAL_KEEPER"
   const redirectUrl = currentUserRole === "TRAINER"
-    ? "/trainer/my-players"
+    ? "/trainer/players/my-players"
     : currentUserRole === "ADMIN"
       ? "/admin/users"
       : "/dashboard"

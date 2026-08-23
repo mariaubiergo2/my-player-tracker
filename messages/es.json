@@ -3,7 +3,8 @@
     "brand": "Foot-Tracker",
     "about": "Cómo funciona",
     "users": "Usuarios",
-    "all_players": "Todos los jugadores",
+    "players": "Jugadores",
+    "all_players": "Asignar jugadores",
     "my_players": "Mis jugadores",
     "dashboard": "Análisis de vídeo",
     "physical_prep": "Preparación física",
@@ -27,6 +28,7 @@
   },
   "common": {
     "save": "Guardar",
+    "manage": "Gestionar",
     "cancel": "Cancelar",
     "delete": "Eliminar",
     "edit": "Editar",
@@ -447,7 +449,7 @@
     "error_email_collision": "Esta dirección de correo ya está en uso por otra cuenta."
   },
   "trainer_players": {
-    "title": "Directorio de jugadores",
+    "title": "Asignar jugadores",
     "subtitle": "Consulta todos los jugadores del sistema y asígnalos a tu plantilla para hacer el seguimiento.",
     "search_placeholder": "Buscar jugadores por nombre o correo...",
     "no_players": "No se encontraron jugadores",
@@ -467,6 +469,12 @@
     "unassign_from_me": "Desasignar",
     "success_assign": "¡Jugador asignado correctamente!",
     "success_unassign": "¡Jugador desasignado correctamente!"
+  },
+  "trainer_players_dashboard": {
+    "title": "Jugadores",
+    "subtitle": "Gestión de tu plantilla de jugadores y asignación de nuevos perfiles a tu equipo.",
+    "my_players_desc": "Haz el seguimiento, consulta el historial de partidos y gestiona el día a día de tu plantilla.",
+    "assign_players_desc": "Consulta todos los jugadores del club registrados en el sistema y autoasígalos a tu plantilla."
   },
   "trainer_my_players": {
     "title": "Mis jugadores asignados",

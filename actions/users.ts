@@ -499,7 +499,8 @@ export async function updateTrainerAssignments(
 
     revalidatePath("/admin/users");
     revalidatePath("/trainer/players");
-    revalidatePath("/trainer/my-players");
+    revalidatePath("/trainer/players/assign");
+    revalidatePath("/trainer/players/my-players");
 
     return { success: true };
   } catch (error) {

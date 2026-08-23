@@ -175,7 +175,7 @@ export default function MyPlayersPage() {
             <p className="py-4 text-base-content/60">
               {t("trainer_my_players.no_assigned_desc")}
             </p>
-            <Link href="/trainer/players" className="btn btn-primary shadow-md hover:scale-105 active:scale-95 transition-all">
+            <Link href="/trainer/players/assign" className="btn btn-primary shadow-md hover:scale-105 active:scale-95 transition-all">
               {t("trainer_my_players.go_directory")}
             </Link>
           </div>
@@ -271,7 +271,7 @@ export default function MyPlayersPage() {
               </div>
 
               {/* Add more players link button */}
-              <Link href="/trainer/players" className="btn btn-outline btn-block text-xs mt-2 border-dashed">
+              <Link href="/trainer/players/assign" className="btn btn-outline btn-block text-xs mt-2 border-dashed">
                 {t("trainer_my_players.assign_more")}
               </Link>
             </div>
