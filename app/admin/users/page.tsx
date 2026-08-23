@@ -9,6 +9,8 @@ import {
   createUser,
   updateUser,
   deleteUser,
+  getAssignmentsData,
+  updateTrainerAssignments,
 } from "@/actions/users";
 import { useTranslation } from "@/components/LanguageProvider";
 import PageContainer from "@/components/ui/PageContainer";
@@ -29,8 +31,134 @@ export default function AdminUsersPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
   const { t } = useTranslation();
-  
-  // State variables
+
+  // Tab control
+  const [activeTab, setActiveTab] = useState<"directory" | "assignments">("directory");
+
+  // Assignments state
+  const [trainers, setTrainers] = useState<any[]>([]);
+  const [allPlayers, setAllPlayers] = useState<any[]>([]);
+  const [selectedTrainerId, setSelectedTrainerId] = useState<string | null>(null);
+  const [selectedPlayerIds, setSelectedPlayerIds] = useState<string[]>([]);
+  const [initialPlayerIds, setInitialPlayerIds] = useState<string[]>([]);
+  const [playerSearchQuery, setPlayerSearchQuery] = useState("");
+  const [loadingAssignments, setLoadingAssignments] = useState(false);
+  const [savingAssignments, setSavingAssignments] = useState(false);
+
+  // Fetch assignments data
+  const fetchAssignmentsData = async () => {
+    setLoadingAssignments(true);
+    try {
+      const res = await getAssignmentsData();
+      if (res.success && res.trainers && res.players) {
+        setTrainers(res.trainers);
+        setAllPlayers(res.players);
+      } else {
+        showError(res.error || t("common.error"));
+      }
+    } catch (err) {
+      console.error(err);
+      showError(t("common.error"));
+    } finally {
+      setLoadingAssignments(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === "assignments") {
+      fetchAssignmentsData();
+      setSelectedTrainerId(null);
+      setSelectedPlayerIds([]);
+      setInitialPlayerIds([]);
+    }
+  }, [activeTab]);
+
+  const handleSelectTrainer = (trainerId: string) => {
+    setSelectedTrainerId(trainerId);
+    const trainer = trainers.find((t) => t.id === trainerId);
+    if (trainer) {
+      setSelectedPlayerIds(trainer.assignedPlayerIds || []);
+      setInitialPlayerIds(trainer.assignedPlayerIds || []);
+    } else {
+      setSelectedPlayerIds([]);
+      setInitialPlayerIds([]);
+    }
+  };
+
+  const handleTogglePlayer = (playerId: string) => {
+    setSelectedPlayerIds((prev) =>
+      prev.includes(playerId)
+        ? prev.filter((id) => id !== playerId)
+        : [...prev, playerId]
+    );
+  };
+
+  const handleSaveAssignments = async () => {
+    if (!selectedTrainerId) return;
+    setSavingAssignments(true);
+
+    const toAssign = selectedPlayerIds.filter((id) => !initialPlayerIds.includes(id));
+    const toUnassign = initialPlayerIds.filter((id) => !selectedPlayerIds.includes(id));
+
+    try {
+      const res = await updateTrainerAssignments(selectedTrainerId, toAssign, toUnassign);
+      if (res.success) {
+        showSuccess(t("admin_users.assignments_save_success") || "Trainer assignments successfully updated.");
+        
+        // Re-fetch assignments data to get fresh counts and relation state
+        await fetchAssignmentsData();
+        
+        // Sync local states
+        const newAssigned = selectedPlayerIds;
+        setInitialPlayerIds(newAssigned);
+        
+        // Update local trainers state
+        setTrainers((prev) =>
+          prev.map((t) =>
+            t.id === selectedTrainerId
+              ? { ...t, playerCount: newAssigned.length, assignedPlayerIds: newAssigned }
+              : t
+          )
+        );
+      } else {
+        showError(res.error || t("admin_users.assignments_save_error") || "Failed to update assignments.");
+      }
+    } catch (err) {
+      console.error(err);
+      showError(t("common.error"));
+    } finally {
+      setSavingAssignments(false);
+    }
+  };
+
+  const selectedTrainer = trainers.find((t) => t.id === selectedTrainerId);
+
+  // Check if there are any differences
+  const hasChanges =
+    selectedPlayerIds.length !== initialPlayerIds.length ||
+    selectedPlayerIds.some((id) => !initialPlayerIds.includes(id));
+
+  // Filter players by query
+  const filteredPlayersList = allPlayers.filter((p) => {
+    const fullName = `${p.name} ${p.surname}`.toLowerCase();
+    const email = p.email ? p.email.toLowerCase() : "";
+    const query = playerSearchQuery.toLowerCase();
+    return fullName.includes(query) || email.includes(query);
+  });
+
+  // Sorting state for trainers list
+  const [trainerSortBy, setTrainerSortBy] = useState<"name" | "count">("name");
+
+  // Sorted trainers list
+  const sortedTrainersList = [...trainers].sort((a, b) => {
+    if (trainerSortBy === "count") {
+      return b.playerCount - a.playerCount; // descending (most assigned first)
+    } else {
+      const nameA = `${a.name} ${a.surname}`.toLowerCase();
+      const nameB = `${b.name} ${b.surname}`.toLowerCase();
+      return nameA.localeCompare(nameB); // ascending (A-Z)
+    }
+  });
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -422,7 +550,6 @@ export default function AdminUsersPage() {
           </div>
         </div>
       )}
-
       {/* Title Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
         <div>
@@ -433,248 +560,482 @@ export default function AdminUsersPage() {
             {t("admin_users.subtitle")}
           </p>
         </div>
-        <button onClick={handleOpenCreate} className="btn btn-primary shadow-md hover:scale-105 active:scale-95 transition-all">
-          + {t("admin_users.create_btn")}
+        {activeTab === "directory" && (
+          <button onClick={handleOpenCreate} className="btn btn-primary shadow-md hover:scale-105 active:scale-95 transition-all">
+            + {t("admin_users.create_btn")}
+          </button>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <div className="tabs tabs-boxed bg-base-200/50 p-1 rounded-xl mb-8 w-fit">
+        <button
+          onClick={() => setActiveTab("directory")}
+          className={`tab rounded-lg transition-all duration-200 ${
+            activeTab === "directory"
+              ? "tab-active bg-primary text-primary-content font-bold shadow-sm"
+              : "text-base-content/60 hover:text-base-content"
+          }`}
+        >
+          {t("admin_users.tab_directory") || "User Directory"}
+        </button>
+        <button
+          onClick={() => setActiveTab("assignments")}
+          className={`tab rounded-lg transition-all duration-200 ${
+            activeTab === "assignments"
+              ? "tab-active bg-primary text-primary-content font-bold shadow-sm"
+              : "text-base-content/60 hover:text-base-content"
+          }`}
+        >
+          {t("admin_users.tab_assignments") || "Assignments"}
         </button>
       </div>
 
-      {/* Control Filter Bar */}
-      <div className="card bg-base-100 shadow-md border border-base-200 mb-8">
-        <div className="card-body py-4 flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div className="form-control w-full md:max-w-md">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder={t("admin_users.search_placeholder")}
-                className="input input-bordered w-full pl-10"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <span className="absolute left-3 top-3.5 text-base-content/50">🔍</span>
+      {activeTab === "directory" ? (
+        <div className="animate-fade-in space-y-8">
+          {/* Control Filter Bar */}
+          <div className="card bg-base-100 shadow-md border border-base-200 mb-8">
+            <div className="card-body py-4 flex flex-col md:flex-row gap-4 items-center justify-between">
+              <div className="form-control w-full md:max-w-md">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder={t("admin_users.search_placeholder")}
+                    className="input input-bordered w-full pl-10"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  <span className="absolute left-3 top-3.5 text-base-content/50">🔍</span>
+                </div>
+              </div>
+
+              <div className="flex gap-2 w-full md:w-auto items-center justify-end">
+                <span className="text-sm font-semibold text-base-content/70 whitespace-nowrap">{t("admin_users.filter_role")}:</span>
+                <select
+                  className="select select-bordered w-full md:w-auto min-w-[150px]"
+                  value={roleFilter}
+                  onChange={(e) => setRoleFilter(e.target.value)}
+                >
+                  <option value="ALL" className="bg-base-100 text-base-content">{t("admin_users.all_roles")}</option>
+                  <option value="ADMIN" className="bg-base-100 text-base-content">{t("admin_users.admins")}</option>
+                  <option value="TRAINER" className="bg-base-100 text-base-content">{t("admin_users.trainers")}</option>
+                  <option value="PLAYER" className="bg-base-100 text-base-content">{t("admin_users.players")}</option>
+                  <option value="GOAL_KEEPER" className="bg-base-100 text-base-content">{t("common.role_goal_keeper")}</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <div className="flex gap-2 w-full md:w-auto items-center justify-end">
-            <span className="text-sm font-semibold text-base-content/70 whitespace-nowrap">{t("admin_users.filter_role")}:</span>
-            <select
-              className="select select-bordered w-full md:w-auto min-w-[150px]"
-              value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-            >
-              <option value="ALL" className="bg-base-100 text-base-content">{t("admin_users.all_roles")}</option>
-              <option value="ADMIN" className="bg-base-100 text-base-content">{t("admin_users.admins")}</option>
-              <option value="TRAINER" className="bg-base-100 text-base-content">{t("admin_users.trainers")}</option>
-              <option value="PLAYER" className="bg-base-100 text-base-content">{t("admin_users.players")}</option>
-              <option value="GOAL_KEEPER" className="bg-base-100 text-base-content">{t("common.role_goal_keeper")}</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      {/* User Directory Table */}
-      {filteredUsers.length === 0 ? (
-        <div className="hero bg-base-200 rounded-2xl p-10 text-center shadow-inner border border-base-content/5">
-          <div className="max-w-md">
-            <span className="text-5xl">👥</span>
-            <h3 className="text-2xl font-bold mt-4">{t("admin_users.no_users")}</h3>
-            <p className="py-2 text-base-content/60">
-              {t("admin_users.adjust_filter")}
-            </p>
-          </div>
+          {/* User Directory Table */}
+          {filteredUsers.length === 0 ? (
+            <div className="hero bg-base-200 rounded-2xl p-10 text-center shadow-inner border border-base-content/5">
+              <div className="max-w-md">
+                <span className="text-5xl">👥</span>
+                <h3 className="text-2xl font-bold mt-4">{t("admin_users.no_users")}</h3>
+                <p className="py-2 text-base-content/60">
+                  {t("admin_users.adjust_filter")}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto card bg-base-100 shadow-xl border border-base-200">
+              <table className="table table-zebra w-full" style={{ tableLayout: "fixed" }}>
+                <thead>
+                  <tr className="bg-base-200/50">
+                    {columnOrder.map((colId) => (
+                      <th
+                        key={colId}
+                        style={{ width: columnWidths[colId] }}
+                        className={`relative p-0 select-none group border-r border-base-content/10 last:border-0 ${getColClass(colId)}`}
+                      >
+                        <div
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, colId)}
+                          onDragOver={handleDragOver}
+                          onDrop={(e) => handleDrop(e, colId)}
+                          className="px-4 py-3 cursor-move flex items-center justify-between font-bold text-xs uppercase text-base-content/70 hover:bg-base-200/50 active:bg-base-200 transition-colors"
+                          title={t("admin_users.drag_reorder") || "Drag to reorder / Arrastra para reordenar"}
+                        >
+                          <span className="truncate">{getColLabel(colId)}</span>
+                          <span className="opacity-0 group-hover:opacity-40 text-[10px] ml-1 select-none pointer-events-none">⋮⋮</span>
+                        </div>
+                        {/* Resizer Handle */}
+                        <div
+                          onMouseDown={(e) => handleResizeStart(e, colId)}
+                          className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize hover:bg-primary/40 active:bg-primary z-20"
+                        />
+                      </th>
+                    ))}
+                    {/* Actions column remains fixed at the end */}
+                    <th className="text-right px-4 py-3 w-[120px] font-bold text-xs uppercase text-base-content/70">
+                      {t("admin_users.table_actions")}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.map((u) => (
+                    <tr key={u.id} className="hover:bg-base-200/30 transition-colors">
+                      {columnOrder.map((colId) => {
+                        if (colId === "name") {
+                          return (
+                            <td key="name" className="px-4 py-3 font-medium max-w-xs truncate">
+                              <div className="flex items-center gap-3">
+                                <div className={`avatar placeholder ${u.avatarUrl ? "" : "bg-neutral text-neutral-content"} rounded-full w-9 h-9 flex items-center justify-center overflow-hidden shrink-0`}>
+                                  {u.avatarUrl ? (
+                                    <img src={u.avatarUrl} alt={u.name} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <span className="text-xs font-semibold">
+                                      {u.name.charAt(0).toUpperCase()}
+                                      {u.surname.charAt(0).toUpperCase()}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="font-bold text-base-content truncate">
+                                    {u.name} {u.surname}
+                                  </div>
+                                  <div className="text-xs text-base-content/50 lg:hidden truncate">
+                                    {u.email}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                          );
+                        }
+                        if (colId === "email") {
+                          return (
+                            <td key="email" className="px-4 py-3 text-sm font-medium text-base-content/85 max-w-xs truncate">
+                              {u.email}
+                            </td>
+                          );
+                        }
+                        if (colId === "role") {
+                          const isDisabled = u.id === user.id;
+                          return (
+                            <td key="role" className="px-4 py-3 text-sm">
+                              <div className="dropdown dropdown-bottom dropdown-end">
+                                <div
+                                  tabIndex={isDisabled ? undefined : 0}
+                                  role={isDisabled ? undefined : "button"}
+                                  className={`${getRoleBadgeClass(u.role)} gap-1 flex items-center pr-2.5 pl-2.5 h-6 rounded-full text-xs font-semibold text-white select-none ${isDisabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all"}`}
+                                  title={isDisabled ? t("admin_users.cannot_demote_self") : t("admin_users.modify_role")}
+                                >
+                                  <span>
+                                    {u.role === "PLAYER" && t("common.role_player")}
+                                    {u.role === "GOAL_KEEPER" && t("common.role_goal_keeper")}
+                                    {u.role === "TRAINER" && t("common.role_trainer")}
+                                    {u.role === "ADMIN" && "Admin"}
+                                  </span>
+                                  {!isDisabled && <span className="text-[9px] opacity-80 ml-0.5">▼</span>}
+                                </div>
+                                {!isDisabled && (
+                                  <ul
+                                    tabIndex={0}
+                                    className="dropdown-content menu p-1.5 shadow-xl bg-base-100 border border-base-300 rounded-lg w-40 z-50 text-xs text-base-content"
+                                  >
+                                    <li>
+                                      <button
+                                        onClick={() => {
+                                          handleRoleChange(u.id, "PLAYER", u.name);
+                                          (document.activeElement as HTMLElement)?.blur();
+                                        }}
+                                        className={`py-1.5 px-3 rounded text-left ${u.role === "PLAYER" ? "bg-primary text-primary-content font-semibold" : "hover:bg-base-200"}`}
+                                      >
+                                        {t("common.role_player")}
+                                      </button>
+                                    </li>
+                                    <li>
+                                      <button
+                                        onClick={() => {
+                                          handleRoleChange(u.id, "GOAL_KEEPER", u.name);
+                                          (document.activeElement as HTMLElement)?.blur();
+                                        }}
+                                        className={`py-1.5 px-3 rounded text-left ${u.role === "GOAL_KEEPER" ? "bg-primary text-primary-content font-semibold" : "hover:bg-base-200"}`}
+                                      >
+                                        {t("common.role_goal_keeper")}
+                                      </button>
+                                    </li>
+                                    <li>
+                                      <button
+                                        onClick={() => {
+                                          handleRoleChange(u.id, "TRAINER", u.name);
+                                          (document.activeElement as HTMLElement)?.blur();
+                                        }}
+                                        className={`py-1.5 px-3 rounded text-left ${u.role === "TRAINER" ? "bg-primary text-primary-content font-semibold" : "hover:bg-base-200"}`}
+                                      >
+                                        {t("common.role_trainer")}
+                                      </button>
+                                    </li>
+                                    <li>
+                                      <button
+                                        onClick={() => {
+                                          handleRoleChange(u.id, "ADMIN", u.name);
+                                          (document.activeElement as HTMLElement)?.blur();
+                                        }}
+                                        className={`py-1.5 px-3 rounded text-left ${u.role === "ADMIN" ? "bg-primary text-primary-content font-semibold" : "hover:bg-base-200"}`}
+                                      >
+                                        {t("common.role_admin")}
+                                      </button>
+                                    </li>
+                                  </ul>
+                                )}
+                              </div>
+                            </td>
+                          );
+                        }
+                        if (colId === "phone") {
+                          return (
+                            <td key="phone" className={`px-4 py-3 text-sm text-base-content/75 truncate ${getColClass(colId)}`}>
+                              {u.phone || <span className="text-base-content/30 italic">{t("common.not_specified")}</span>}
+                            </td>
+                          );
+                        }
+                        if (colId === "birth") {
+                          return (
+                            <td key="birth" className={`px-4 py-3 text-sm text-base-content/75 truncate ${getColClass(colId)}`}>
+                              {u.birthDate || <span className="text-base-content/30 italic">{t("common.not_specified")}</span>}
+                            </td>
+                          );
+                        }
+                        if (colId === "registered") {
+                          return (
+                            <td key="registered" className={`px-4 py-3 text-sm text-base-content/50 truncate ${getColClass(colId)}`}>
+                              {u.createdAt}
+                            </td>
+                          );
+                        }
+                        return null;
+                      })}
+                      {/* Actions column remains fixed at the end */}
+                      <td className="px-4 py-3 text-right w-[120px]">
+                        <div className="flex justify-end gap-1">
+                          <button
+                            onClick={() => handleOpenEdit(u)}
+                            className="btn btn-ghost btn-sm text-primary hover:bg-primary/10"
+                            title={t("common.edit")}
+                          >
+                            ✏️
+                          </button>
+                          <button
+                            onClick={() => handleOpenDelete(u)}
+                            className="btn btn-ghost btn-sm text-error hover:bg-error/10"
+                            disabled={u.id === user.id}
+                            title={u.id === user.id ? "Cannot delete yourself" : t("common.delete")}
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       ) : (
-        <div className="overflow-x-auto card bg-base-100 shadow-xl border border-base-200">
-          <table className="table table-zebra w-full" style={{ tableLayout: "fixed" }}>
-            <thead>
-              <tr className="bg-base-200/50">
-                {columnOrder.map((colId) => (
-                  <th
-                    key={colId}
-                    style={{ width: columnWidths[colId] }}
-                    className={`relative p-0 select-none group border-r border-base-content/10 last:border-0 ${getColClass(colId)}`}
-                  >
-                    <div
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, colId)}
-                      onDragOver={handleDragOver}
-                      onDrop={(e) => handleDrop(e, colId)}
-                      className="px-4 py-3 cursor-move flex items-center justify-between font-bold text-xs uppercase text-base-content/70 hover:bg-base-200/50 active:bg-base-200 transition-colors"
-                      title={t("admin_users.drag_reorder") || "Drag to reorder / Arrastra para reordenar"}
-                    >
-                      <span className="truncate">{getColLabel(colId)}</span>
-                      <span className="opacity-0 group-hover:opacity-40 text-[10px] ml-1 select-none pointer-events-none">⋮⋮</span>
+        /* Assignments Section */
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in">
+          {/* Trainers List Panel */}
+          <div className="lg:col-span-5 space-y-4">
+            <div className="card bg-base-100 shadow-md border border-base-200 p-6">
+              <h3 className="font-bold text-xl mb-1 text-base-content">
+                {t("admin_users.assignments_trainer_title") || "Trainers"}
+              </h3>
+              <p className="text-sm text-base-content/60 mb-6">
+                {t("admin_users.assignments_trainer_subtitle") || "Select a trainer to manage their assigned players."}
+              </p>
+
+              {loadingAssignments ? (
+                <div className="flex justify-center items-center py-12">
+                  <span className="loading loading-spinner loading-md text-primary"></span>
+                </div>
+              ) : trainers.length === 0 ? (
+                <div className="text-center py-8 text-base-content/50">
+                  {t("admin_users.assignments_no_trainers") || "No trainers found."}
+                </div>
+              ) : (
+                <>
+                  {/* Sorting Controls */}
+                  <div className="flex items-center gap-2 mb-4 p-2 bg-base-200/40 rounded-lg text-xs w-fit select-none">
+                    <span className="font-semibold text-base-content/60">
+                      {t("admin_users.assignments_sort_label") || "Sort by:"}
+                    </span>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => setTrainerSortBy("name")}
+                        className={`px-2 py-1 rounded transition-colors ${
+                          trainerSortBy === "name"
+                            ? "bg-primary text-primary-content font-semibold"
+                            : "hover:bg-base-200 text-base-content/70"
+                        }`}
+                      >
+                        {t("admin_users.assignments_sort_by_name") || "Name"}
+                      </button>
+                      <button
+                        onClick={() => setTrainerSortBy("count")}
+                        className={`px-2 py-1 rounded transition-colors ${
+                          trainerSortBy === "count"
+                            ? "bg-primary text-primary-content font-semibold"
+                            : "hover:bg-base-200 text-base-content/70"
+                        }`}
+                      >
+                        {t("admin_users.assignments_sort_by_count") || "No. of Players"}
+                      </button>
                     </div>
-                    {/* Resizer Handle */}
-                    <div
-                      onMouseDown={(e) => handleResizeStart(e, colId)}
-                      className="absolute top-0 right-0 h-full w-1.5 cursor-col-resize hover:bg-primary/40 active:bg-primary z-20"
-                    />
-                  </th>
-                ))}
-                {/* Actions column remains fixed at the end */}
-                <th className="text-right px-4 py-3 w-[120px] font-bold text-xs uppercase text-base-content/70">
-                  {t("admin_users.table_actions")}
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.map((u) => (
-                <tr key={u.id} className="hover:bg-base-200/30 transition-colors">
-                  {columnOrder.map((colId) => {
-                    if (colId === "name") {
+                  </div>
+
+                  <div className="space-y-2 max-h-[600px] overflow-y-auto pr-2">
+                    {sortedTrainersList.map((trainer) => (
+                      <div
+                        key={trainer.id}
+                        onClick={() => handleSelectTrainer(trainer.id)}
+                        className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between group ${
+                          selectedTrainerId === trainer.id
+                            ? "bg-primary/10 border-primary/50 shadow-sm font-semibold"
+                            : "bg-base-100 border-base-200 hover:bg-base-200/50"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className={`avatar placeholder ${trainer.avatarUrl ? "" : "bg-neutral text-neutral-content"} rounded-full w-10 h-10 flex items-center justify-center overflow-hidden shrink-0`}>
+                            {trainer.avatarUrl ? (
+                              <img src={trainer.avatarUrl} alt={trainer.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-xs font-semibold">
+                                {trainer.name.charAt(0).toUpperCase()}
+                                {trainer.surname.charAt(0).toUpperCase()}
+                              </span>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="font-bold text-base-content truncate group-hover:text-primary transition-colors">
+                              {trainer.name} {trainer.surname}
+                            </div>
+                            <div className="text-xs text-base-content/50 truncate">
+                              {trainer.email}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="badge badge-neutral text-xs font-semibold shrink-0">
+                          {trainer.playerCount}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Players Checklist Panel */}
+          <div className="lg:col-span-7">
+            {selectedTrainer ? (
+              <div className="card bg-base-100 shadow-md border border-base-200 p-6 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-base-200 pb-4">
+                  <div>
+                    <h3 className="font-bold text-xl text-base-content">
+                      {t("admin_users.assignments_players_title", { trainerName: `${selectedTrainer.name} ${selectedTrainer.surname}` })}
+                    </h3>
+                    <p className="text-sm text-base-content/60">
+                      {t("admin_users.assignments_count", { count: selectedPlayerIds.length })}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleSaveAssignments}
+                    disabled={savingAssignments || !hasChanges}
+                    className="btn btn-primary btn-sm shadow-md hover:scale-105 active:scale-95 transition-all"
+                  >
+                    {savingAssignments ? (
+                      <>
+                        <span className="loading loading-spinner loading-xs"></span>
+                        {t("admin_users.assignments_saving") || "Saving..."}
+                      </>
+                    ) : (
+                      t("admin_users.assignments_save_btn") || "Save Changes"
+                    )}
+                  </button>
+                </div>
+
+                {/* Filter Input */}
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder={t("admin_users.assignments_search_players") || "Search players..."}
+                    className="input input-bordered input-sm w-full pl-8"
+                    value={playerSearchQuery}
+                    onChange={(e) => setPlayerSearchQuery(e.target.value)}
+                  />
+                  <span className="absolute left-2.5 top-2 text-base-content/50 text-sm">🔍</span>
+                </div>
+
+                {/* Players Checklist */}
+                <div className="space-y-2 max-h-[500px] overflow-y-auto pr-2">
+                  {filteredPlayersList.length === 0 ? (
+                    <div className="text-center py-8 text-base-content/50">
+                      {t("admin_users.assignments_no_players") || "No players found."}
+                    </div>
+                  ) : (
+                    filteredPlayersList.map((player) => {
+                      const isChecked = selectedPlayerIds.includes(player.id);
                       return (
-                        <td key="name" className="px-4 py-3 font-medium max-w-xs truncate">
-                          <div className="flex items-center gap-3">
-                            <div className={`avatar placeholder ${u.avatarUrl ? "" : "bg-neutral text-neutral-content"} rounded-full w-9 h-9 flex items-center justify-center overflow-hidden shrink-0`}>
-                              {u.avatarUrl ? (
-                                <img src={u.avatarUrl} alt={u.name} className="w-full h-full object-cover" />
+                        <label
+                          key={player.id}
+                          className="flex items-center justify-between p-3 rounded-xl border border-base-200 hover:bg-base-200/30 cursor-pointer transition-all select-none"
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <input
+                              type="checkbox"
+                              className="checkbox checkbox-primary checkbox-sm rounded"
+                              checked={isChecked}
+                              onChange={() => handleTogglePlayer(player.id)}
+                            />
+                            <div className={`avatar placeholder ${player.avatarUrl ? "" : "bg-neutral text-neutral-content"} rounded-full w-8 h-8 flex items-center justify-center overflow-hidden shrink-0`}>
+                              {player.avatarUrl ? (
+                                <img src={player.avatarUrl} alt={player.name} className="w-full h-full object-cover" />
                               ) : (
                                 <span className="text-xs font-semibold">
-                                  {u.name.charAt(0).toUpperCase()}
-                                  {u.surname.charAt(0).toUpperCase()}
+                                  {player.name.charAt(0).toUpperCase()}
+                                  {player.surname.charAt(0).toUpperCase()}
                                 </span>
                               )}
                             </div>
                             <div className="min-w-0">
-                              <div className="font-bold text-base-content truncate">
-                                {u.name} {u.surname}
+                              <div className="font-semibold text-sm text-base-content truncate">
+                                {player.name} {player.surname}
                               </div>
-                              <div className="text-xs text-base-content/50 lg:hidden truncate">
-                                {u.email}
+                              <div className="text-xs text-base-content/50 truncate">
+                                {player.email}
                               </div>
+                              {(() => {
+                                const otherTrainers = player.trainers?.filter((tr: any) => tr.id !== selectedTrainerId) || [];
+                                if (otherTrainers.length > 0) {
+                                  return (
+                                    <div className="text-[10px] text-base-content/40 mt-0.5 truncate">
+                                      {t("admin_users.assignments_also_assigned_to", {
+                                        names: otherTrainers.map((tr: any) => `${tr.name} ${tr.surname}`).join(", ")
+                                      })}
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              })()}
                             </div>
                           </div>
-                        </td>
+                        </label>
                       );
-                    }
-                    if (colId === "email") {
-                      return (
-                        <td key="email" className="px-4 py-3 text-sm font-medium text-base-content/85 max-w-xs truncate">
-                          {u.email}
-                        </td>
-                      );
-                    }
-                    if (colId === "role") {
-                      const isDisabled = u.id === user.id;
-                      return (
-                        <td key="role" className="px-4 py-3 text-sm">
-                          <div className="dropdown dropdown-bottom dropdown-end">
-                            <div
-                              tabIndex={isDisabled ? undefined : 0}
-                              role={isDisabled ? undefined : "button"}
-                              className={`${getRoleBadgeClass(u.role)} gap-1 flex items-center pr-2.5 pl-2.5 h-6 rounded-full text-xs font-semibold text-white select-none ${isDisabled ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all"}`}
-                              title={isDisabled ? t("admin_users.cannot_demote_self") : t("admin_users.modify_role")}
-                            >
-                              <span>
-                                {u.role === "PLAYER" && t("common.role_player")}
-                                {u.role === "GOAL_KEEPER" && t("common.role_goal_keeper")}
-                                {u.role === "TRAINER" && t("common.role_trainer")}
-                                {u.role === "ADMIN" && "Admin"}
-                              </span>
-                              {!isDisabled && <span className="text-[9px] opacity-80 ml-0.5">▼</span>}
-                            </div>
-                            {!isDisabled && (
-                              <ul
-                                tabIndex={0}
-                                className="dropdown-content menu p-1.5 shadow-xl bg-base-100 border border-base-300 rounded-lg w-40 z-50 text-xs text-base-content"
-                              >
-                                <li>
-                                  <button
-                                    onClick={() => {
-                                      handleRoleChange(u.id, "PLAYER", u.name);
-                                      (document.activeElement as HTMLElement)?.blur();
-                                    }}
-                                    className={`py-1.5 px-3 rounded text-left ${u.role === "PLAYER" ? "bg-primary text-primary-content font-semibold" : "hover:bg-base-200"}`}
-                                  >
-                                    {t("common.role_player")}
-                                  </button>
-                                </li>
-                                <li>
-                                  <button
-                                    onClick={() => {
-                                      handleRoleChange(u.id, "GOAL_KEEPER", u.name);
-                                      (document.activeElement as HTMLElement)?.blur();
-                                    }}
-                                    className={`py-1.5 px-3 rounded text-left ${u.role === "GOAL_KEEPER" ? "bg-primary text-primary-content font-semibold" : "hover:bg-base-200"}`}
-                                  >
-                                    {t("common.role_goal_keeper")}
-                                  </button>
-                                </li>
-                                <li>
-                                  <button
-                                    onClick={() => {
-                                      handleRoleChange(u.id, "TRAINER", u.name);
-                                      (document.activeElement as HTMLElement)?.blur();
-                                    }}
-                                    className={`py-1.5 px-3 rounded text-left ${u.role === "TRAINER" ? "bg-primary text-primary-content font-semibold" : "hover:bg-base-200"}`}
-                                  >
-                                    {t("common.role_trainer")}
-                                  </button>
-                                </li>
-                                <li>
-                                  <button
-                                    onClick={() => {
-                                      handleRoleChange(u.id, "ADMIN", u.name);
-                                      (document.activeElement as HTMLElement)?.blur();
-                                    }}
-                                    className={`py-1.5 px-3 rounded text-left ${u.role === "ADMIN" ? "bg-primary text-primary-content font-semibold" : "hover:bg-base-200"}`}
-                                  >
-                                    {t("common.role_admin")}
-                                  </button>
-                                </li>
-                              </ul>
-                            )}
-                          </div>
-                        </td>
-                      );
-                    }
-                    if (colId === "phone") {
-                      return (
-                        <td key="phone" className={`px-4 py-3 text-sm text-base-content/75 truncate ${getColClass(colId)}`}>
-                          {u.phone || <span className="text-base-content/30 italic">{t("common.not_specified")}</span>}
-                        </td>
-                      );
-                    }
-                    if (colId === "birth") {
-                      return (
-                        <td key="birth" className={`px-4 py-3 text-sm text-base-content/75 truncate ${getColClass(colId)}`}>
-                          {u.birthDate || <span className="text-base-content/30 italic">{t("common.not_specified")}</span>}
-                        </td>
-                      );
-                    }
-                    if (colId === "registered") {
-                      return (
-                        <td key="registered" className={`px-4 py-3 text-sm text-base-content/50 truncate ${getColClass(colId)}`}>
-                          {u.createdAt}
-                        </td>
-                      );
-                    }
-                    return null;
-                  })}
-                  {/* Actions column remains fixed at the end */}
-                  <td className="px-4 py-3 text-right w-[120px]">
-                    <div className="flex justify-end gap-1">
-                      <button
-                        onClick={() => handleOpenEdit(u)}
-                        className="btn btn-ghost btn-sm text-primary hover:bg-primary/10"
-                        title={t("common.edit")}
-                      >
-                        ✏️
-                      </button>
-                      <button
-                        onClick={() => handleOpenDelete(u)}
-                        className="btn btn-ghost btn-sm text-error hover:bg-error/10"
-                        disabled={u.id === user.id}
-                        title={u.id === user.id ? "Cannot delete yourself" : t("common.delete")}
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                    })
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="card bg-base-100 shadow-md border border-base-200 p-12 text-center flex flex-col items-center justify-center h-full min-h-[350px]">
+                <span className="text-5xl mb-4 block animate-bounce">📋</span>
+                <h4 className="font-bold text-lg text-base-content/60 max-w-sm">
+                  {t("admin_users.assignments_trainer_subtitle") || "Select a trainer to manage their assigned players."}
+                </h4>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

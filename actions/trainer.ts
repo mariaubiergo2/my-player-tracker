@@ -79,34 +79,52 @@ export async function getAllPlayersWithMatchCount() {
 }
 
 /**
+ * Core assignment update logic (shared between Trainer self-service and Admin)
+ */
+export async function updateTrainerPlayersRelationShared(
+  trainerId: string,
+  toConnect: string[],
+  toDisconnect: string[]
+) {
+  // Validate players to connect
+  if (toConnect.length > 0) {
+    const players = await prisma.user.findMany({
+      where: { id: { in: toConnect } },
+      select: { id: true, role: true }
+    });
+    for (const player of players) {
+      if (player.role !== UserRole.PLAYER && player.role !== UserRole.GOAL_KEEPER) {
+        throw new Error(`User ${player.id} is not registered as a Player or Goal Keeper.`);
+      }
+    }
+  }
+
+  return await prisma.user.update({
+    where: { id: trainerId },
+    data: {
+      players: {
+        connect: toConnect.map(id => ({ id })),
+        disconnect: toDisconnect.map(id => ({ id })),
+      }
+    }
+  });
+}
+
+export async function connectPlayerToTrainerShared(trainerId: string, playerId: string) {
+  return updateTrainerPlayersRelationShared(trainerId, [playerId], []);
+}
+
+export async function disconnectPlayerFromTrainerShared(trainerId: string, playerId: string) {
+  return updateTrainerPlayersRelationShared(trainerId, [], [playerId]);
+}
+
+/**
  * UPDATE: Assign a player to the logged-in trainer
  */
 export async function assignPlayerToTrainer(playerId: string) {
   try {
     const trainerId = await checkTrainer();
-
-    // Check if player exists and is a player
-    const player = await prisma.user.findUnique({
-      where: { id: playerId },
-      select: { role: true },
-    });
-
-    if (!player) {
-      return { success: false, error: "Player not found." };
-    }
-
-    if (player.role !== UserRole.PLAYER && player.role !== UserRole.GOAL_KEEPER) {
-      return { success: false, error: "User is not registered as a Player." };
-    }
-
-    await prisma.user.update({
-      where: { id: playerId },
-      data: {
-        trainers: {
-          connect: { id: trainerId }
-        }
-      },
-    });
+    await connectPlayerToTrainerShared(trainerId, playerId);
 
     revalidatePath("/trainer/players");
     revalidatePath("/trainer/my-players");
@@ -192,14 +210,7 @@ export async function unassignPlayerFromTrainer(playerId: string) {
       return { success: false, error: "Player not found or not assigned to you." };
     }
 
-    await prisma.user.update({
-      where: { id: playerId },
-      data: {
-        trainers: {
-          disconnect: { id: trainerId }
-        }
-      },
-    });
+    await disconnectPlayerFromTrainerShared(trainerId, playerId);
 
     revalidatePath("/trainer/players");
     revalidatePath("/trainer/my-players");

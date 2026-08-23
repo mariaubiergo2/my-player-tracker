@@ -6,6 +6,8 @@ import { prisma } from "@/lib/prisma";
 import { verifyToken, hashPassword, verifyPassword, generateToken } from "@/lib/auth";
 import { UserRole, Prisma } from "@prisma/client";
 import { createUserSchema, updateUserSchema, updateProfileSchema } from "@/lib/validations/users";
+import { updateTrainerPlayersRelationShared } from "./trainer";
+
 
 /**
  * Checks if the current request is initiated by a verified Admin user
@@ -417,4 +419,96 @@ export async function updateProfile(updates: {
     };
   }
 }
+
+/**
+ * READ: Fetch trainers (with count of assigned players and list of assigned player IDs)
+ * and fetch all players, so the Admin page can manage trainer-player assignments.
+ */
+export async function getAssignmentsData() {
+  try {
+    await checkAdmin();
+
+    const trainers = await prisma.user.findMany({
+      where: { role: UserRole.TRAINER },
+      select: {
+        id: true,
+        name: true,
+        surname: true,
+        email: true,
+        avatarUrl: true,
+        players: {
+          select: {
+            id: true,
+          }
+        }
+      },
+      orderBy: { name: "asc" },
+    });
+
+    const trainersWithCount = trainers.map((t) => ({
+      id: t.id,
+      name: t.name,
+      surname: t.surname,
+      email: t.email,
+      avatarUrl: t.avatarUrl,
+      playerCount: t.players.length,
+      assignedPlayerIds: t.players.map((p) => p.id),
+    }));
+
+    const players = await prisma.user.findMany({
+      where: { role: { in: [UserRole.PLAYER, UserRole.GOAL_KEEPER] } },
+      select: {
+        id: true,
+        name: true,
+        surname: true,
+        email: true,
+        avatarUrl: true,
+        trainers: {
+          select: {
+            id: true,
+            name: true,
+            surname: true,
+          }
+        }
+      },
+      orderBy: { name: "asc" },
+    });
+
+    return { success: true, trainers: trainersWithCount, players };
+  } catch (error) {
+    console.error("getAssignmentsData error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to load assignments data",
+    };
+  }
+}
+
+/**
+ * UPDATE: Update a trainer's player assignments in a single query transaction
+ */
+export async function updateTrainerAssignments(
+  trainerId: string,
+  toAssign: string[],
+  toUnassign: string[]
+) {
+  try {
+    await checkAdmin();
+
+    await updateTrainerPlayersRelationShared(trainerId, toAssign, toUnassign);
+
+    revalidatePath("/admin/users");
+    revalidatePath("/trainer/players");
+    revalidatePath("/trainer/my-players");
+
+    return { success: true };
+  } catch (error) {
+    console.error("updateTrainerAssignments error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Failed to update assignments",
+    };
+  }
+}
+
 

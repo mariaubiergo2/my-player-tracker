@@ -6,11 +6,24 @@ import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/components/LanguageProvider";
 import PageContainer from "@/components/ui/PageContainer";
-import { getPlayerActivePlans, toggleSessionCompletion } from "@/actions/training-plans";
+import { getPlayerActivePlans } from "@/actions/training-plans";
 import { getActiveObjectives, getObjectivesHistory } from "@/actions/objectives";
 import { getAssignmentsByPlayer } from "@/actions/questionnaires";
-import { submitTrainingFeedback } from "@/actions/training-feedback";
 import { ObjectiveCategory, QuestionnaireType } from "@prisma/client";
+
+interface Exercise {
+  id: string;
+  repetitionsOverride: string | null;
+  exercise: {
+    id: string;
+    title: string;
+    description: string | null;
+    repetitions: string;
+    mediaType: "IMAGE" | "VIDEO_LINK" | null;
+    imageUrl: string | null;
+    videoUrl: string | null;
+  };
+}
 
 interface TrainingSession {
   id: string;
@@ -18,19 +31,7 @@ interface TrainingSession {
   recurrenceDays: string[];
   startDate: string;
   endDate: string;
-  exercises: {
-    id: string;
-    repetitionsOverride: string | null;
-    exercise: {
-      id: string;
-      title: string;
-      description: string | null;
-      repetitions: string;
-      mediaType: "IMAGE" | "VIDEO_LINK" | null;
-      imageUrl: string | null;
-      videoUrl: string | null;
-    };
-  }[];
+  exercises: Exercise[];
   completions: {
     id: string;
     scheduledDate: string;
@@ -80,20 +81,50 @@ export default function PhysicalPrepPage() {
   const [questionnaires, setQuestionnaires] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Week offset state for calendar browsing
-  const [weekOffset, setWeekOffset] = useState(0);
-
   // Tabs for the page
   const [activeTab, setActiveTab] = useState<"checklist" | "objectives" | "questionnaires">("checklist");
 
-  // Feedback states
-  const [feedbackSessionId, setFeedbackSessionId] = useState<string | null>(null);
-  const [feedbackAssignmentId, setFeedbackAssignmentId] = useState<string | null>(null);
-  const [feedbackComment, setFeedbackComment] = useState("");
-  const [feedbackVideoUrl, setFeedbackVideoUrl] = useState("");
-  const [submittingFeedback, setSubmittingFeedback] = useState(false);
-  const [feedbackSuccessMsg, setFeedbackSuccessMsg] = useState("");
-  const [feedbackErrorMsg, setFeedbackErrorMsg] = useState("");
+  // Calendar states
+  const [viewMode, setViewMode] = useState<"month" | "week" >("month");
+  const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
+
+  // Load state from URL parameters on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const urlViewMode = params.get("viewMode");
+      const urlViewDate = params.get("viewDate");
+
+      if (urlViewMode === "month" || urlViewMode === "week") {
+        setViewMode(urlViewMode);
+      }
+      if (urlViewDate) {
+        const parsedDate = new Date(urlViewDate);
+        if (!isNaN(parsedDate.getTime())) {
+          setCurrentDate(parsedDate);
+        }
+      }
+    }
+  }, []);
+
+  const updateUrl = (mode: "month" | "week", date: Date) => {
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("viewMode", mode);
+      url.searchParams.set("viewDate", date.toISOString());
+      window.history.replaceState({}, "", url.toString());
+    }
+  };
+
+  const handleSetViewMode = (mode: "month" | "week") => {
+    setViewMode(mode);
+    updateUrl(mode, currentDate);
+  };
+
+  const handleSetCurrentDate = (date: Date) => {
+    setCurrentDate(date);
+    updateUrl(viewMode, date);
+  };
 
   useEffect(() => {
     if (!isLoading) {
@@ -132,7 +163,6 @@ export default function PhysicalPrepPage() {
         setObjectivesHistory(historyObjRes.data.history || []);
       }
       if (questRes.success && questRes.pending) {
-        // Show pending questionnaires
         setQuestionnaires(questRes.pending);
       }
     } catch (err) {
@@ -142,369 +172,351 @@ export default function PhysicalPrepPage() {
     }
   };
 
-  // Helper: Get dates for the selected week offset
-  const getWeekDays = () => {
-    const current = new Date();
-    const day = current.getDay(); // 0 is Sunday, 1 is Monday, etc.
-    const distanceToMonday = day === 0 ? -6 : 1 - day; // distance to Monday
-    const monday = new Date(current);
-    monday.setDate(current.getDate() + distanceToMonday + weekOffset * 7);
-    monday.setHours(0, 0, 0, 0);
-
-    const days: { date: Date; label: string; key: string }[] = [];
-    const dayLabels = ["Dilluns", "Dimarts", "Dimecres", "Dijous", "Divendres", "Dissabte", "Diumenge"];
-    const dayKeys = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
-
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      days.push({
-        date: d,
-        label: dayLabels[i],
-        key: dayKeys[i],
-      });
+  // Helper: Get standard 42 days grid for Month view
+  const getMonthDays = (date: Date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const firstDayOfMonth = new Date(year, month, 1);
+    const dayOfWeek = firstDayOfMonth.getDay();
+    
+    // In Spain/Catalonia, Monday is the first day of the week
+    const leadingDaysCount = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+    
+    const startCalendarDate = new Date(firstDayOfMonth);
+    startCalendarDate.setDate(firstDayOfMonth.getDate() - leadingDaysCount);
+    
+    const days: Date[] = [];
+    for (let i = 0; i < 42; i++) {
+      const d = new Date(startCalendarDate);
+      d.setDate(startCalendarDate.getDate() + i);
+      days.push(d);
     }
     return days;
   };
 
-  const weekDays = getWeekDays();
+  // Helper: Get 7 days for Week view
+  const getWeekDaysForDate = (date: Date) => {
+    const day = date.getDay();
+    const distanceToMonday = day === 0 ? -6 : 1 - day;
+    const monday = new Date(date);
+    monday.setDate(date.getDate() + distanceToMonday);
+    monday.setHours(0, 0, 0, 0);
 
-  // Helper: Calculate occurrences for a session during the current week offset
-  const getSessionOccurrences = (assignment: TrainingPlanAssignment, session: TrainingSession) => {
-    const occurrences: { date: Date; key: string; label: string; isCompleted: boolean }[] = [];
-    const startDate = new Date(session.startDate);
-    const endDate = new Date(session.endDate);
+    const days: Date[] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      days.push(d);
+    }
+    return days;
+  };
 
-    // Normalize start/end dates
-    startDate.setHours(0, 0, 0, 0);
-    endDate.setHours(23, 59, 59, 999);
+  const visibleDays = viewMode === "month" ? getMonthDays(currentDate) : getWeekDaysForDate(currentDate);
+  const rangeStart = visibleDays[0];
+  const rangeEnd = visibleDays[visibleDays.length - 1];
 
-    for (const day of weekDays) {
-      if (day.date >= startDate && day.date <= endDate) {
-        if (session.recurrenceDays.includes(day.key)) {
-          // Check completion
+  // Helper: Calculate occurrences for a session during a date range
+  const getOccurrencesInRange = (session: TrainingSession, start: Date, end: Date) => {
+    const occurrences: {
+      date: Date;
+      session: TrainingSession;
+      isCompleted: boolean;
+      state: "pending" | "completed" | "feedback_sent" | "feedback_reviewed";
+    }[] = [];
+
+    const sessionStart = new Date(session.startDate);
+    const sessionEnd = new Date(session.endDate);
+    sessionStart.setHours(0, 0, 0, 0);
+    sessionEnd.setHours(23, 59, 59, 999);
+
+    const dayKeys = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+
+    const current = new Date(start);
+    current.setHours(0, 0, 0, 0);
+
+    const rangeEndLimit = new Date(end);
+    rangeEndLimit.setHours(23, 59, 59, 999);
+
+    while (current <= rangeEndLimit) {
+      if (current >= sessionStart && current <= sessionEnd) {
+        const dayOfWeekKey = dayKeys[current.getDay()];
+        if (session.recurrenceDays.includes(dayOfWeekKey)) {
+          const occDate = new Date(current);
+          const dateStr = occDate.toDateString();
+
           const isCompleted = session.completions.some(
-            (c) => new Date(c.scheduledDate).toDateString() === day.date.toDateString()
+            (c) => new Date(c.scheduledDate).toDateString() === dateStr
           );
 
+          // Find feedback near occurrence date (within 1 day)
+          const sessionFeedback = session.feedback.find((f) => {
+            const fbDate = new Date(f.createdAt);
+            const diffTime = Math.abs(fbDate.getTime() - occDate.getTime());
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays <= 1;
+          });
+
+          let state: "pending" | "completed" | "feedback_sent" | "feedback_reviewed" = "pending";
+          if (sessionFeedback) {
+            state = sessionFeedback.isReviewed ? "feedback_reviewed" : "feedback_sent";
+          } else if (isCompleted) {
+            state = "completed";
+          }
+
           occurrences.push({
-            date: day.date,
-            key: day.key,
-            label: day.label,
+            date: occDate,
+            session,
             isCompleted,
+            state,
           });
         }
       }
+      current.setDate(current.getDate() + 1);
     }
     return occurrences;
   };
 
-  const handleToggleCompletion = async (
-    sessionId: string,
-    scheduledDate: Date,
-    currentlyCompleted: boolean
-  ) => {
-    if (!user) return;
-    const nextVal = !currentlyCompleted;
+  const allOccurrences = assignments.flatMap((assignment) =>
+    assignment.trainingPlan.sessions.flatMap((session) =>
+      getOccurrencesInRange(session, rangeStart, rangeEnd)
+    )
+  );
 
-    // Optimistic UI update
-    setAssignments((prev) =>
-      prev.map((a) => {
-        const updatedSessions = a.trainingPlan.sessions.map((s) => {
-          if (s.id !== sessionId) return s;
+  const completedCount = allOccurrences.filter((o) => o.isCompleted).length;
+  const totalCount = allOccurrences.length;
 
-          let updatedCompletions = [...s.completions];
-          if (nextVal) {
-            updatedCompletions.push({
-              id: `temp_${Date.now()}`,
-              scheduledDate: scheduledDate.toISOString(),
-              completedAt: new Date().toISOString(),
-            });
-          } else {
-            updatedCompletions = updatedCompletions.filter(
-              (c) => new Date(c.scheduledDate).toDateString() !== scheduledDate.toDateString()
-            );
-          }
-          return { ...s, completions: updatedCompletions };
-        });
-        return {
-          ...a,
-          trainingPlan: { ...a.trainingPlan, sessions: updatedSessions },
-        };
-      })
-    );
-
-    const res = await toggleSessionCompletion(sessionId, user.id, scheduledDate, nextVal);
-    if (!res.success) {
-      alert("Error al guardar l'estat. Si us plau, torna a provar.");
-      fetchData(); // Rollback on error
+  const handlePrev = () => {
+    if (viewMode === "month") {
+      const nextDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+      handleSetCurrentDate(nextDate);
+    } else {
+      const nextDate = new Date(currentDate);
+      nextDate.setDate(currentDate.getDate() - 7);
+      handleSetCurrentDate(nextDate);
     }
   };
 
-  const handleOpenFeedback = (type: "session" | "plan", id: string) => {
-    setFeedbackComment("");
-    setFeedbackVideoUrl("");
-    setFeedbackSuccessMsg("");
-    setFeedbackErrorMsg("");
-
-    if (type === "session") {
-      setFeedbackSessionId(id);
-      setFeedbackAssignmentId(null);
+  const handleNext = () => {
+    if (viewMode === "month") {
+      const nextDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1);
+      handleSetCurrentDate(nextDate);
     } else {
-      setFeedbackSessionId(null);
-      setFeedbackAssignmentId(id);
+      const nextDate = new Date(currentDate);
+      nextDate.setDate(currentDate.getDate() + 7);
+      handleSetCurrentDate(nextDate);
     }
-  };
-
-  const handleSubmitFeedback = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!feedbackComment.trim()) {
-      setFeedbackErrorMsg("El comentari és obligatori.");
-      return;
-    }
-
-    setSubmittingFeedback(true);
-    setFeedbackSuccessMsg("");
-    setFeedbackErrorMsg("");
-
-    const res = await submitTrainingFeedback({
-      sessionId: feedbackSessionId,
-      assignmentId: feedbackAssignmentId,
-      comment: feedbackComment,
-      videoUrl: feedbackVideoUrl || null,
-    });
-
-    if (res.success) {
-      setFeedbackSuccessMsg("Feedback enviat correctament!");
-      setFeedbackComment("");
-      setFeedbackVideoUrl("");
-      // Refresh to load new feedback in view
-      fetchData();
-      // Auto close modal after 1.5s
-      setTimeout(() => {
-        setFeedbackSessionId(null);
-        setFeedbackAssignmentId(null);
-        setFeedbackSuccessMsg("");
-      }, 1500);
-    } else {
-      setFeedbackErrorMsg(res.error || "Error al enviar el feedback.");
-    }
-    setSubmittingFeedback(false);
   };
 
   if (isLoading || loading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
-        <span className="loading loading-spinner loading-lg"></span>
+        <span className="loading loading-spinner loading-lg text-primary"></span>
       </div>
     );
   }
 
+  const monthLabel = currentDate.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+
   return (
-    <PageContainer className="py-10">
+    <PageContainer className="py-10 animate-fade-in">
       {/* Header banner */}
-      <div className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-4xl font-bold text-primary">{t("physical_prep_page.title") || "Preparació Física"}</h1>
-          <p className="text-base-content/70 mt-2">
+          <h1 className="text-4xl font-extrabold text-primary tracking-tight">
+            {t("physical_prep_page.title") || "Preparació Física"}
+          </h1>
+          <p className="text-base-content/70 mt-2 font-medium">
             {t("physical_prep_page.subtitle") || "Controla els teus entrenaments setmanals i segueix els consells de l'entrenador."}
           </p>
         </div>
 
         {/* Tab Selector */}
-        <div className="tabs tabs-boxed shadow-sm border border-base-200 p-1">
+        <div className="tabs tabs-boxed shadow-md border border-base-200 p-1 bg-base-100">
           <button
-            className={`tab font-semibold text-xs ${activeTab === "checklist" ? "tab-active bg-accent text-white" : ""}`}
+            className={`tab font-bold text-xs rounded-xl px-4 ${activeTab === "checklist" ? "tab-active bg-accent text-white" : ""}`}
             onClick={() => setActiveTab("checklist")}
           >
-            📋 Rutines
+            📅 {t("physical_prep_page.session_checklist") ? "Calendari" : "Calendar"}
           </button>
           <button
-            className={`tab font-semibold text-xs ${activeTab === "objectives" ? "tab-active bg-accent text-white" : ""}`}
+            className={`tab font-bold text-xs rounded-xl px-4 ${activeTab === "objectives" ? "tab-active bg-accent text-white" : ""}`}
             onClick={() => setActiveTab("objectives")}
           >
-            🎯 Objectius
+            🎯 {t("physical_prep_page.objectives_title") || "Objectius"}
           </button>
           <button
-            className={`tab font-semibold text-xs ${activeTab === "questionnaires" ? "tab-active bg-accent text-white" : ""}`}
+            className={`tab font-bold text-xs rounded-xl px-4 ${activeTab === "questionnaires" ? "tab-active bg-accent text-white" : ""}`}
             onClick={() => setActiveTab("questionnaires")}
           >
-            📝 Qüestionaris ({questionnaires.length})
+            📝 {t("questionnaires.title")} ({questionnaires.length})
           </button>
         </div>
       </div>
 
       {activeTab === "checklist" && (
         <div className="space-y-8">
-          {/* Week offset controls */}
-          <div className="flex justify-between items-center bg-base-100 p-4 rounded-xl border border-base-200 shadow-sm">
-            <button className="btn btn-sm btn-outline btn-secondary" onClick={() => setWeekOffset((o) => o - 1)}>
-              ← Setmana anterior
-            </button>
-            <div className="text-center font-bold text-secondary">
-              Setmana del {weekDays[0].date.toLocaleDateString()} al {weekDays[6].date.toLocaleDateString()}
-              {weekOffset === 0 && <span className="badge badge-accent ml-2 text-xs">Actual</span>}
+          {/* Progress Summary & Toggles */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6 bg-base-100 p-6 rounded-3xl border border-base-200 shadow-md items-center">
+            {/* Progress widget */}
+            <div className="md:col-span-6 flex items-center gap-4">
+              <div className="radial-progress text-primary font-black" style={{ "--value": totalCount > 0 ? (completedCount / totalCount) * 100 : 0, "--size": "3.5rem" } as any} role="progressbar">
+                {totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0}%
+              </div>
+              <div>
+                <h3 className="font-extrabold text-base-content text-lg">
+                  {t("physical_prep_page.progress_title")}
+                </h3>
+                <p className="text-sm text-base-content/65 font-medium mt-0.5">
+                  {t("physical_prep_page.completed_stat")
+                    .replace("{completed}", String(completedCount))
+                    .replace("{total}", String(totalCount))}
+                </p>
+              </div>
             </div>
-            <button className="btn btn-sm btn-outline btn-secondary" onClick={() => setWeekOffset((o) => o + 1)}>
-              Setmana següent →
+
+            {/* Toggle Mode */}
+            <div className="md:col-span-6 flex justify-end gap-3">
+              <div className="join border border-base-200 shadow-inner bg-base-50 p-0.5 rounded-xl">
+                <button
+                  onClick={() => handleSetViewMode("week")}
+                  className={`btn btn-xs join-item font-bold px-4 rounded-lg border-none ${
+                    viewMode === "week" ? "bg-primary text-primary-content shadow-sm" : "btn-ghost"
+                  }`}
+                >
+                  {t("physical_prep_page.toggle_week")}
+                </button>
+                <button
+                  onClick={() => handleSetViewMode("month")}
+                  className={`btn btn-xs join-item font-bold px-4 rounded-lg border-none ${
+                    viewMode === "month" ? "bg-primary text-primary-content shadow-sm" : "btn-ghost"
+                  }`}
+                >
+                  {t("physical_prep_page.toggle_month")}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Calendar Header / Navigator */}
+          <div className="flex justify-between items-center bg-base-100 p-4 rounded-2xl border border-base-200 shadow-md">
+            <button className="btn btn-sm btn-outline btn-secondary rounded-xl font-bold" onClick={handlePrev}>
+              &larr; {viewMode === "month" ? "Mes ant." : "Setm. ant."}
+            </button>
+            <div className="text-center font-black text-secondary text-lg capitalize">
+              {viewMode === "month"
+                ? monthLabel
+                : `Setmana del ${rangeStart.toLocaleDateString()} al ${rangeEnd.toLocaleDateString()}`}
+            </div>
+            <button className="btn btn-sm btn-outline btn-secondary rounded-xl font-bold" onClick={handleNext}>
+              {viewMode === "month" ? "Mes seg." : "Setm. seg."} &rarr;
             </button>
           </div>
 
           {assignments.length === 0 ? (
-            <div className="card bg-base-100 shadow border border-base-200 p-10 text-center">
-              <p className="text-base-content/50">
-                No tens cap plan de preparació física actiu o assignat en aquest moment.
+            <div className="card bg-base-100 shadow border border-base-200 p-10 text-center rounded-3xl">
+              <p className="text-base-content/50 font-medium">
+                No tens cap pla de preparació física actiu o assignat en aquest moment.
               </p>
             </div>
           ) : (
-            assignments.map((assignment) => (
-              <div key={assignment.id} className="card bg-base-100 shadow-md border border-base-200 overflow-hidden">
-                <div className="bg-base-200/60 px-6 py-5 border-b border-base-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div>
-                    <h2 className="text-2xl font-bold text-secondary">{assignment.trainingPlan.title}</h2>
-                    {assignment.trainingPlan.description && (
-                      <p className="text-sm text-base-content/75 mt-1">{assignment.trainingPlan.description}</p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-base-content/60">Preparador:</span>
-                    <div className="flex items-center gap-1.5 bg-base-100 px-3 py-1 rounded-full border border-base-200 text-xs font-bold">
-                      {assignment.trainingPlan.trainer.avatarUrl && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={assignment.trainingPlan.trainer.avatarUrl}
-                          alt={assignment.trainingPlan.trainer.name}
-                          className="w-4 h-4 rounded-full"
-                        />
-                      )}
-                      <span>{assignment.trainingPlan.trainer.name} {assignment.trainingPlan.trainer.surname}</span>
-                    </div>
-                    <button
-                      className="btn btn-xs btn-outline btn-primary ml-2 font-medium"
-                      onClick={() => handleOpenFeedback("plan", assignment.id)}
-                    >
-                      Feedback General
-                    </button>
-                  </div>
-                </div>
-
-                <div className="card-body p-6 space-y-6">
-                  {assignment.trainingPlan.sessions.map((session) => {
-                    const occurrences = getSessionOccurrences(assignment, session);
-                    return (
-                      <div key={session.id} className="border border-base-100 p-4 rounded-xl bg-base-50/50 space-y-4">
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-base-200/80 pb-3 gap-2">
-                          <div>
-                            <h3 className="font-bold text-lg text-secondary">{session.title}</h3>
-                            <p className="text-xs text-base-content/50">
-                              Vigent del {new Date(session.startDate).toLocaleDateString()} al{" "}
-                              {new Date(session.endDate).toLocaleDateString()}
-                            </p>
-                          </div>
-                          <button
-                            className="btn btn-xs btn-outline btn-secondary"
-                            onClick={() => handleOpenFeedback("session", session.id)}
-                          >
-                            Feedback sessió
-                          </button>
-                        </div>
-
-                        {/* Occurrence checklist */}
-                        {occurrences.length === 0 ? (
-                          <p className="text-xs text-base-content/40 italic">
-                            No programada per a aquesta setmana dins del rang de vigència.
-                          </p>
-                        ) : (
-                          <div className="flex flex-wrap gap-3">
-                            {occurrences.map((occ, idx) => (
-                              <label
-                                key={idx}
-                                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition select-none ${
-                                  occ.isCompleted
-                                    ? "bg-success/5 border-success/30 text-success font-semibold"
-                                    : "bg-base-100 border-base-200 hover:bg-base-50 text-base-content"
-                                }`}
-                              >
-                                <input
-                                  type="checkbox"
-                                  className="checkbox checkbox-success checkbox-sm"
-                                  checked={occ.isCompleted}
-                                  onChange={() =>
-                                    handleToggleCompletion(session.id, occ.date, occ.isCompleted)
-                                  }
-                                />
-                                <div className="text-xs flex flex-col">
-                                  <span className="font-bold">{occ.label}</span>
-                                  <span className="text-[10px] opacity-80">{occ.date.toLocaleDateString()}</span>
-                                </div>
-                              </label>
-                            ))}
-                          </div>
-                        )}
-
-                        {/* Session exercises list */}
-                        <div className="bg-base-100 p-4 rounded-lg border border-base-150 space-y-3">
-                          <h4 className="font-bold text-xs text-base-content/65 uppercase tracking-wider mb-2">
-                            Exercicis a realitzar:
-                          </h4>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                            {session.exercises.map((se) => (
-                              <div
-                                key={se.id}
-                                className="p-3 border border-base-200 rounded-lg flex flex-col justify-between"
-                              >
-                                <div>
-                                  <div className="flex justify-between items-start mb-1">
-                                    <h5 className="font-bold text-sm text-secondary">{se.exercise.title}</h5>
-                                    <span className="badge badge-accent badge-sm font-semibold">
-                                      {se.repetitionsOverride || se.exercise.repetitions}
-                                    </span>
-                                  </div>
-                                  {se.exercise.description && (
-                                    <p className="text-xs text-base-content/70 line-clamp-2 mt-1">
-                                      {se.exercise.description}
-                                    </p>
-                                  )}
-                                </div>
-                                <div className="mt-3 pt-2 border-t border-base-100 flex items-center justify-between text-[11px] font-medium text-primary">
-                                  {se.exercise.mediaType === "IMAGE" && se.exercise.imageUrl && (
-                                    <a href={se.exercise.imageUrl} target="_blank" rel="noopener noreferrer">
-                                      🖼️ Imatge demostrativa
-                                    </a>
-                                  )}
-                                  {se.exercise.mediaType === "VIDEO_LINK" && se.exercise.videoUrl && (
-                                    <a href={se.exercise.videoUrl} target="_blank" rel="noopener noreferrer">
-                                      🎥 Vídeo demostratiu
-                                    </a>
-                                  )}
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+            /* Calendar Grid */
+            <div className="card bg-base-100 border border-base-200 shadow-xl rounded-3xl overflow-hidden p-4 md:p-6">
+              {/* Day names */}
+              <div className="grid grid-cols-7 text-center font-bold text-xs text-base-content/50 pb-4 border-b border-base-200 uppercase tracking-wider">
+                <div>dl</div>
+                <div>dt</div>
+                <div>dc</div>
+                <div>dj</div>
+                <div>dv</div>
+                <div>ds</div>
+                <div>dg</div>
               </div>
-            ))
+
+              {/* Grid content */}
+              <div className="grid grid-cols-7 gap-1 md:gap-3 mt-4">
+                {visibleDays.map((day, idx) => {
+                  const isCurrentMonth = day.getMonth() === currentDate.getMonth();
+                  const isToday = day.toDateString() === new Date().toDateString();
+
+                  // Filter occurrences for this day
+                  const dayOccurrences = allOccurrences.filter(
+                    (o) => o.date.toDateString() === day.toDateString()
+                  );
+
+                  return (
+                    <div
+                      key={idx}
+                      className={`min-h-[90px] md:min-h-[120px] p-1.5 md:p-3 border rounded-2xl flex flex-col justify-between transition-all duration-300 ${
+                        isToday
+                          ? "border-primary bg-primary/5 shadow-inner"
+                          : "border-base-100 bg-base-50/20"
+                      } ${!isCurrentMonth && viewMode === "month" ? "opacity-35" : ""}`}
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className={`text-xs md:text-sm font-extrabold ${isToday ? "text-primary" : "text-base-content/75"}`}>
+                          {day.getDate()}
+                        </span>
+                        {isToday && (
+                          <span className="badge badge-primary badge-xs font-bold text-[9px] px-1 md:px-1.5 uppercase">
+                            {t("physical_prep_page.today")}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Occurrences list */}
+                      <div className="flex-1 flex flex-col gap-1.5 justify-end mt-2">
+                        {dayOccurrences.map((occ, oIdx) => {
+                          let badgeClass = "bg-base-200 text-base-content/85";
+                          let stateLabel = t("physical_prep_page.pending");
+
+                          if (occ.state === "feedback_reviewed") {
+                            badgeClass = "bg-success/20 text-success border border-success/30";
+                            stateLabel = `✓✓ ${t("physical_prep_page.feedback_reviewed")}`;
+                          } else if (occ.state === "feedback_sent") {
+                            badgeClass = "bg-warning/20 text-warning border border-warning/30";
+                            stateLabel = t("physical_prep_page.feedback_sent");
+                          } else if (occ.state === "completed") {
+                            badgeClass = "bg-success text-success-content font-bold";
+                            stateLabel = `✓ ${t("completed")}`;
+                          }
+
+                          return (
+                            <Link
+                              key={oIdx}
+                              href={`/dashboard/physical/sessions/${occ.session.id}?date=${occ.date.toISOString().split("T")[0]}&viewMode=${viewMode}&viewDate=${currentDate.toISOString()}`}
+                              className={`text-[9px] md:text-[10px] p-1 md:p-1.5 rounded-lg truncate block font-bold text-center transition-transform hover:scale-105 active:scale-95 shadow-sm ${badgeClass}`}
+                              title={`${occ.session.title} (${stateLabel})`}
+                            >
+                              <div className="truncate text-left">{occ.session.title}</div>
+                              <div className="text-[8px] opacity-75 mt-0.5 text-left font-medium block truncate">
+                                {stateLabel}
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           )}
         </div>
       )}
 
       {activeTab === "objectives" && (
         <div className="space-y-6">
-          <div className="card bg-base-100 shadow border border-base-200 p-6">
+          <div className="card bg-base-100 shadow border border-base-200 p-6 rounded-3xl">
             <h2 className="text-2xl font-bold text-secondary mb-2">Objectiu Físic Actiu</h2>
             {activeObjective ? (
-              <div className="bg-primary/5 border border-primary/20 p-5 rounded-xl space-y-4">
-                <p className="font-medium text-base-content">{activeObjective.summary}</p>
+              <div className="bg-primary/5 border border-primary/20 p-5 rounded-2xl space-y-4">
+                <p className="font-semibold text-base-content">{activeObjective.summary}</p>
                 <div className="divider text-xs text-base-content/40 font-bold m-0 uppercase tracking-wider">
                   Detall de fites
                 </div>
                 <ul className="space-y-2">
                   {activeObjective.items.map((item: string, index: number) => (
-                    <li key={index} className="flex gap-2 text-sm text-base-content/85">
+                    <li key={index} className="flex gap-2 text-sm text-base-content/85 font-medium">
                       <span className="text-primary font-bold">✓</span>
                       <span>{item}</span>
                     </li>
@@ -521,7 +533,7 @@ export default function PhysicalPrepPage() {
             )}
           </div>
 
-          <div className="card bg-base-100 shadow border border-base-200 p-6">
+          <div className="card bg-base-100 shadow border border-base-200 p-6 rounded-3xl">
             <h3 className="text-xl font-bold text-secondary mb-4">Historial d'Objectius Físics</h3>
             {objectivesHistory.length <= 1 ? (
               <p className="text-sm text-base-content/50 italic">No hi ha historial disponible.</p>
@@ -530,7 +542,7 @@ export default function PhysicalPrepPage() {
                 {objectivesHistory
                   .filter((o) => o.id !== activeObjective?.id)
                   .map((obj) => (
-                    <div key={obj.id} className="p-4 border border-base-200 rounded-lg text-sm bg-base-50/30">
+                    <div key={obj.id} className="p-4 border border-base-200 rounded-2xl text-sm bg-base-50/30">
                       <p className="font-semibold text-base-content/80 mb-2">{obj.summary}</p>
                       <ul className="space-y-1 pl-4 list-disc text-xs text-base-content/65 mb-3">
                         {obj.items.map((item: string, idx: number) => (
@@ -550,7 +562,7 @@ export default function PhysicalPrepPage() {
       )}
 
       {activeTab === "questionnaires" && (
-        <div className="card bg-base-100 shadow border border-base-200 p-6 space-y-4">
+        <div className="card bg-base-100 shadow border border-base-200 p-6 space-y-4 rounded-3xl">
           <h2 className="text-2xl font-bold text-secondary">Qüestionaris Físics Pendents</h2>
           {questionnaires.length === 0 ? (
             <p className="text-sm text-base-content/50 italic py-4">
@@ -559,7 +571,7 @@ export default function PhysicalPrepPage() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {questionnaires.map((q) => (
-                <div key={q.id} className="p-4 border border-base-200 rounded-xl bg-base-50/50 flex flex-col justify-between items-start">
+                <div key={q.id} className="p-4 border border-base-200 rounded-2xl bg-base-50/50 flex flex-col justify-between items-start">
                   <div>
                     <h3 className="font-bold text-lg text-secondary mb-1">{q.questionnaire.title}</h3>
                     {q.questionnaire.description && (
@@ -571,7 +583,7 @@ export default function PhysicalPrepPage() {
                   </div>
                   <Link
                     href={`/questionnaires/assignments/${q.id}`}
-                    className="btn btn-sm btn-primary mt-4 font-semibold w-full"
+                    className="btn btn-sm btn-primary mt-4 font-semibold w-full rounded-xl shadow"
                   >
                     Respondre Ara
                   </Link>
@@ -579,60 +591,6 @@ export default function PhysicalPrepPage() {
               ))}
             </div>
           )}
-        </div>
-      )}
-
-      {/* Feedback Modal */}
-      {(feedbackSessionId || feedbackAssignmentId) && (
-        <div className="modal modal-open">
-          <div className="modal-box">
-            <h3 className="font-bold text-xl mb-4">
-              {feedbackSessionId ? "Enviar Feedback de Sessió" : "Enviar Feedback General del Pla"}
-            </h3>
-            <form onSubmit={handleSubmitFeedback} className="space-y-4">
-              {feedbackSuccessMsg && <div className="alert alert-success">{feedbackSuccessMsg}</div>}
-              {feedbackErrorMsg && <div className="alert alert-error">{feedbackErrorMsg}</div>}
-
-              <div className="form-control">
-                <label className="label font-medium text-sm">Comentaris</label>
-                <textarea
-                  className="textarea textarea-bordered h-28 text-sm"
-                  placeholder="Escull la teva fatiga, problemes amb els exercicis o dubtes..."
-                  value={feedbackComment}
-                  onChange={(e) => setFeedbackComment(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="form-control">
-                <label className="label font-medium text-sm">Enllaç de vídeo (opcional)</label>
-                <input
-                  type="url"
-                  className="input input-bordered input-sm"
-                  placeholder="https://www.youtube.com/watch?v=..."
-                  value={feedbackVideoUrl}
-                  onChange={(e) => setFeedbackVideoUrl(e.target.value)}
-                />
-              </div>
-
-              <div className="modal-action">
-                <button
-                  type="button"
-                  className="btn btn-sm btn-outline"
-                  onClick={() => {
-                    setFeedbackSessionId(null);
-                    setFeedbackAssignmentId(null);
-                  }}
-                  disabled={submittingFeedback}
-                >
-                  Tancar
-                </button>
-                <button type="submit" className="btn btn-sm btn-primary" disabled={submittingFeedback}>
-                  {submittingFeedback ? "Enviant..." : "Enviar Feedback"}
-                </button>
-              </div>
-            </form>
-          </div>
         </div>
       )}
     </PageContainer>
