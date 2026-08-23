@@ -47,6 +47,8 @@ export async function POST(request: NextRequest) {
 
       const s3 = new S3Client({
         region: process.env.S3_REGION,
+        endpoint: process.env.S3_ENDPOINT, // p.ej. https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+        forcePathStyle: true, // R2 lo requiere; en S3 clásico no molesta
         credentials: {
           accessKeyId: process.env.S3_ACCESS_KEY_ID!,
           secretAccessKey: process.env.S3_SECRET_ACCESS_KEY!,
@@ -61,7 +63,8 @@ export async function POST(request: NextRequest) {
       });
 
       const uploadUrl = await getSignedUrl(s3, command, { expiresIn: 3600 });
-      const publicUrl = `https://${process.env.S3_BUCKET}.s3.${process.env.S3_REGION}.amazonaws.com/${key}`;
+      const publicUrl = process.env.S3_PUBLIC_URL_BASE ? `${process.env.S3_PUBLIC_URL_BASE}/${key}`
+                      : `https://${process.env.S3_BUCKET}.s3.${process.env.S3_REGION}.amazonaws.com/${key}`;
 
       return NextResponse.json({
         uploadUrl,

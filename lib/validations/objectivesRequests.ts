@@ -5,6 +5,7 @@ export const createObjectivesRequestSchema = z.object({
   reason: z.string()
     .min(5, "El motiu ha de tenir almenys 5 caràcters")
     .max(500, "El motiu no pot superar els 500 caràcters"),
+  type: z.enum(["ANALYSIS_VIDEO", "PHYSICAL", "NUTRITION"]),
 });
 
 export const replyObjectivesRequestSchema = z.object({

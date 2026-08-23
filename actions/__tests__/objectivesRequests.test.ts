@@ -135,7 +135,7 @@ describe("Objectives Requests Server Actions - End to End Flow", () => {
     expect(trainersRes.trainers?.length).toBe(1);
 
     // 2. Player creates objectives request for trainer1
-    const createRes = await createObjectivesRequestForAllTrainers("Motiu de prova per als meus objectius");
+    const createRes = await createObjectivesRequestForAllTrainers("Motiu de prova per als meus objectius", "ANALYSIS_VIDEO");
     expect(createRes.success).toBe(true);
     expect(createRes.data).toBeDefined();
 
@@ -227,7 +227,7 @@ describe("Objectives Requests Server Actions - End to End Flow", () => {
     // Authenticate as player
     await authenticateUser(player);
 
-    const createRes = await createObjectivesRequestForAllTrainers("Necessito que tots reviseu els meus objectius.");
+    const createRes = await createObjectivesRequestForAllTrainers("Necessito que tots reviseu els meus objectius.", "ANALYSIS_VIDEO");
     expect(createRes.success).toBe(true);
     expect(createRes.data?.length).toBe(2); // One for each trainer
 
@@ -255,7 +255,7 @@ describe("Objectives Requests Server Actions - End to End Flow", () => {
 
     await authenticateUser(player);
 
-    const createRes = await createObjectivesRequestForAllTrainers("Necessito que reviseu els meus objectius.");
+    const createRes = await createObjectivesRequestForAllTrainers("Necessito que reviseu els meus objectius.", "ANALYSIS_VIDEO");
     expect(createRes.success).toBe(false);
     expect(createRes.error).toBe("no_trainers_assigned");
   });

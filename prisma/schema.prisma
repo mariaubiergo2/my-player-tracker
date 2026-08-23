@@ -310,7 +310,7 @@ model PlayerObjectives {
 
   summary       String              // breve texto libre redactado por el trainer
   items         String[]            // lista de objetivos individuales, en orden
-  category      ObjectiveCategory   @default(MATCH)
+  category      QuestionnaireType   @default(ANALYSIS_VIDEO)
 
   effectiveFrom DateTime  @default(now()) @map("effective_from")
   effectiveTo   DateTime? @map("effective_to")   // null = objetivo actualmente activo
@@ -337,6 +337,7 @@ model ObjectivesRequest {
   trainerReply String? @map("trainer_reply") // mensaje/icono predefinido del trainer
   repliedAt   DateTime? @map("replied_at")
   createdAt   DateTime @default(now()) @map("created_at")
+  type        QuestionnaireType       @default(ANALYSIS_VIDEO)
 
   player      User @relation("ObjectivesRequestsAsPlayer", fields: [playerId], references: [id], onDelete: Cascade)
   trainer     User @relation("ObjectivesRequestsAsTrainer", fields: [trainerId], references: [id], onDelete: Cascade)
@@ -371,11 +372,6 @@ enum QuestionnaireType {
   ANALYSIS_VIDEO
   PHYSICAL
   NUTRITION
-}
-
-enum ObjectiveCategory {
-  MATCH
-  PHYSICAL
 }
 
 model Exercise {

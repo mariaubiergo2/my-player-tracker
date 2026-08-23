@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { UserRole, AssignmentStatus, ObjectivesRequestStatus, ObjectiveCategory } from "@prisma/client";
+import { UserRole, AssignmentStatus, ObjectivesRequestStatus, QuestionnaireType } from "@prisma/client";
 
 // Helper helper to verify if trainer owns player or user is admin/self
 async function checkAccess(playerId: string) {
@@ -31,7 +31,7 @@ export async function defineObjectives(
   playerId: string,
   summary: string,
   items: string[],
-  category: ObjectiveCategory = ObjectiveCategory.MATCH
+  category: QuestionnaireType = "ANALYSIS_VIDEO"
 ) {
   try {
     const currentUser = await getCurrentUser();
@@ -86,6 +86,7 @@ export async function defineObjectives(
         where: {
           playerId,
           trainerId: currentUser.userId,
+          type: category,
           status: { in: [ObjectivesRequestStatus.PENDING, ObjectivesRequestStatus.ACKNOWLEDGED] },
         },
         data: {
@@ -117,7 +118,7 @@ export async function defineObjectives(
 }
 
 // 2. GET ACTIVE OBJECTIVES
-export async function getActiveObjectives(playerId: string, category: ObjectiveCategory = ObjectiveCategory.MATCH) {
+export async function getActiveObjectives(playerId: string, category: QuestionnaireType = "ANALYSIS_VIDEO") {
   try {
     const { authorized } = await checkAccess(playerId);
     if (!authorized) {
@@ -140,7 +141,7 @@ export async function getActiveObjectives(playerId: string, category: ObjectiveC
 }
 
 // 3. GET OBJECTIVES HISTORY
-export async function getObjectivesHistory(playerId: string, category: ObjectiveCategory = ObjectiveCategory.MATCH) {
+export async function getObjectivesHistory(playerId: string, category: QuestionnaireType = "ANALYSIS_VIDEO") {
   try {
     const { authorized } = await checkAccess(playerId);
     if (!authorized) {
@@ -168,7 +169,7 @@ export async function getObjectivesHistory(playerId: string, category: Objective
 export async function getEffectiveObjectivesAt(
   playerId: string,
   date: Date | string,
-  category: ObjectiveCategory = ObjectiveCategory.MATCH
+  category: QuestionnaireType = "ANALYSIS_VIDEO"
 ) {
   try {
     const { authorized } = await checkAccess(playerId);
@@ -207,7 +208,7 @@ export async function getEffectiveObjectivesAt(
 }
 
 // 5. GET PLAYERS FOR TRAINER WITH THEIR OBJECTIVES & COMPLETED ASSIGNMENTS
-export async function getTrainerPlayersObjectivesData(category: ObjectiveCategory = ObjectiveCategory.MATCH) {
+export async function getTrainerPlayersObjectivesData(category: QuestionnaireType = "ANALYSIS_VIDEO") {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) {
@@ -242,7 +243,9 @@ export async function getTrainerPlayersObjectivesData(category: ObjectiveCategor
             respondedAt: true,
             questionnaire: {
               select: {
+                id: true,
                 title: true,
+                type: true,
               },
             },
           },
@@ -251,11 +254,8 @@ export async function getTrainerPlayersObjectivesData(category: ObjectiveCategor
         playerObjectivesReceived: {
           where: {
             trainerId: currentUser.userId,
-            effectiveTo: null,
-            category,
           },
           orderBy: { effectiveFrom: "desc" },
-          take: 1,
         },
       },
       orderBy: { name: "asc" },

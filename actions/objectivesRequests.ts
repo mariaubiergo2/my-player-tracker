@@ -3,14 +3,14 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { UserRole, ObjectivesRequestStatus } from "@prisma/client";
+import { UserRole, ObjectivesRequestStatus, QuestionnaireType } from "@prisma/client";
 import {
   createObjectivesRequestSchema,
   replyObjectivesRequestSchema,
 } from "@/lib/validations/objectivesRequests";
 
 // 1. CREATE OBJECTIVES REQUEST
-export async function createObjectivesRequest(trainerId: string, reason: string) {
+export async function createObjectivesRequest(trainerId: string, reason: string, type: QuestionnaireType) {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) {
@@ -21,7 +21,7 @@ export async function createObjectivesRequest(trainerId: string, reason: string)
       return { success: false, error: "Only players can request objectives" };
     }
 
-    const validation = createObjectivesRequestSchema.safeParse({ trainerId, reason });
+    const validation = createObjectivesRequestSchema.safeParse({ trainerId, reason, type });
     if (!validation.success) {
       return { success: false, error: validation.error.issues[0].message };
     }
@@ -43,6 +43,7 @@ export async function createObjectivesRequest(trainerId: string, reason: string)
           trainerId,
           reason: reason.trim(),
           status: ObjectivesRequestStatus.PENDING,
+          type,
         },
       });
 
@@ -66,7 +67,7 @@ export async function createObjectivesRequest(trainerId: string, reason: string)
 }
 
 // 2. CREATE OBJECTIVES REQUEST FOR ALL TRAINERS
-export async function createObjectivesRequestForAllTrainers(reason: string) {
+export async function createObjectivesRequestForAllTrainers(reason: string, type: QuestionnaireType) {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) {
@@ -88,7 +89,7 @@ export async function createObjectivesRequestForAllTrainers(reason: string) {
     }
 
     // Validate for one of them just to check the reason constraints
-    const validation = createObjectivesRequestSchema.safeParse({ trainerId: trainerIds[0], reason });
+    const validation = createObjectivesRequestSchema.safeParse({ trainerId: trainerIds[0], reason, type });
     if (!validation.success) {
       return { success: false, error: validation.error.issues[0].message };
     }
@@ -102,6 +103,7 @@ export async function createObjectivesRequestForAllTrainers(reason: string) {
             trainerId,
             reason: reason.trim(),
             status: ObjectivesRequestStatus.PENDING,
+            type,
           },
         });
 

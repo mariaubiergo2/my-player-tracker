@@ -519,12 +519,22 @@ export async function getQuestionnairesByTrainer(trainerId: string) {
             name: true,
             surname: true,
             avatarUrl: true,
+            playerObjectivesReceived: {
+              where: {
+                trainerId,
+              },
+              select: {
+                effectiveFrom: true,
+                category: true,
+              },
+            },
           },
         },
         questionnaire: {
           select: {
             id: true,
             title: true,
+            type: true,
           },
         },
       },

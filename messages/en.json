@@ -839,7 +839,14 @@
     "request_quick_reply_working": "Working on it",
     "request_quick_reply_incoming": "New objectives coming",
     "request_quick_reply_next_training": "Let's discuss at the next training session",
-    "define_objectives_from_request": "Define objectives now"
+    "define_objectives_from_request": "Define objectives now",
+    "pending_objective": "Pending to define objective",
+    "request_objectives_area_label": "Select the objectives category *"
+  },
+  "categories": {
+    "ANALYSIS_VIDEO": "Video",
+    "PHYSICAL": "Physical",
+    "NUTRITION": "Nutrition"
   },
   "trainer_training_plans": {
     "title": "Training Plans",

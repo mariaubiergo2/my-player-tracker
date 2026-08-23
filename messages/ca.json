@@ -839,7 +839,14 @@
     "request_quick_reply_working": "Treballant-hi",
     "request_quick_reply_incoming": "Objectius nous en camí",
     "request_quick_reply_next_training": "Ho parlem al proper entrenament",
-    "define_objectives_from_request": "Definir objectius ara"
+    "define_objectives_from_request": "Definir objectius ara",
+    "pending_objective": "Pendent de definir objectiu",
+    "request_objectives_area_label": "Selecciona l'àrea dels objectius *"
+  },
+  "categories": {
+    "ANALYSIS_VIDEO": "Vídeo",
+    "PHYSICAL": "Físic",
+    "NUTRITION": "Nutrició"
   },
   "trainer_training_plans": {
     "title": "Plans d'Entrenament",

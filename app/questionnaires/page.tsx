@@ -25,13 +25,15 @@ import {
   getPlayerTrainers,
 } from "@/actions/objectivesRequests";
 import { formatRelativeTime } from "@/lib/utils/dates";
-import { ObjectiveCategory } from "@prisma/client";
+import { QuestionnaireType } from "@prisma/client";
+import SegmentedTabs from "@/components/ui/SegmentedTabs";
 
 interface TrainerQuestionnaire {
   id: string;
   title: string;
   description: string | null;
   status: "DRAFT" | "DEFINED" | "SEND";
+  type: QuestionnaireType;
   createdAt: Date | string;
   counts: {
     sent: number;
@@ -48,6 +50,7 @@ interface PlayerAssignment {
     id: string;
     title: string;
     description: string | null;
+    type: QuestionnaireType;
     trainer: {
       id: string;
       name: string;
@@ -72,8 +75,8 @@ export default function QuestionnairesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [summary, setSummary] = useState("");
   const [items, setItems] = useState<string[]>([""]);
-  const [category, setCategory] = useState<ObjectiveCategory>("MATCH");
-  const [objectivesCategory, setObjectivesCategory] = useState<ObjectiveCategory>("MATCH");
+  const [category, setCategory] = useState<QuestionnaireType>("ANALYSIS_VIDEO");
+  const [objectivesCategory, setObjectivesCategory] = useState<QuestionnaireType>("ANALYSIS_VIDEO");
   const [isSavingObjectives, setIsSavingObjectives] = useState(false);
 
   // Trainer Answers Filtering & Search States
@@ -97,6 +100,7 @@ export default function QuestionnairesPage() {
   const [playerTrainers, setPlayerTrainers] = useState<any[]>([]);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
   const [requestReason, setRequestReason] = useState("");
+  const [requestType, setRequestType] = useState<QuestionnaireType>("ANALYSIS_VIDEO");
   const [isSendingRequest, setIsSendingRequest] = useState(false);
 
   const isTrainer = user?.role === "TRAINER";
@@ -326,12 +330,13 @@ export default function QuestionnairesPage() {
 
     setIsSendingRequest(true);
     try {
-      const res = await createObjectivesRequestForAllTrainers(requestReason);
+      const res = await createObjectivesRequestForAllTrainers(requestReason, requestType);
 
       if (res.success) {
         showSuccess(t("questionnaires.request_objectives_success"));
         setIsRequestModalOpen(false);
         setRequestReason("");
+        setRequestType("ANALYSIS_VIDEO");
         fetchData();
       } else {
         if (res.error === "no_trainers_assigned") {
@@ -406,6 +411,44 @@ export default function QuestionnairesPage() {
     }
   };
 
+  const getTypeBadge = (type: string) => {
+    switch (type) {
+      case "ANALYSIS_VIDEO":
+        return (
+          <span className="badge bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 font-bold border-none text-[11px] uppercase tracking-wide">
+            {t("categories.ANALYSIS_VIDEO") || "Vídeo"}
+          </span>
+        );
+      case "PHYSICAL":
+        return (
+          <span className="badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300 font-bold border-none text-[11px] uppercase tracking-wide">
+            {t("categories.PHYSICAL") || "Físic"}
+          </span>
+        );
+      case "NUTRITION":
+        return (
+          <span className="badge bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 font-bold border-none text-[11px] uppercase tracking-wide">
+            {t("categories.NUTRITION") || "Nutrició"}
+          </span>
+        );
+      default:
+        return null;
+    }
+  };
+
+  const isObjectivePending = (assignment: any) => {
+    if (assignment.status !== "COMPLETED" || !assignment.respondedAt) return false;
+    
+    const playerObjList = assignment.player?.playerObjectivesReceived || [];
+    const hasObjAfterResponse = playerObjList.some(
+      (obj: any) =>
+        obj.category === assignment.questionnaire.type &&
+        new Date(obj.effectiveFrom).getTime() >= new Date(assignment.respondedAt).getTime()
+    );
+    
+    return !hasObjAfterResponse;
+  };
+
   if (isLoading || loading) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
@@ -449,40 +492,17 @@ export default function QuestionnairesPage() {
           </div>
 
           {/* Tabs for templates vs. answers vs. objectives */}
-          <div className="tabs tabs-boxed bg-base-200/80 p-0.5 w-full max-w-xl mb-8">
-            <button
-              onClick={() => setTrainerTab("templates")}
-              className={`tab flex-1 font-semibold transition-all ${
-                trainerTab === "templates" ? "tab-active bg-primary text-primary-content" : ""
-              }`}
-            >
-              Plantillas ({trainerTemplates.length})
-            </button>
-            <button
-              onClick={() => setTrainerTab("answers")}
-              className={`tab flex-1 font-semibold transition-all ${
-                trainerTab === "answers" ? "tab-active bg-primary text-primary-content" : ""
-              }`}
-            >
-              Respuestas ({trainerAssignments.length})
-            </button>
-            <button
-              onClick={() => setTrainerTab("objectives")}
-              className={`tab flex-1 font-semibold transition-all ${
-                trainerTab === "objectives" ? "tab-active bg-primary text-primary-content" : ""
-              }`}
-            >
-              {t("questionnaires.tab_objectives")} ({trainerPlayersObjectives.length})
-            </button>
-            <button
-              onClick={() => setTrainerTab("requests")}
-              className={`tab flex-1 font-semibold transition-all ${
-                trainerTab === "requests" ? "tab-active bg-primary text-primary-content" : ""
-              }`}
-            >
-              {t("questionnaires.tab_requests")} ({trainerRequests.length})
-            </button>
-          </div>
+          <SegmentedTabs
+            tabs={[
+              { id: "templates", label: `Plantillas (${trainerTemplates.length})` },
+              { id: "answers", label: `Respuestas (${trainerAssignments.length})` },
+              { id: "objectives", label: `${t("questionnaires.tab_objectives")} (${trainerPlayersObjectives.length})` },
+              { id: "requests", label: `${t("questionnaires.tab_requests")} (${trainerRequests.length})` },
+            ]}
+            activeTab={trainerTab}
+            onChange={setTrainerTab}
+            className="mb-8"
+          />
 
           {trainerTab === "templates" && (
             trainerTemplates.length === 0 ? (
@@ -506,11 +526,14 @@ export default function QuestionnairesPage() {
                     <div className="card-body p-6 flex flex-col justify-between">
                       <div>
                         <div className="flex justify-between items-start gap-2 mb-2">
-                          <h2 className="card-title text-xl font-bold text-base-content leading-tight hover:text-primary transition-colors">
-                            <Link href={`/questionnaires/${template.id}`}>
-                              {template.title}
-                            </Link>
-                          </h2>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h2 className="card-title text-xl font-bold text-base-content leading-tight hover:text-primary transition-colors">
+                              <Link href={`/questionnaires/${template.id}`}>
+                                {template.title}
+                              </Link>
+                            </h2>
+                            {getTypeBadge(template.type)}
+                          </div>
                           {getTemplateStatusBadge(template.status)}
                         </div>
                         <p className="text-sm text-base-content/70 line-clamp-2 min-h-[2.5rem]">
@@ -665,7 +688,13 @@ export default function QuestionnairesPage() {
                                   {assignment.questionnaire.title}
                                 </Link>
                               </h2>
+                              {getTypeBadge(assignment.questionnaire.type)}
                               {getAssignmentStatusBadge(assignment.status)}
+                              {isObjectivePending(assignment) && (
+                                <span className="badge badge-warning text-white font-bold text-xs animate-pulse">
+                                  ⚠️ {t("questionnaires.pending_objective") || "Pendiente de definir objetivo"}
+                                </span>
+                              )}
                             </div>
                             <div className="text-xs text-base-content/70 mt-2 space-y-1">
                               <p>
@@ -706,16 +735,22 @@ export default function QuestionnairesPage() {
               <div className="flex justify-end mb-2">
                 <div className="join border border-base-200 shadow-sm bg-base-100">
                   <button
-                    className={`btn btn-xs join-item ${objectivesCategory === "MATCH" ? "btn-primary text-white" : "btn-ghost"}`}
-                    onClick={() => setObjectivesCategory("MATCH")}
+                    className={`btn btn-xs join-item ${objectivesCategory === "ANALYSIS_VIDEO" ? "btn-primary text-white" : "btn-ghost"}`}
+                    onClick={() => setObjectivesCategory("ANALYSIS_VIDEO")}
                   >
-                    Tàctic / Partits
+                    {t("categories.ANALYSIS_VIDEO") || "Vídeo"}
                   </button>
                   <button
                     className={`btn btn-xs join-item ${objectivesCategory === "PHYSICAL" ? "btn-primary text-white" : "btn-ghost"}`}
                     onClick={() => setObjectivesCategory("PHYSICAL")}
                   >
-                    Preparació Física
+                    {t("categories.PHYSICAL") || "Físic"}
+                  </button>
+                  <button
+                    className={`btn btn-xs join-item ${objectivesCategory === "NUTRITION" ? "btn-primary text-white" : "btn-ghost"}`}
+                    onClick={() => setObjectivesCategory("NUTRITION")}
+                  >
+                    {t("categories.NUTRITION") || "Nutrició"}
                   </button>
                 </div>
               </div>
@@ -730,7 +765,7 @@ export default function QuestionnairesPage() {
             ) : (
               <div className="space-y-6">
                 {trainerPlayersObjectives.map((player) => {
-                  const activeObj = player.playerObjectivesReceived?.[0];
+                  const activeObj = player.playerObjectivesReceived?.find((obj: any) => obj.category === objectivesCategory && obj.effectiveTo === null);
                   const completedAssignments = player.playerAssignments || [];
                   const fullName = `${player.name} ${player.surname}`;
 
@@ -759,9 +794,12 @@ export default function QuestionnairesPage() {
 
                             {/* Active Objective Summary */}
                             <div className="bg-base-200/40 p-4 rounded-2xl border border-base-content/5">
-                              <h4 className="font-bold text-xs uppercase tracking-wider text-base-content/50 mb-2">
-                                {t("questionnaires.objectives_title")}
-                              </h4>
+                              <div className="flex justify-between items-center mb-2 flex-wrap gap-2">
+                                <h4 className="font-bold text-xs uppercase tracking-wider text-base-content/50">
+                                  {t("questionnaires.objectives_title")}
+                                </h4>
+                                {activeObj && getTypeBadge(activeObj.category)}
+                              </div>
                               {activeObj ? (
                                 <div className="space-y-3">
                                   <p className="text-sm font-medium text-base-content/80">{activeObj.summary}</p>
@@ -794,16 +832,33 @@ export default function QuestionnairesPage() {
                                 <p className="text-xs italic text-base-content/45">No hay respuestas completadas.</p>
                               ) : (
                                 <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
-                                  {completedAssignments.map((assign: any) => (
-                                    <div key={assign.id} className="flex items-center justify-between text-xs p-2 bg-base-200/30 rounded-xl border border-base-content/5">
-                                      <span className="font-medium truncate flex-1 mr-2" title={assign.questionnaire.title}>
-                                        {assign.questionnaire.title}
-                                      </span>
-                                      <Link href={`/questionnaires/assignments/${assign.id}`} className="btn btn-xs btn-ghost text-primary shrink-0">
-                                        {t("questionnaires.view_answers")}
-                                      </Link>
-                                    </div>
-                                  ))}
+                                  {completedAssignments.map((assign: any) => {
+                                    const isPendingObj = !player.playerObjectivesReceived?.some(
+                                      (obj: any) =>
+                                        obj.category === assign.questionnaire.type &&
+                                        new Date(obj.effectiveFrom).getTime() >= new Date(assign.respondedAt).getTime()
+                                    );
+                                    return (
+                                      <div key={assign.id} className="flex items-center justify-between text-xs p-2 bg-base-200/30 rounded-xl border border-base-content/5">
+                                        <div className="min-w-0 flex-1 mr-2">
+                                          <div className="flex items-center gap-1.5 flex-wrap">
+                                            <span className="font-medium truncate max-w-[120px] inline-block" title={assign.questionnaire.title}>
+                                              {assign.questionnaire.title}
+                                            </span>
+                                            {getTypeBadge(assign.questionnaire.type)}
+                                          </div>
+                                          {isPendingObj && (
+                                            <span className="text-[10px] text-warning font-bold block mt-0.5 animate-pulse">
+                                              ⚠️ {t("questionnaires.pending_objective") || "Pendiente de definir objetivo"}
+                                            </span>
+                                          )}
+                                        </div>
+                                        <Link href={`/questionnaires/assignments/${assign.id}`} className="btn btn-xs btn-ghost text-primary shrink-0">
+                                          {t("questionnaires.view_answers")}
+                                        </Link>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                               )}
                             </div>
@@ -853,10 +908,11 @@ export default function QuestionnairesPage() {
                   <select
                     className="select select-bordered w-full"
                     value={category}
-                    onChange={(e) => setCategory(e.target.value as ObjectiveCategory)}
+                    onChange={(e) => setCategory(e.target.value as QuestionnaireType)}
                   >
-                    <option value="MATCH">Tàctic / Partits</option>
-                    <option value="PHYSICAL">Preparació Física</option>
+                    <option value="ANALYSIS_VIDEO">{t("categories.ANALYSIS_VIDEO") || "Tàctic / Partits"}</option>
+                    <option value="PHYSICAL">{t("categories.PHYSICAL") || "Preparació Física"}</option>
+                    <option value="NUTRITION">{t("categories.NUTRITION") || "Nutrició"}</option>
                   </select>
                 </div>
 
@@ -968,7 +1024,8 @@ export default function QuestionnairesPage() {
                                   {formatRelativeTime(request.createdAt, locale)}
                                 </p>
                               </div>
-                              <div className="ml-auto md:ml-0">
+                              <div className="ml-auto md:ml-0 flex items-center gap-2 flex-wrap">
+                                {getTypeBadge(request.type)}
                                 {request.status === "PENDING" && (
                                   <span className="badge badge-warning text-white font-semibold text-xs">
                                     {t("questionnaires.request_status_pending")}
@@ -1076,32 +1133,16 @@ export default function QuestionnairesPage() {
           </div>
 
           {/* Pending / Completed / Requests Tabs */}
-          <div className="tabs tabs-boxed bg-base-200/80 p-0.5 w-full max-w-lg mb-8">
-            <button
-              onClick={() => setActiveTab("pending")}
-              className={`tab flex-1 font-semibold transition-all ${
-                activeTab === "pending" ? "tab-active bg-primary text-primary-content" : ""
-              }`}
-            >
-              {t("questionnaires.pending")} ({playerPending.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("completed")}
-              className={`tab flex-1 font-semibold transition-all ${
-                activeTab === "completed" ? "tab-active bg-primary text-primary-content" : ""
-              }`}
-            >
-              {t("questionnaires.completed")} ({playerCompleted.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("requests")}
-              className={`tab flex-1 font-semibold transition-all ${
-                activeTab === "requests" ? "tab-active bg-primary text-primary-content" : ""
-              }`}
-            >
-              {t("questionnaires.tab_requests")} ({playerRequests.length})
-            </button>
-          </div>
+          <SegmentedTabs
+            tabs={[
+              { id: "pending", label: `${t("questionnaires.pending")} (${playerPending.length})` },
+              { id: "completed", label: `${t("questionnaires.completed")} (${playerCompleted.length})` },
+              { id: "requests", label: `${t("questionnaires.tab_requests")} (${playerRequests.length})` },
+            ]}
+            activeTab={activeTab}
+            onChange={setActiveTab}
+            className="mb-8"
+          />
 
           {activeTab === "pending" ? (
             playerPending.length === 0 ? (
@@ -1125,6 +1166,7 @@ export default function QuestionnairesPage() {
                           <h2 className="text-lg font-bold text-base-content leading-tight truncate">
                             {assignment.questionnaire.title}
                           </h2>
+                          {getTypeBadge(assignment.questionnaire.type)}
                           {getAssignmentStatusBadge(assignment.status)}
                         </div>
                         <p className="text-sm text-base-content/75 line-clamp-1">
@@ -1167,6 +1209,7 @@ export default function QuestionnairesPage() {
                           <h2 className="text-lg font-bold text-base-content leading-tight truncate">
                             {assignment.questionnaire.title}
                           </h2>
+                          {getTypeBadge(assignment.questionnaire.type)}
                           {getAssignmentStatusBadge(assignment.status)}
                         </div>
                         <p className="text-sm text-base-content/75 line-clamp-1">
@@ -1213,6 +1256,7 @@ export default function QuestionnairesPage() {
                               <h2 className="text-lg font-bold text-base-content leading-tight">
                                 Sol·licitud per a {trainerName}
                               </h2>
+                              {getTypeBadge(request.type)}
                               {request.status === "PENDING" && (
                                 <span className="badge badge-warning text-white font-semibold text-xs">
                                   {t("questionnaires.request_status_pending")}
@@ -1276,6 +1320,56 @@ export default function QuestionnairesPage() {
                 <h3 className="font-bold text-2xl mb-4 text-primary">
                   {t("questionnaires.request_objectives_modal_title")}
                 </h3>
+
+                {errorMessage && (
+                  <div className="alert alert-error shadow-sm py-2 px-3 text-xs mb-4 border border-error/20 animate-fade-in">
+                    <span>❌ {errorMessage}</span>
+                  </div>
+                )}
+
+                <div className="form-control mb-4">
+                  <label className="label font-semibold text-sm">
+                    {t("questionnaires.request_objectives_area_label") || "Selecciona l'àrea dels objectius *"}
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setRequestType("ANALYSIS_VIDEO")}
+                      className={`btn btn-sm py-2 h-auto flex flex-col items-center justify-center rounded-xl border transition-all ${
+                        requestType === "ANALYSIS_VIDEO"
+                          ? "btn-primary border-primary text-primary-content animate-pulse"
+                          : "btn-outline border-base-300"
+                      }`}
+                    >
+                      <span className="text-lg">📺</span>
+                      <span className="text-[10px] font-bold mt-1">{t("categories.ANALYSIS_VIDEO") || "Vídeo"}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRequestType("PHYSICAL")}
+                      className={`btn btn-sm py-2 h-auto flex flex-col items-center justify-center rounded-xl border transition-all ${
+                        requestType === "PHYSICAL"
+                          ? "btn-primary border-primary text-primary-content animate-pulse"
+                          : "btn-outline border-base-300"
+                      }`}
+                    >
+                      <span className="text-lg">🏃‍♂️</span>
+                      <span className="text-[10px] font-bold mt-1">{t("categories.PHYSICAL") || "Físic"}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setRequestType("NUTRITION")}
+                      className={`btn btn-sm py-2 h-auto flex flex-col items-center justify-center rounded-xl border transition-all ${
+                        requestType === "NUTRITION"
+                          ? "btn-primary border-primary text-primary-content animate-pulse"
+                          : "btn-outline border-base-300"
+                      }`}
+                    >
+                      <span className="text-lg">🍎</span>
+                      <span className="text-[10px] font-bold mt-1">{t("categories.NUTRITION") || "Nutrició"}</span>
+                    </button>
+                  </div>
+                </div>
                 
                 <div className="form-control mb-6">
                   <label className="label font-semibold">
@@ -1295,6 +1389,7 @@ export default function QuestionnairesPage() {
                     onClick={() => {
                       setIsRequestModalOpen(false);
                       setRequestReason("");
+                      setRequestType("ANALYSIS_VIDEO");
                     }}
                   >
                     {t("common.cancel")}

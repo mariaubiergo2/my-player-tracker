@@ -10,6 +10,7 @@ describe("objectivesRequests validations", () => {
       const payload = {
         trainerId: "cjld2cjxh0000qzrmn8ed3b6y",
         reason: "Necessito nous objectius de cara al proper partit.",
+        type: "ANALYSIS_VIDEO" as const,
       };
       const parsed = createObjectivesRequestSchema.safeParse(payload);
       expect(parsed.success).toBe(true);
@@ -22,6 +23,7 @@ describe("objectivesRequests validations", () => {
       const payload = {
         trainerId: "",
         reason: "Necessito nous objectius de cara al proper partit.",
+        type: "ANALYSIS_VIDEO" as const,
       };
       const parsed = createObjectivesRequestSchema.safeParse(payload);
       expect(parsed.success).toBe(false);
@@ -31,6 +33,7 @@ describe("objectivesRequests validations", () => {
       const payload = {
         trainerId: "cjld2cjxh0000qzrmn8ed3b6y",
         reason: "Hola",
+        type: "ANALYSIS_VIDEO" as const,
       };
       const parsed = createObjectivesRequestSchema.safeParse(payload);
       expect(parsed.success).toBe(false);
@@ -40,6 +43,26 @@ describe("objectivesRequests validations", () => {
       const payload = {
         trainerId: "cjld2cjxh0000qzrmn8ed3b6y",
         reason: "a".repeat(501),
+        type: "ANALYSIS_VIDEO" as const,
+      };
+      const parsed = createObjectivesRequestSchema.safeParse(payload);
+      expect(parsed.success).toBe(false);
+    });
+
+    it("should reject missing type", () => {
+      const payload = {
+        trainerId: "cjld2cjxh0000qzrmn8ed3b6y",
+        reason: "Necessito nous objectius de cara al proper partit.",
+      };
+      const parsed = createObjectivesRequestSchema.safeParse(payload);
+      expect(parsed.success).toBe(false);
+    });
+
+    it("should reject invalid type value", () => {
+      const payload = {
+        trainerId: "cjld2cjxh0000qzrmn8ed3b6y",
+        reason: "Necessito nous objectius de cara al proper partit.",
+        type: "INVALID_TYPE",
       };
       const parsed = createObjectivesRequestSchema.safeParse(payload);
       expect(parsed.success).toBe(false);

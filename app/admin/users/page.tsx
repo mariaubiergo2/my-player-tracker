@@ -14,6 +14,7 @@ import {
 } from "@/actions/users";
 import { useTranslation } from "@/components/LanguageProvider";
 import PageContainer from "@/components/ui/PageContainer";
+import SegmentedTabs from "@/components/ui/SegmentedTabs";
 
 interface UserListItem {
   id: string;
@@ -568,28 +569,15 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Tabs */}
-      <div className="tabs tabs-boxed bg-base-200/50 p-1 rounded-xl mb-8 w-fit">
-        <button
-          onClick={() => setActiveTab("directory")}
-          className={`tab rounded-lg transition-all duration-200 ${
-            activeTab === "directory"
-              ? "tab-active bg-primary text-primary-content font-bold shadow-sm"
-              : "text-base-content/60 hover:text-base-content"
-          }`}
-        >
-          {t("admin_users.tab_directory") || "User Directory"}
-        </button>
-        <button
-          onClick={() => setActiveTab("assignments")}
-          className={`tab rounded-lg transition-all duration-200 ${
-            activeTab === "assignments"
-              ? "tab-active bg-primary text-primary-content font-bold shadow-sm"
-              : "text-base-content/60 hover:text-base-content"
-          }`}
-        >
-          {t("admin_users.tab_assignments") || "Assignments"}
-        </button>
-      </div>
+      <SegmentedTabs
+        tabs={[
+          { id: "directory", label: t("admin_users.tab_directory") || "User Directory" },
+          { id: "assignments", label: t("admin_users.tab_assignments") || "Assignments" },
+        ]}
+        activeTab={activeTab}
+        onChange={setActiveTab}
+        className="mb-8"
+      />
 
       {activeTab === "directory" ? (
         <div className="animate-fade-in space-y-8">

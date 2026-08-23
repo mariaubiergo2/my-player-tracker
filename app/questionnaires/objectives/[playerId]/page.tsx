@@ -7,6 +7,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/components/LanguageProvider";
 import PageContainer from "@/components/ui/PageContainer";
 import { getObjectivesHistory } from "@/actions/objectives";
+import { QuestionnaireType } from "@prisma/client";
+import SegmentedTabs from "@/components/ui/SegmentedTabs";
 
 export default function ObjectivesHistoryPage({ params }: { params: Promise<{ playerId: string }> }) {
   const router = useRouter();
@@ -16,14 +18,15 @@ export default function ObjectivesHistoryPage({ params }: { params: Promise<{ pl
 
   const [history, setHistory] = useState<any[]>([]);
   const [player, setPlayer] = useState<any>(null);
+  const [category, setCategory] = useState<QuestionnaireType>("ANALYSIS_VIDEO");
   const [loadingData, setLoadingData] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
 
-  const loadHistory = async () => {
+  const loadHistory = async (cat: QuestionnaireType) => {
     setLoadingData(true);
     setErrorMessage("");
     try {
-      const res = await getObjectivesHistory(playerId);
+      const res = await getObjectivesHistory(playerId, cat);
       if (res.success && res.data) {
         setHistory(res.data.history);
         setPlayer(res.data.player);
@@ -43,10 +46,10 @@ export default function ObjectivesHistoryPage({ params }: { params: Promise<{ pl
       if (!isAuthenticated) {
         router.push("/login");
       } else {
-        loadHistory();
+        loadHistory(category);
       }
     }
-  }, [isLoading, isAuthenticated, user, playerId]);
+  }, [isLoading, isAuthenticated, user, playerId, category]);
 
   if (isLoading || loadingData) {
     return (
@@ -72,6 +75,31 @@ export default function ObjectivesHistoryPage({ params }: { params: Promise<{ pl
   const isTrainer = user?.role === "TRAINER";
   const playerFullName = player ? `${player.name} ${player.surname}` : "Jugador";
 
+  const getTypeBadge = (type: string) => {
+    switch (type) {
+      case "ANALYSIS_VIDEO":
+        return (
+          <span className="badge bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 font-bold border-none text-[11px] uppercase tracking-wide">
+            {t("categories.ANALYSIS_VIDEO") || "Vídeo"}
+          </span>
+        );
+      case "PHYSICAL":
+        return (
+          <span className="badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300 font-bold border-none text-[11px] uppercase tracking-wide">
+            {t("categories.PHYSICAL") || "Físic"}
+          </span>
+        );
+      case "NUTRITION":
+        return (
+          <span className="badge bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 font-bold border-none text-[11px] uppercase tracking-wide">
+            {t("categories.NUTRITION") || "Nutrició"}
+          </span>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <PageContainer className="py-10 animate-fade-in" maxWidthClassName="max-w-3xl">
       <div className="mb-8">
@@ -89,6 +117,17 @@ export default function ObjectivesHistoryPage({ params }: { params: Promise<{ pl
           {t("questionnaires.player")}: <strong className="text-base-content font-semibold">{playerFullName}</strong>
         </p>
       </div>
+
+      <SegmentedTabs
+        tabs={[
+          { id: "ANALYSIS_VIDEO", label: `📺 ${t("categories.ANALYSIS_VIDEO") || "Vídeo"}` },
+          { id: "PHYSICAL", label: `🏃‍♂️ ${t("categories.PHYSICAL") || "Físic"}` },
+          { id: "NUTRITION", label: `🍎 ${t("categories.NUTRITION") || "Nutrició"}` },
+        ]}
+        activeTab={category}
+        onChange={setCategory}
+        className="mb-6"
+      />
 
       {history.length === 0 ? (
         <div className="hero bg-base-200 rounded-2xl p-10 text-center shadow-inner border border-base-content/5">
@@ -119,11 +158,14 @@ export default function ObjectivesHistoryPage({ params }: { params: Promise<{ pl
                         ? t("questionnaires.objectives_history_active", { from: fromStr })
                         : t("questionnaires.objectives_history_period", { from: fromStr, to: toStr })}
                     </span>
-                    {isActive && (
-                      <span className="badge badge-success text-success-content font-bold">
-                        Activo
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {getTypeBadge(obj.category)}
+                      {isActive && (
+                        <span className="badge badge-success text-success-content font-bold">
+                          Activo
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="space-y-4">

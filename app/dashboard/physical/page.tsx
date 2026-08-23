@@ -9,7 +9,8 @@ import PageContainer from "@/components/ui/PageContainer";
 import { getPlayerActivePlans } from "@/actions/training-plans";
 import { getActiveObjectives, getObjectivesHistory } from "@/actions/objectives";
 import { getAssignmentsByPlayer } from "@/actions/questionnaires";
-import { ObjectiveCategory, QuestionnaireType } from "@prisma/client";
+import { QuestionnaireType } from "@prisma/client";
+import SegmentedTabs from "@/components/ui/SegmentedTabs";
 
 interface Exercise {
   id: string;
@@ -85,7 +86,7 @@ export default function PhysicalPrepPage() {
   const [activeTab, setActiveTab] = useState<"checklist" | "objectives" | "questionnaires">("checklist");
 
   // Calendar states
-  const [viewMode, setViewMode] = useState<"month" | "week" >("month");
+  const [viewMode, setViewMode] = useState<"month" | "week" >("week");
   const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
 
   // Load state from URL parameters on mount
@@ -146,9 +147,9 @@ export default function PhysicalPrepPage() {
     try {
       const [plansRes, activeObjRes, historyObjRes, questRes] = await Promise.all([
         getPlayerActivePlans(user.id),
-        getActiveObjectives(user.id, ObjectiveCategory.PHYSICAL),
-        getObjectivesHistory(user.id, ObjectiveCategory.PHYSICAL),
-        getAssignmentsByPlayer(user.id, QuestionnaireType.PHYSICAL),
+        getActiveObjectives(user.id, "PHYSICAL"),
+        getObjectivesHistory(user.id, "PHYSICAL"),
+        getAssignmentsByPlayer(user.id, "PHYSICAL"),
       ]);
 
       if (plansRes.success && plansRes.data) {
@@ -320,7 +321,7 @@ export default function PhysicalPrepPage() {
   return (
     <PageContainer className="py-10 animate-fade-in">
       {/* Header banner */}
-      <div className="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div className="mb-8 flex flex-col gap-6">
         <div>
           <h1 className="text-4xl font-extrabold text-primary tracking-tight">
             {t("physical_prep_page.title") || "Preparació Física"}
@@ -331,26 +332,16 @@ export default function PhysicalPrepPage() {
         </div>
 
         {/* Tab Selector */}
-        <div className="tabs tabs-boxed shadow-md border border-base-200 p-1 bg-base-100">
-          <button
-            className={`tab font-bold text-xs rounded-xl px-4 ${activeTab === "checklist" ? "tab-active bg-accent text-white" : ""}`}
-            onClick={() => setActiveTab("checklist")}
-          >
-            📅 {t("physical_prep_page.session_checklist") ? "Calendari" : "Calendar"}
-          </button>
-          <button
-            className={`tab font-bold text-xs rounded-xl px-4 ${activeTab === "objectives" ? "tab-active bg-accent text-white" : ""}`}
-            onClick={() => setActiveTab("objectives")}
-          >
-            🎯 {t("physical_prep_page.objectives_title") || "Objectius"}
-          </button>
-          <button
-            className={`tab font-bold text-xs rounded-xl px-4 ${activeTab === "questionnaires" ? "tab-active bg-accent text-white" : ""}`}
-            onClick={() => setActiveTab("questionnaires")}
-          >
-            📝 {t("questionnaires.title")} ({questionnaires.length})
-          </button>
-        </div>
+        <SegmentedTabs
+          tabs={[
+            { id: "checklist", label: `📅 ${t("physical_prep_page.session_checklist") || "Calendari"}` },
+            { id: "objectives", label: `🎯 ${t("physical_prep_page.objectives_title") || "Objectius"}` },
+            { id: "questionnaires", label: `📝 ${t("questionnaires.title")} (${questionnaires.length})` },
+          ]}
+          activeTab={activeTab}
+          onChange={setActiveTab}
+          className="shadow-sm bg-base-100 border border-base-200"
+        />
       </div>
 
       {activeTab === "checklist" && (
