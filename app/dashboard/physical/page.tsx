@@ -71,6 +71,42 @@ interface TrainingPlanAssignment {
   }[];
 }
 
+const getStateIcon = (state: string, className = "w-3 h-3") => {
+  switch (state) {
+    case "feedback_reviewed":
+    case "completed_feedback_sent":
+      // Double check (checks)
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+          <path d="m18 6-8.5 8.5L5 10" />
+          <path d="m22 6-8.5 8.5L12 13" />
+        </svg>
+      );
+    case "completed":
+      // Single check
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+          <path d="M20 6L9 17l-5-5" />
+        </svg>
+      );
+    case "feedback_sent":
+      // Message Square
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+      );
+    case "pending":
+    default:
+      // Dashed circle
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+          <circle cx="12" cy="12" r="9" strokeDasharray="4 4" />
+        </svg>
+      );
+  }
+};
+
 export default function PhysicalPrepPage() {
   const router = useRouter();
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -222,7 +258,7 @@ export default function PhysicalPrepPage() {
       date: Date;
       session: TrainingSession;
       isCompleted: boolean;
-      state: "pending" | "completed" | "feedback_sent" | "feedback_reviewed";
+      state: "pending" | "completed" | "feedback_sent" | "feedback_reviewed" | "completed_feedback_sent";
     }[] = [];
 
     const sessionStart = new Date(session.startDate);
@@ -243,11 +279,19 @@ export default function PhysicalPrepPage() {
         const dayOfWeekKey = dayKeys[current.getDay()];
         if (session.recurrenceDays.includes(dayOfWeekKey)) {
           const occDate = new Date(current);
-          const dateStr = occDate.toDateString();
+          
+          const occY = occDate.getFullYear();
+          const occM = String(occDate.getMonth() + 1).padStart(2, "0");
+          const occD = String(occDate.getDate()).padStart(2, "0");
+          const occDateStr = `${occY}-${occM}-${occD}`;
 
-          const isCompleted = session.completions.some(
-            (c) => new Date(c.scheduledDate).toDateString() === dateStr
-          );
+          const isCompleted = session.completions.some((c) => {
+            const dateObj = new Date(c.scheduledDate);
+            const y = dateObj.getUTCFullYear();
+            const m = String(dateObj.getUTCMonth() + 1).padStart(2, "0");
+            const dayVal = String(dateObj.getUTCDate()).padStart(2, "0");
+            return `${y}-${m}-${dayVal}` === occDateStr;
+          });
 
           // Find feedback near occurrence date (within 1 day)
           const sessionFeedback = session.feedback.find((f) => {
@@ -257,11 +301,17 @@ export default function PhysicalPrepPage() {
             return diffDays <= 1;
           });
 
-          let state: "pending" | "completed" | "feedback_sent" | "feedback_reviewed" = "pending";
-          if (sessionFeedback) {
-            state = sessionFeedback.isReviewed ? "feedback_reviewed" : "feedback_sent";
-          } else if (isCompleted) {
+          let state: "pending" | "completed" | "feedback_sent" | "feedback_reviewed" | "completed_feedback_sent" = "pending";
+          if (sessionFeedback && sessionFeedback.isReviewed) {
+            state = "feedback_reviewed";
+          } else if (isCompleted && sessionFeedback && !sessionFeedback.isReviewed) {
+            state = "completed_feedback_sent";
+          } else if (isCompleted && !sessionFeedback) {
             state = "completed";
+          } else if (!isCompleted && sessionFeedback && !sessionFeedback.isReviewed) {
+            state = "feedback_sent";
+          } else {
+            state = "pending";
           }
 
           occurrences.push({
@@ -440,10 +490,12 @@ export default function PhysicalPrepPage() {
                       className={`min-h-[90px] md:min-h-[120px] p-1.5 md:p-3 border rounded-2xl flex flex-col justify-between transition-all duration-300 ${
                         isToday
                           ? "border-primary bg-primary/5 shadow-inner"
+                          : !isCurrentMonth && viewMode === "month"
+                          ? "border-base-100/50 bg-base-50/5"
                           : "border-base-100 bg-base-50/20"
-                      } ${!isCurrentMonth && viewMode === "month" ? "opacity-35" : ""}`}
+                      }`}
                     >
-                      <div className="flex justify-between items-center">
+                      <div className={`flex justify-between items-center ${!isCurrentMonth && viewMode === "month" ? "opacity-35" : ""}`}>
                         <span className={`text-xs md:text-sm font-extrabold ${isToday ? "text-primary" : "text-base-content/75"}`}>
                           {day.getDate()}
                         </span>
@@ -457,18 +509,31 @@ export default function PhysicalPrepPage() {
                       {/* Occurrences list */}
                       <div className="flex-1 flex flex-col gap-1.5 justify-end mt-2">
                         {dayOccurrences.map((occ, oIdx) => {
-                          let badgeClass = "bg-base-200 text-base-content/85";
-                          let stateLabel = t("physical_prep_page.pending");
+                          let badgeClass = "";
+                          let stateLabel = "";
 
-                          if (occ.state === "feedback_reviewed") {
-                            badgeClass = "bg-success/20 text-success border border-success/30";
-                            stateLabel = `✓✓ ${t("physical_prep_page.feedback_reviewed")}`;
-                          } else if (occ.state === "feedback_sent") {
-                            badgeClass = "bg-warning/20 text-warning border border-warning/30";
-                            stateLabel = t("physical_prep_page.feedback_sent");
-                          } else if (occ.state === "completed") {
-                            badgeClass = "bg-success text-success-content font-bold";
-                            stateLabel = `✓ ${t("completed")}`;
+                          switch (occ.state) {
+                            case "feedback_reviewed":
+                              badgeClass = "!bg-teal-600 !text-white border border-teal-600/20 !dark:bg-teal-900/30 !dark:text-teal-300 dark:border-teal-900/40";
+                              stateLabel = t("physical_prep_page.feedback_reviewed");
+                              break;
+                            case "completed_feedback_sent":
+                              badgeClass = "!bg-lime-500 !text-lime-950 border border-lime-500/20 !dark:bg-lime-900/30 !dark:text-lime-300 dark:border-lime-900/50";
+                              stateLabel = t("physical_prep_page.completed_feedback_sent");
+                              break;
+                            case "completed":
+                              badgeClass = "!bg-indigo-600 !text-white border border-indigo-600/20 !dark:bg-indigo-900/30 !dark:text-indigo-300 dark:border-indigo-900/50";
+                              stateLabel = t("physical_prep_page.completed");
+                              break;
+                            case "feedback_sent":
+                              badgeClass = "!bg-amber-500 !text-amber-950 border border-amber-500/20 !dark:bg-amber-900/30 !dark:text-amber-300 dark:border-amber-900/50";
+                              stateLabel = t("physical_prep_page.feedback_sent");
+                              break;
+                            case "pending":
+                            default:
+                              badgeClass = "!bg-slate-500 !text-white border border-slate-500/20 !dark:bg-slate-800/40 !dark:text-slate-400 dark:border-slate-800/50";
+                              stateLabel = t("physical_prep_page.pending");
+                              break;
                           }
 
                           return (
@@ -479,8 +544,9 @@ export default function PhysicalPrepPage() {
                               title={`${occ.session.title} (${stateLabel})`}
                             >
                               <div className="truncate text-left">{occ.session.title}</div>
-                              <div className="text-[8px] opacity-75 mt-0.5 text-left font-medium block truncate">
-                                {stateLabel}
+                              <div className="text-[8px] opacity-90 mt-0.5 text-left font-medium flex items-center gap-1.5 truncate">
+                                {getStateIcon(occ.state, "w-2.5 h-2.5 shrink-0")}
+                                <span className="truncate">{stateLabel}</span>
                               </div>
                             </Link>
                           );
@@ -489,6 +555,33 @@ export default function PhysicalPrepPage() {
                     </div>
                   );
                 })}
+              </div>
+
+              {/* Legend */}
+              <div className="mt-6 pt-6 border-t border-base-200 flex flex-wrap gap-x-5 gap-y-2 justify-center items-center text-xs font-semibold">
+                <span className="font-extrabold text-base-content/50 uppercase tracking-wider mr-1">
+                  {t("physical_prep_page.legend_title")}
+                </span>
+                <span className="flex items-center gap-1.5 text-base-content/70">
+                  <span className="text-slate-500 shrink-0">{getStateIcon("pending", "w-4 h-4")}</span>
+                  <span>{t("physical_prep_page.pending")}</span>
+                </span>
+                <span className="flex items-center gap-1.5 text-base-content/70">
+                  <span className="text-amber-500 shrink-0">{getStateIcon("feedback_sent", "w-4 h-4")}</span>
+                  <span>{t("physical_prep_page.feedback_sent")}</span>
+                </span>
+                <span className="flex items-center gap-1.5 text-base-content/70">
+                  <span className="text-indigo-600 shrink-0">{getStateIcon("completed", "w-4 h-4")}</span>
+                  <span>{t("physical_prep_page.completed")}</span>
+                </span>
+                <span className="flex items-center gap-1.5 text-base-content/70">
+                  <span className="text-lime-500 shrink-0">{getStateIcon("completed_feedback_sent", "w-4 h-4")}</span>
+                  <span>{t("physical_prep_page.completed_feedback_sent")}</span>
+                </span>
+                <span className="flex items-center gap-1.5 text-base-content/70">
+                  <span className="text-teal-600 shrink-0">{getStateIcon("feedback_reviewed", "w-4 h-4")}</span>
+                  <span>{t("physical_prep_page.feedback_reviewed")}</span>
+                </span>
               </div>
             </div>
           )}

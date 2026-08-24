@@ -396,8 +396,14 @@ export async function toggleSessionCompletion(
       return { success: false, error: "Unauthorized" };
     }
 
-    const targetDate = new Date(scheduledDate);
-    targetDate.setHours(0, 0, 0, 0); // Normalize date to midnight
+    // Normalize date to UTC midnight to avoid timezone offsets and server local time shifts
+    let dateStr = "";
+    if (typeof scheduledDate === "string") {
+      dateStr = scheduledDate.includes("T") ? scheduledDate.split("T")[0] : scheduledDate;
+    } else if (scheduledDate instanceof Date) {
+      dateStr = scheduledDate.toISOString().split("T")[0];
+    }
+    const targetDate = new Date(`${dateStr}T00:00:00.000Z`);
 
     if (completed) {
       await prisma.sessionCompletion.upsert({
@@ -425,7 +431,7 @@ export async function toggleSessionCompletion(
       });
     }
 
-    revalidatePath("/dashboard/physical");
+    revalidatePath("/dashboard/physical", "layout");
     return { success: true };
   } catch (error) {
     console.error("toggleSessionCompletion error:", error);

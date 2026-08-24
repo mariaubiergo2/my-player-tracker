@@ -415,19 +415,19 @@ export default function QuestionnairesPage() {
     switch (type) {
       case "ANALYSIS_VIDEO":
         return (
-          <span className="badge bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300 font-bold border-none text-[11px] uppercase tracking-wide">
+          <span className="badge bg-blue-600 text-white border border-blue-600/20 dark:bg-blue-950 dark:text-blue-200 dark:border dark:border-blue-800/80 font-bold text-[11px] uppercase tracking-wide">
             {t("categories.ANALYSIS_VIDEO") || "Vídeo"}
           </span>
         );
       case "PHYSICAL":
         return (
-          <span className="badge bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300 font-bold border-none text-[11px] uppercase tracking-wide">
+          <span className="badge bg-emerald-500 text-white border border-emerald-500/20 dark:bg-emerald-950 dark:text-emerald-200 dark:border dark:border-emerald-800/80 font-bold text-[11px] uppercase tracking-wide">
             {t("categories.PHYSICAL") || "Físic"}
           </span>
         );
       case "NUTRITION":
         return (
-          <span className="badge bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300 font-bold border-none text-[11px] uppercase tracking-wide">
+          <span className="badge bg-amber-500 text-black border border-amber-500/20 dark:bg-amber-950 dark:text-amber-200 dark:border dark:border-amber-900/80 font-bold text-[11px] uppercase tracking-wide">
             {t("categories.NUTRITION") || "Nutrició"}
           </span>
         );
@@ -691,7 +691,7 @@ export default function QuestionnairesPage() {
                               {getTypeBadge(assignment.questionnaire.type)}
                               {getAssignmentStatusBadge(assignment.status)}
                               {isObjectivePending(assignment) && (
-                                <span className="badge badge-warning text-white font-bold text-xs animate-pulse">
+                                <span className="badge badge-warning text-white font-bold text-xs">
                                   ⚠️ {t("questionnaires.pending_objective") || "Pendiente de definir objetivo"}
                                 </span>
                               )}
@@ -848,7 +848,7 @@ export default function QuestionnairesPage() {
                                             {getTypeBadge(assign.questionnaire.type)}
                                           </div>
                                           {isPendingObj && (
-                                            <span className="text-[10px] text-warning font-bold block mt-0.5 animate-pulse">
+                                            <span className="text-[10px] text-warning font-bold block mt-0.5">
                                               ⚠️ {t("questionnaires.pending_objective") || "Pendiente de definir objetivo"}
                                             </span>
                                           )}
@@ -1337,7 +1337,7 @@ export default function QuestionnairesPage() {
                       onClick={() => setRequestType("ANALYSIS_VIDEO")}
                       className={`btn btn-sm py-2 h-auto flex flex-col items-center justify-center rounded-xl border transition-all ${
                         requestType === "ANALYSIS_VIDEO"
-                          ? "btn-primary border-primary text-primary-content animate-pulse"
+                          ? "btn-primary border-primary text-primary-content"
                           : "btn-outline border-base-300"
                       }`}
                     >
@@ -1349,7 +1349,7 @@ export default function QuestionnairesPage() {
                       onClick={() => setRequestType("PHYSICAL")}
                       className={`btn btn-sm py-2 h-auto flex flex-col items-center justify-center rounded-xl border transition-all ${
                         requestType === "PHYSICAL"
-                          ? "btn-primary border-primary text-primary-content animate-pulse"
+                          ? "btn-primary border-primary text-primary-content"
                           : "btn-outline border-base-300"
                       }`}
                     >
@@ -1361,7 +1361,7 @@ export default function QuestionnairesPage() {
                       onClick={() => setRequestType("NUTRITION")}
                       className={`btn btn-sm py-2 h-auto flex flex-col items-center justify-center rounded-xl border transition-all ${
                         requestType === "NUTRITION"
-                          ? "btn-primary border-primary text-primary-content animate-pulse"
+                          ? "btn-primary border-primary text-primary-content"
                           : "btn-outline border-base-300"
                       }`}
                     >

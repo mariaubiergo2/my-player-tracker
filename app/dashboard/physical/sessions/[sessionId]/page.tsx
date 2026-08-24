@@ -46,17 +46,53 @@ interface SessionDetail {
   };
 }
 
+const getStateIcon = (state: string, className = "w-3 h-3") => {
+  switch (state) {
+    case "feedback_reviewed":
+    case "completed_feedback_sent":
+      // Double check (checks)
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+          <path d="m18 6-8.5 8.5L5 10" />
+          <path d="m22 6-8.5 8.5L12 13" />
+        </svg>
+      );
+    case "completed":
+      // Single check
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}>
+          <path d="M20 6L9 17l-5-5" />
+        </svg>
+      );
+    case "feedback_sent":
+      // Message Square
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+        </svg>
+      );
+    case "pending":
+    default:
+      // Dashed circle
+      return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+          <circle cx="12" cy="12" r="9" strokeDasharray="4 4" />
+        </svg>
+      );
+  }
+};
+
 export default function SessionDetailPage({
   params,
 }: {
   params: Promise<{ sessionId: string }>;
 }) {
+  const { sessionId } = use(params);
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isAuthenticated, isLoading } = useAuth();
   const { t } = useTranslation();
-
-  const { sessionId } = use(params);
 
   // Search parameters for calendar state preservation
   const dateParam = searchParams.get("date") || new Date().toISOString().split("T")[0];
@@ -144,9 +180,17 @@ export default function SessionDetailPage({
     );
   }
 
-  // Check completion
+  // Check completion (using timezone-independent UTC matching)
+  const formatUTCDate = (d: Date | string) => {
+    const dateObj = new Date(d);
+    const y = dateObj.getUTCFullYear();
+    const m = String(dateObj.getUTCMonth() + 1).padStart(2, "0");
+    const dayVal = String(dateObj.getUTCDate()).padStart(2, "0");
+    return `${y}-${m}-${dayVal}`;
+  };
+
   const isCompleted = session.completions.some(
-    (c) => new Date(c.scheduledDate).toDateString() === occurrenceDate.toDateString()
+    (c) => formatUTCDate(c.scheduledDate) === dateParam
   );
 
   const handleToggleCompletion = async () => {
@@ -160,18 +204,18 @@ export default function SessionDetailPage({
       if (nextVal) {
         updatedCompletions.push({
           id: `temp_${Date.now()}`,
-          scheduledDate: occurrenceDate.toISOString(),
+          scheduledDate: `${dateParam}T00:00:00.000Z`,
           completedAt: new Date().toISOString(),
         });
       } else {
         updatedCompletions = updatedCompletions.filter(
-          (c) => new Date(c.scheduledDate).toDateString() !== occurrenceDate.toDateString()
+          (c) => formatUTCDate(c.scheduledDate) !== dateParam
         );
       }
       return { ...prev, completions: updatedCompletions };
     });
 
-    const res = await toggleSessionCompletion(session.id, user.id, occurrenceDate, nextVal);
+    const res = await toggleSessionCompletion(session.id, user.id, dateParam, nextVal);
     if (!res.success) {
       alert("Error al guardar l'estat.");
       fetchData(); // Rollback
@@ -414,12 +458,14 @@ export default function SessionDetailPage({
                         {new Date(fb.createdAt).toLocaleDateString()}
                       </span>
                       {fb.isReviewed ? (
-                        <span className="badge badge-success badge-xs font-semibold">
-                          {t("physical_prep_page.feedback_reviewed")}
+                        <span className="badge !bg-teal-600 !text-white border border-teal-600/20 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-900/40 badge-xs font-bold px-2 py-1 rounded-md flex items-center gap-1">
+                          {getStateIcon("feedback_reviewed", "w-3 h-3 shrink-0")}
+                          <span>{t("physical_prep_page.feedback_reviewed")}</span>
                         </span>
                       ) : (
-                        <span className="badge badge-warning badge-xs font-semibold">
-                          Pendiente de revisar
+                        <span className="badge !bg-amber-500 !text-amber-950 border border-amber-500/20 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-900/50 badge-xs font-bold px-2 py-1 rounded-md flex items-center gap-1">
+                          {getStateIcon("feedback_sent", "w-3 h-3 shrink-0")}
+                          <span>{t("physical_prep_page.pending_review")}</span>
                         </span>
                       )}
                     </div>
