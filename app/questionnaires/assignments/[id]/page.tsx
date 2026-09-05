@@ -8,7 +8,6 @@ import { useTranslation } from "@/components/LanguageProvider";
 import PageContainer from "@/components/ui/PageContainer";
 import {
   getAssignmentById,
-  reclaimAssignment,
   submitAssignmentAnswers,
 } from "@/actions/questionnaires";
 
@@ -69,27 +68,7 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
     setAnswers((prev) => ({ ...prev, [qId]: val }));
   };
 
-  const handleReclaim = () => {
-    setErrorMessage("");
-    setSuccessMessage("");
-    if (!confirm(t("questionnaires.reclaim_confirm"))) return;
 
-    startTransition(async () => {
-      try {
-        const res = await reclaimAssignment(id);
-        if (res.success) {
-          setSuccessMessage(t("questionnaires.questionnaire_reclaimed_success"));
-          loadAssignment();
-          setTimeout(() => setSuccessMessage(""), 3000);
-        } else {
-          setErrorMessage(res.error || t("common.error"));
-        }
-      } catch (err) {
-        console.error(err);
-        setErrorMessage(t("common.error"));
-      }
-    });
-  };
 
   const handleSubmitAnswers = () => {
     setErrorMessage("");
@@ -210,15 +189,7 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
         </div>
       )}
 
-      {/* Reclaimed Player Banner */}
-      {!isTrainer && isReclaimed && (
-        <div className="alert alert-warning shadow border border-warning/20 mb-6 p-4 rounded-3xl">
-          <div>
-            <h3 className="font-bold text-warning-content">⚠️ Reclamación Activa</h3>
-            <p className="text-sm text-warning-content/85 mt-1">{t("questionnaires.reclaimed_status_info")}</p>
-          </div>
-        </div>
-      )}
+
 
       {/* Reclaimed Trainer Banner */}
       {isTrainer && isReclaimed && (
@@ -376,16 +347,6 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
                       "🚀 " + t("questionnaires.submit_answers")
                     )}
                   </button>
-
-                  {assignment.status === "SENT" && (
-                    <button
-                      onClick={handleReclaim}
-                      disabled={isPending}
-                      className="btn btn-warning btn-outline w-full text-warning hover:text-warning-content"
-                    >
-                      ⚠️ {t("questionnaires.reclaim")}
-                    </button>
-                  )}
                 </div>
               )}
 

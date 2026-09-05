@@ -1,16 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { prisma } from "@/lib/prisma";
-import { UserRole, ObjectivesRequestStatus } from "@prisma/client";
+import { UserRole, QuickResponseType } from "@prisma/client";
 import { generateToken } from "@/lib/auth";
 import {
-  createObjectivesRequest,
-  createObjectivesRequestForAllTrainers,
+  createObjectiveRequest,
   getObjectivesRequestsForPlayer,
   getObjectivesRequestsForTrainer,
-  replyToObjectivesRequest,
+  replyToObjectiveRequest,
+  markObjectiveRequestAsReviewed,
   getPlayerTrainers,
 } from "../objectivesRequests";
 import { defineObjectives } from "../objectives";
+import { updateUser } from "../users";
 
 // Define mock get functions and state using vi.hoisted to prevent hoisting reference errors
 const { mockRevalidatePath, mockRedirect, mockGetCookie, authState } = vi.hoisted(() => {
@@ -79,7 +80,8 @@ describe("Objectives Requests Server Actions - End to End Flow", () => {
 
     // Clean test database records that might clash
     await prisma.notification.deleteMany();
-    await prisma.objectivesRequest.deleteMany();
+    await prisma.objectiveRequestResponse.deleteMany();
+    await prisma.objectiveRequest.deleteMany();
     await prisma.playerObjectives.deleteMany();
     await prisma.user.deleteMany();
 
@@ -91,6 +93,7 @@ describe("Objectives Requests Server Actions - End to End Flow", () => {
         email: "trainer1@test.com",
         password: "hash",
         role: UserRole.TRAINER,
+        trainerSpecialty: "VIDEO_ANALYSIS",
       },
     });
 
@@ -101,6 +104,7 @@ describe("Objectives Requests Server Actions - End to End Flow", () => {
         email: "trainer2@test.com",
         password: "hash",
         role: UserRole.TRAINER,
+        trainerSpecialty: "VIDEO_ANALYSIS",
       },
     });
 
@@ -120,7 +124,8 @@ describe("Objectives Requests Server Actions - End to End Flow", () => {
 
   afterEach(async () => {
     await prisma.notification.deleteMany();
-    await prisma.objectivesRequest.deleteMany();
+    await prisma.objectiveRequestResponse.deleteMany();
+    await prisma.objectiveRequest.deleteMany();
     await prisma.playerObjectives.deleteMany();
     await prisma.user.deleteMany();
   });
@@ -134,12 +139,12 @@ describe("Objectives Requests Server Actions - End to End Flow", () => {
     expect(trainersRes.success).toBe(true);
     expect(trainersRes.trainers?.length).toBe(1);
 
-    // 2. Player creates objectives request for trainer1
-    const createRes = await createObjectivesRequestForAllTrainers("Motiu de prova per als meus objectius", "ANALYSIS_VIDEO");
+    // 2. Player creates objectives request
+    const createRes = await createObjectiveRequest("Motiu de prova per als meus objectius", "ANALYSIS_VIDEO");
     expect(createRes.success).toBe(true);
     expect(createRes.data).toBeDefined();
 
-    const requestId = createRes.data![0].id;
+    const requestId = (createRes.data as any).id;
 
     // Verify notification was sent to trainer1
     const trainer1Notifications = await prisma.notification.findMany({
@@ -152,7 +157,7 @@ describe("Objectives Requests Server Actions - End to End Flow", () => {
     const playerRequests = await getObjectivesRequestsForPlayer(player.id);
     expect(playerRequests.success).toBe(true);
     expect(playerRequests.data?.length).toBe(1);
-    expect(playerRequests.data?.[0].status).toBe(ObjectivesRequestStatus.PENDING);
+    expect(playerRequests.data?.[0].reviewed).toBe(false);
 
     // 4. Authenticate as trainer1 and reply to the request using quick reply
     await authenticateUser(trainer1);
@@ -161,15 +166,16 @@ describe("Objectives Requests Server Actions - End to End Flow", () => {
     expect(trainerRequests.success).toBe(true);
     expect(trainerRequests.data?.length).toBe(1);
 
-    const replyRes = await replyToObjectivesRequest(requestId, "👀 Ho estic mirant");
+    const replyRes = await replyToObjectiveRequest(requestId, "LOOKING_INTO_IT");
     expect(replyRes.success).toBe(true);
 
-    // Verify request status is now ACKNOWLEDGED
-    const updatedRequest = await prisma.objectivesRequest.findUnique({
+    // Verify reply in database
+    const requestWithResponses = await prisma.objectiveRequest.findUnique({
       where: { id: requestId },
+      include: { responses: true }
     });
-    expect(updatedRequest?.status).toBe(ObjectivesRequestStatus.ACKNOWLEDGED);
-    expect(updatedRequest?.trainerReply).toBe("👀 Ho estic mirant");
+    expect(requestWithResponses?.responses.length).toBe(1);
+    expect(requestWithResponses?.responses[0].quickResponseType).toBe("LOOKING_INTO_IT");
 
     // Verify notification was sent back to player
     let playerNotifications = await prisma.notification.findMany({
@@ -185,14 +191,15 @@ describe("Objectives Requests Server Actions - End to End Flow", () => {
     });
 
     // Reply again
-    const secondReplyRes = await replyToObjectivesRequest(requestId, "🛠️ Treballant-hi");
+    const secondReplyRes = await replyToObjectiveRequest(requestId, "WORKING_ON_IT");
     expect(secondReplyRes.success).toBe(true);
 
-    // Verify trainerReply was updated
-    const requestAfterSecondReply = await prisma.objectivesRequest.findUnique({
+    // Verify responses list was updated
+    const requestWithTwoResponses = await prisma.objectiveRequest.findUnique({
       where: { id: requestId },
+      include: { responses: true }
     });
-    expect(requestAfterSecondReply?.trainerReply).toBe("🛠️ Treballant-hi");
+    expect(requestWithTwoResponses?.responses.length).toBe(2);
 
     // Verify there is still exactly one notification of type OBJECTIVES_REQUEST_REPLIED, and it is unread (isRead: false)
     playerNotifications = await prisma.notification.findMany({
@@ -203,17 +210,17 @@ describe("Objectives Requests Server Actions - End to End Flow", () => {
     expect(playerNotifications[0].isRead).toBe(false);
 
     // 5. Trainer1 defines objectives for player
-    const defineRes = await defineObjectives(player.id, "Nous objectius de la setmana", ["Tàctica defensiva", "Pressió alta"]);
+    const defineRes = await defineObjectives(player.id, "Nous objectius de la setmana", ["Tàctica defensiva", "Pressió alta"], "ANALYSIS_VIDEO");
     expect(defineRes.success).toBe(true);
 
-    // Verify request status transitions to RESOLVED automatically
-    const resolvedRequest = await prisma.objectivesRequest.findUnique({
+    // Verify request status transitions to reviewed: true automatically
+    const resolvedRequest = await prisma.objectiveRequest.findUnique({
       where: { id: requestId },
     });
-    expect(resolvedRequest?.status).toBe(ObjectivesRequestStatus.RESOLVED);
+    expect(resolvedRequest?.reviewed).toBe(true);
   });
 
-  it("should support requesting objectives for all trainers at once", async () => {
+  it("should support requesting objectives notifying all trainers in the section", async () => {
     // Connect second trainer
     await prisma.user.update({
       where: { id: player.id },
@@ -227,9 +234,8 @@ describe("Objectives Requests Server Actions - End to End Flow", () => {
     // Authenticate as player
     await authenticateUser(player);
 
-    const createRes = await createObjectivesRequestForAllTrainers("Necessito que tots reviseu els meus objectius.", "ANALYSIS_VIDEO");
+    const createRes = await createObjectiveRequest("Necessito que tots reviseu els meus objectius.", "ANALYSIS_VIDEO");
     expect(createRes.success).toBe(true);
-    expect(createRes.data?.length).toBe(2); // One for each trainer
 
     // Verify notification was sent to both trainer1 and trainer2
     const trainer1Notifications = await prisma.notification.findMany({
@@ -242,7 +248,7 @@ describe("Objectives Requests Server Actions - End to End Flow", () => {
     expect(trainer2Notifications.length).toBe(1);
   });
 
-  it("should return success: false and error: no_trainers_assigned when player has no trainers", async () => {
+  it("should create request and notify admins when player has no trainers for that section", async () => {
     // Disconnect all trainers
     await prisma.user.update({
       where: { id: player.id },
@@ -253,10 +259,121 @@ describe("Objectives Requests Server Actions - End to End Flow", () => {
       },
     });
 
+    // Create an admin
+    const admin = await prisma.user.create({
+      data: {
+        name: "Admin",
+        surname: "User",
+        email: "admin-no-trainer@test.com",
+        password: "hash",
+        role: UserRole.ADMIN,
+      },
+    });
+
     await authenticateUser(player);
 
-    const createRes = await createObjectivesRequestForAllTrainers("Necessito que reviseu els meus objectius.", "ANALYSIS_VIDEO");
-    expect(createRes.success).toBe(false);
-    expect(createRes.error).toBe("no_trainers_assigned");
+    const createRes = await createObjectiveRequest("Necessito que reviseu els meus objectius.", "ANALYSIS_VIDEO");
+    expect(createRes.success).toBe(true);
+
+    // Verify notification was sent to admin
+    const adminNotifications = await prisma.notification.findMany({
+      where: { recipientId: admin.id },
+    });
+    expect(adminNotifications.length).toBe(1);
+    expect(adminNotifications[0].type).toBe("OBJECTIVE_REQUEST_NO_TRAINER_AVAILABLE");
+  });
+
+  it("should notify trainer when they are assigned a specialty after player has pending objectives requests", async () => {
+    // 1. Clear trainer specialty
+    await prisma.user.update({
+      where: { id: trainer1.id },
+      data: { trainerSpecialty: null }
+    });
+
+    // 2. Create pending objectives request (notifies admin since trainer has no specialty)
+    await authenticateUser(player);
+    const reqRes = await createObjectiveRequest("Vull millorar en la sortida de pilota", "ANALYSIS_VIDEO");
+    expect(reqRes.success).toBe(true);
+    const requestId = reqRes.data!.id;
+
+    // Verify trainer has no notifications yet
+    let trainerNotifications = await prisma.notification.findMany({
+      where: { recipientId: trainer1.id }
+    });
+    expect(trainerNotifications.length).toBe(0);
+
+    // 3. Admin updates trainer specialty to VIDEO_ANALYSIS
+    const admin = await prisma.user.create({
+      data: {
+        name: "Admin",
+        surname: "User",
+        email: "admin-specialty-test@test.com",
+        password: "hash",
+        role: UserRole.ADMIN,
+      },
+    });
+    await authenticateUser(admin);
+
+    const updateRes = await updateUser(trainer1.id, {
+      trainerSpecialty: "VIDEO_ANALYSIS"
+    });
+    expect(updateRes.success).toBe(true);
+
+    // 4. Verify trainer now has OBJECTIVES_REQUEST_CREATED notification for that request
+    trainerNotifications = await prisma.notification.findMany({
+      where: {
+        recipientId: trainer1.id,
+        type: "OBJECTIVES_REQUEST_CREATED"
+      }
+    });
+    expect(trainerNotifications.length).toBe(1);
+    expect(trainerNotifications[0].objectiveRequestId).toBe(requestId);
+  });
+
+  it("should not duplicate OBJECTIVES_REQUEST_CREATED notifications if trainer specialty is updated multiple times", async () => {
+    // 1. Clear trainer specialty
+    await prisma.user.update({
+      where: { id: trainer1.id },
+      data: { trainerSpecialty: null }
+    });
+
+    // 2. Create pending objectives request
+    await authenticateUser(player);
+    const reqRes = await createObjectiveRequest("Vull millorar en la sortida de pilota", "ANALYSIS_VIDEO");
+    expect(reqRes.success).toBe(true);
+    const requestId = reqRes.data!.id;
+
+    // 3. Admin updates trainer specialty to VIDEO_ANALYSIS
+    const admin = await prisma.user.create({
+      data: {
+        name: "Admin",
+        surname: "User",
+        email: "admin-duplicate-test@test.com",
+        password: "hash",
+        role: UserRole.ADMIN,
+      },
+    });
+    await authenticateUser(admin);
+
+    const updateRes1 = await updateUser(trainer1.id, {
+      trainerSpecialty: "VIDEO_ANALYSIS"
+    });
+    expect(updateRes1.success).toBe(true);
+
+    // 4. Admin updates trainer specialty again
+    const updateRes2 = await updateUser(trainer1.id, {
+      trainerSpecialty: "VIDEO_ANALYSIS"
+    });
+    expect(updateRes2.success).toBe(true);
+
+    // 5. Verify trainer has EXACTLY ONE notification for this request
+    const trainerNotifications = await prisma.notification.findMany({
+      where: {
+        recipientId: trainer1.id,
+        type: "OBJECTIVES_REQUEST_CREATED",
+        objectiveRequestId: requestId
+      }
+    });
+    expect(trainerNotifications.length).toBe(1);
   });
 });

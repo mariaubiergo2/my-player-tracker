@@ -10,6 +10,7 @@
     "match_feedback": "Match feedback",
     "all_matches": "All matches",
     "dashboard": "Video Analysis",
+    "video_objectives": "Video objectives",
     "physical_prep": "Physical Prep",
     "nutrition": "Nutrition",
     "create_match": "Create Match",
@@ -27,7 +28,11 @@
     "training_feedback": "Feedback inbox"
   },
   "footer": {
-    "text": "Built with Next.js 16 + DaisyUI — Demonstrating SSG, SSR, ISR, and CSR patterns"
+    "brand": "Foot-Tracker",
+    "slogan": "The application that connects players and coaches, match by match.",
+    "contact": "Questions or suggestions?",
+    "contactEmail": "hello@foot-tracker.app",
+    "copyright": "© {year} Foot-Tracker. All rights reserved."
   },
   "common": {
     "save": "Save",
@@ -730,7 +735,10 @@
     "TRAINING_PLAN_SENT": "Coach {trainerName} has sent you a new training plan: {planTitle}",
     "TRAINING_PLAN_UPDATED": "Coach {trainerName} has updated your training plan",
     "SESSION_FEEDBACK_RECEIVED": "Player {playerName} has sent feedback for session: {sessionTitle}",
-    "PLAN_FEEDBACK_RECEIVED": "Player {playerName} has sent feedback for plan: {planTitle}"
+    "PLAN_FEEDBACK_RECEIVED": "Player {playerName} has sent feedback for plan: {planTitle}",
+    "objectives_defined": "Your {section} objectives have been defined.",
+    "player_unassigned": "Player {playerName} has registered without a trainer.",
+    "objective_request_no_trainer_available": "{playerName} has requested {section} objectives but has no trainer assigned for this specialty."
   },
   "questionnaires": {
     "title": "Questionnaires",

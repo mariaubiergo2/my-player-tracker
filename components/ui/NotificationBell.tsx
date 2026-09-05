@@ -16,12 +16,14 @@ import { formatRelativeTime } from "@/lib/utils/dates";
 interface NotificationItem {
   id: string;
   recipientId: string;
-  type: "MATCH_CREATED" | "MATCH_UPDATED" | "MATCH_UPDATED_BY_TRAINER" | "FEEDBACK_MESSAGE_FROM_PLAYER" | "FEEDBACK_MESSAGE_FROM_TRAINER" | "QUESTIONNAIRE_SENT" | "QUESTIONNAIRE_RESPONDED" | "QUESTIONNAIRE_RECLAIMED" | "OBJECTIVES_REQUEST_CREATED" | "OBJECTIVES_REQUEST_REPLIED" | "TRAINING_PLAN_SENT" | "SESSION_FEEDBACK_RECEIVED" | "PLAN_FEEDBACK_RECEIVED" | "TRAINING_PLAN_UPDATED";
+  type: "MATCH_CREATED" | "MATCH_UPDATED" | "MATCH_UPDATED_BY_TRAINER" | "FEEDBACK_MESSAGE_FROM_PLAYER" | "FEEDBACK_MESSAGE_FROM_TRAINER" | "QUESTIONNAIRE_SENT" | "QUESTIONNAIRE_RESPONDED" | "QUESTIONNAIRE_RECLAIMED" | "OBJECTIVES_REQUEST_CREATED" | "OBJECTIVES_REQUEST_REPLIED" | "TRAINING_PLAN_SENT" | "SESSION_FEEDBACK_RECEIVED" | "PLAN_FEEDBACK_RECEIVED" | "TRAINING_PLAN_UPDATED" | "PLAYER_UNASSIGNED" | "OBJECTIVES_DEFINED";
   matchId?: string | null;
   assignmentId?: string | null;
-  objectivesRequestId?: string | null;
+  objectiveRequestId?: string | null;
   trainingPlanAssignmentId?: string | null;
   trainingFeedbackId?: string | null;
+  unassignedPlayerId?: string | null;
+  playerObjectivesId?: string | null;
   isRead: boolean;
   createdAt: Date;
   match?: {
@@ -65,26 +67,39 @@ interface NotificationItem {
       };
     };
   } | null;
-  objectivesRequest?: {
+  objectiveRequest?: {
     id: string;
     playerId: string;
-    trainerId: string;
-    reason: string;
-    status: string;
-    trainerReply?: string | null;
-    repliedAt?: string | Date | null;
+    reason?: string | null;
+    reviewed: boolean;
     player: {
       id: string;
       name: string;
       surname: string;
       avatarUrl?: string | null;
     };
-    trainer: {
+    responses: {
       id: string;
-      name: string;
-      surname: string;
-      avatarUrl?: string | null;
-    };
+      trainerId: string;
+      quickResponseType: string;
+      trainer: {
+        id: string;
+        name: string;
+        surname: string;
+        avatarUrl?: string | null;
+      };
+    }[];
+  } | null;
+  unassignedPlayer?: {
+    id: string;
+    name: string;
+    surname: string;
+    avatarUrl?: string | null;
+  } | null;
+  playerObjectives?: {
+    id: string;
+    category: string;
+    summary: string;
   } | null;
   trainingPlanAssignment?: {
     id: string;
@@ -157,7 +172,8 @@ export default function NotificationBell() {
   const isUserAuthorized =
     user?.role === "TRAINER" ||
     user?.role === "PLAYER" ||
-    user?.role === "GOAL_KEEPER";
+    user?.role === "GOAL_KEEPER" ||
+    user?.role === "ADMIN";
 
   const fetchUnreadCount = async () => {
     if (!user?.id) return;
@@ -186,7 +202,6 @@ export default function NotificationBell() {
     }
   };
 
-  // Fetch count on mount, when user changes, or when pathname changes
   useEffect(() => {
     if (isUserAuthorized) {
       fetchUnreadCount();
@@ -196,7 +211,6 @@ export default function NotificationBell() {
     }
   }, [user?.id, pathname, isUserAuthorized, hasOpened]);
 
-  // Listen to custom notification update events
   useEffect(() => {
     if (!isUserAuthorized) return;
     const handleUpdate = () => {
@@ -217,7 +231,6 @@ export default function NotificationBell() {
     e.preventDefault();
     e.stopPropagation();
     
-    // Optimistic update
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, isRead } : n))
     );
@@ -231,7 +244,6 @@ export default function NotificationBell() {
 
   const handleNotificationClick = (id: string, isRead: boolean) => {
     if (!isRead) {
-      // Optimistic update
       setNotifications((prev) =>
         prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
       );
@@ -251,7 +263,6 @@ export default function NotificationBell() {
 
     if (unreadCount === 0 || !user?.id) return;
 
-    // Optimistic update
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     setUnreadCount(0);
 
@@ -277,7 +288,6 @@ export default function NotificationBell() {
 
   return (
     <div className="dropdown dropdown-end">
-      {/* Trigger button */}
       <div
         tabIndex={0}
         role="button"
@@ -308,7 +318,6 @@ export default function NotificationBell() {
         )}
       </div>
 
-      {/* Dropdown Menu content */}
       <div
         tabIndex={0}
         className="dropdown-content mt-3 w-80 sm:w-96 rounded-box border border-base-content/10 bg-base-100 p-2 shadow-2xl z-[50]"
@@ -340,14 +349,14 @@ export default function NotificationBell() {
           ) : (
             notifications.map((n) => {
               const isQuestionnaire = ["QUESTIONNAIRE_SENT", "QUESTIONNAIRE_RESPONDED", "QUESTIONNAIRE_RECLAIMED"].includes(n.type);
-              const isObjectivesRequest = ["OBJECTIVES_REQUEST_CREATED", "OBJECTIVES_REQUEST_REPLIED"].includes(n.type);
+              const isObjectivesRequest = ["OBJECTIVES_REQUEST_CREATED", "OBJECTIVES_REQUEST_REPLIED", "OBJECTIVE_REQUEST_NO_TRAINER_AVAILABLE"].includes(n.type);
               const isTrainingPlan = ["TRAINING_PLAN_SENT", "TRAINING_PLAN_UPDATED"].includes(n.type);
               const isTrainingFeedback = ["SESSION_FEEDBACK_RECEIVED", "PLAN_FEEDBACK_RECEIVED"].includes(n.type);
 
               const playerName = isQuestionnaire
                 ? (n.assignment?.player ? `${n.assignment.player.name} ${n.assignment.player.surname}` : "")
                 : isObjectivesRequest
-                ? (n.objectivesRequest?.player ? `${n.objectivesRequest.player.name} ${n.objectivesRequest.player.surname}` : "")
+                ? (n.objectiveRequest?.player ? `${n.objectiveRequest.player.name} ${n.objectiveRequest.player.surname}` : "")
                 : isTrainingPlan
                 ? (n.trainingPlanAssignment?.player ? `${n.trainingPlanAssignment.player.name} ${n.trainingPlanAssignment.player.surname}` : "")
                 : isTrainingFeedback
@@ -357,7 +366,9 @@ export default function NotificationBell() {
               const trainerName = isQuestionnaire
                 ? (n.assignment?.questionnaire?.trainer ? `${n.assignment.questionnaire.trainer.name} ${n.assignment.questionnaire.trainer.surname}` : "")
                 : isObjectivesRequest
-                ? (n.objectivesRequest?.trainer ? `${n.objectivesRequest.trainer.name} ${n.objectivesRequest.trainer.surname}` : "")
+                ? (n.objectiveRequest?.responses?.[0]?.trainer 
+                  ? `${n.objectiveRequest.responses[0].trainer.name} ${n.objectiveRequest.responses[0].trainer.surname}`
+                  : "")
                 : isTrainingPlan
                 ? (n.trainingPlanAssignment?.trainingPlan?.trainer ? `${n.trainingPlanAssignment.trainingPlan.trainer.name} ${n.trainingPlanAssignment.trainingPlan.trainer.surname}` : "")
                 : isTrainingFeedback
@@ -397,7 +408,19 @@ export default function NotificationBell() {
               } else if (n.type === "OBJECTIVES_REQUEST_CREATED") {
                 messageText = t("notifications.objectives_request_created", { playerName });
               } else if (n.type === "OBJECTIVES_REQUEST_REPLIED") {
-                messageText = t("notifications.objectives_request_replied", { trainerName, reply: n.objectivesRequest?.trainerReply || "" });
+                let replyText = "";
+                const lastResponse = n.objectiveRequest?.responses?.[n.objectiveRequest.responses.length - 1];
+                if (lastResponse) {
+                  const rType = lastResponse.quickResponseType;
+                  if (rType === "LOOKING_INTO_IT") replyText = t("questionnaires.request_quick_reply_looking");
+                  else if (rType === "WORKING_ON_IT") replyText = t("questionnaires.request_quick_reply_working");
+                  else if (rType === "WILL_DISCUSS_NEXT_SESSION") replyText = t("questionnaires.request_quick_reply_discuss");
+                  else if (rType === "NEW_OBJECTIVES_COMING") replyText = t("questionnaires.request_quick_reply_coming");
+                }
+                const activeTrainerName = lastResponse?.trainer
+                  ? `${lastResponse.trainer.name} ${lastResponse.trainer.surname}`
+                  : trainerName;
+                messageText = t("notifications.objectives_request_replied", { trainerName: activeTrainerName, reply: replyText });
               } else if (n.type === "TRAINING_PLAN_SENT") {
                 messageText = t("notifications.TRAINING_PLAN_SENT", { trainerName, planTitle });
               } else if (n.type === "TRAINING_PLAN_UPDATED") {
@@ -406,6 +429,22 @@ export default function NotificationBell() {
                 messageText = t("notifications.SESSION_FEEDBACK_RECEIVED", { playerName, sessionTitle });
               } else if (n.type === "PLAN_FEEDBACK_RECEIVED") {
                 messageText = t("notifications.PLAN_FEEDBACK_RECEIVED", { playerName, planTitle });
+              } else if (n.type === "PLAYER_UNASSIGNED") {
+                const uPlayerName = n.unassignedPlayer ? `${n.unassignedPlayer.name} ${n.unassignedPlayer.surname}` : "";
+                messageText = t("notifications.player_unassigned", { playerName: uPlayerName });
+              } else if (n.type === "OBJECTIVE_REQUEST_NO_TRAINER_AVAILABLE") {
+                let sectionName = "";
+                if (n.objectiveRequest?.type === "ANALYSIS_VIDEO") sectionName = t("header.video_analysis") || "Vídeo";
+                else if (n.objectiveRequest?.type === "PHYSICAL") sectionName = t("header.physical_prep") || "Físic";
+                else if (n.objectiveRequest?.type === "NUTRITION") sectionName = t("header.nutrition") || "Nutrició";
+                const pName = n.objectiveRequest?.player ? `${n.objectiveRequest.player.name} ${n.objectiveRequest.player.surname}` : "";
+                messageText = t("notifications.objective_request_no_trainer_available", { playerName: pName, section: sectionName });
+              } else if (n.type === "OBJECTIVES_DEFINED") {
+                let sectionName = "";
+                if (n.playerObjectives?.category === "ANALYSIS_VIDEO") sectionName = t("header.video_analysis");
+                else if (n.playerObjectives?.category === "PHYSICAL") sectionName = t("header.physical_prep");
+                else if (n.playerObjectives?.category === "NUTRITION") sectionName = t("header.nutrition");
+                messageText = t("notifications.objectives_defined", { section: sectionName });
               }
 
               return (
@@ -419,18 +458,25 @@ export default function NotificationBell() {
                     href={
                       isQuestionnaire
                         ? `/questionnaires/assignments/${n.assignmentId}`
+                        : (n.type === "OBJECTIVE_REQUEST_NO_TRAINER_AVAILABLE" || n.type === "PLAYER_UNASSIGNED")
+                        ? `/admin/users?tab=assignments`
                         : isObjectivesRequest
                         ? `/questionnaires?tab=requests`
                         : isTrainingPlan
                         ? `/dashboard/physical`
                         : isTrainingFeedback
                         ? `/trainer/training-feedback`
+                        : n.type === "OBJECTIVES_DEFINED"
+                        ? (n.playerObjectives?.category === "ANALYSIS_VIDEO"
+                          ? `/dashboard?tab=objectives`
+                          : n.playerObjectives?.category === "PHYSICAL"
+                          ? `/dashboard/physical`
+                          : `/dashboard/nutrition`)
                         : `/matches/${n.matchId}`
                     }
                     onClick={() => handleNotificationClick(n.id, n.isRead)}
                     className="flex gap-3 px-3.5 py-3 pr-10 items-start select-none"
                   >
-                    {/* Unread circle indicator */}
                     {!n.isRead && (
                       <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-blue-500" />
                     )}
@@ -444,7 +490,6 @@ export default function NotificationBell() {
                     </div>
                   </Link>
 
-                  {/* Toggle single read/unread status */}
                   <button
                     onClick={(e) => handleToggleReadState(n.id, !n.isRead, e)}
                     title={t(n.isRead ? "notifications.mark_as_unread" : "notifications.mark_as_read")}
@@ -452,7 +497,6 @@ export default function NotificationBell() {
                     disabled={isPending}
                   >
                     {n.isRead ? (
-                      /* Envelope icon for mark as unread */
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -468,7 +512,6 @@ export default function NotificationBell() {
                         />
                       </svg>
                     ) : (
-                      /* Checkmark icon for mark as read */
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"

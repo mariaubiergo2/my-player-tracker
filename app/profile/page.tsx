@@ -17,6 +17,7 @@ export default function ProfilePage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [imageError, setImageError] = useState(false);
+  const [trainerSpecialty, setTrainerSpecialty] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -45,6 +46,7 @@ export default function ProfilePage() {
     try {
       const res = await getProfile();
       if (res.success && res.user) {
+        setTrainerSpecialty(res.user.trainerSpecialty || null);
         setFormData({
           name: res.user.name,
           surname: res.user.surname,
@@ -271,6 +273,28 @@ export default function ProfilePage() {
                     : t("common.role_admin")
                 }
               </div>
+
+              {user?.role === "TRAINER" && (
+                <div className="mt-4 flex flex-col items-center">
+                  <div className="badge badge-lg bg-primary/10 text-primary border border-primary/20 font-bold px-4 py-3">
+                    Especialitat: {
+                      trainerSpecialty === "VIDEO_ANALYSIS"
+                        ? "Anàlisi de Vídeo"
+                        : trainerSpecialty === "PHYSICAL_PREP"
+                        ? "Preparació Física"
+                        : trainerSpecialty === "NUTRITION"
+                        ? "Nutrició"
+                        : "Cap"
+                    }
+                  </div>
+                  {!trainerSpecialty && (
+                    <p className="text-[10px] text-base-content/40 mt-1.5 italic">
+                      Tu especialidad la asigna el administrador
+                    </p>
+                  )}
+                </div>
+              )}
+
               <p className="text-xs text-base-content/50 mt-3 max-w-xs leading-relaxed">
                 {t("profile_page.role_note")}
               </p>

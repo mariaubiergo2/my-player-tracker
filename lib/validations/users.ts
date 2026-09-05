@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { UserRole } from "@prisma/client";
+import { UserRole, TrainerSpecialty } from "@prisma/client";
 
 export const createUserSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -9,6 +9,7 @@ export const createUserSchema = z.object({
   phone: z.string().optional(),
   birthDate: z.string().optional(),
   password: z.string().optional(),
+  trainerSpecialty: z.union([z.nativeEnum(TrainerSpecialty), z.literal(""), z.null()]).optional(),
 });
 
 export const updateUserSchema = z.object({
@@ -18,6 +19,7 @@ export const updateUserSchema = z.object({
   role: z.nativeEnum(UserRole).optional(),
   phone: z.string().nullable().optional(),
   birthDate: z.string().nullable().optional(),
+  trainerSpecialty: z.union([z.nativeEnum(TrainerSpecialty), z.literal(""), z.null()]).optional(),
 });
 
 export const updateProfileSchema = z.object({

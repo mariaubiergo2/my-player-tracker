@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifyToken } from "@/lib/auth";
-import { UserRole } from "@prisma/client";
+import { UserRole, QuestionnaireType } from "@prisma/client";
+import { mapSpecialtyToSection } from "@/lib/config/sections";
 
 /**
  * Checks if the current request is initiated by a verified Trainer user
@@ -99,15 +100,57 @@ export async function updateTrainerPlayersRelationShared(
     }
   }
 
-  return await prisma.user.update({
+  const updatedTrainer = await prisma.user.update({
     where: { id: trainerId },
     data: {
       players: {
         connect: toConnect.map(id => ({ id })),
         disconnect: toDisconnect.map(id => ({ id })),
       }
+    },
+    select: {
+      id: true,
+      trainerSpecialty: true
     }
   });
+
+  if (toConnect.length > 0 && updatedTrainer.trainerSpecialty) {
+    const category = mapSpecialtyToSection(updatedTrainer.trainerSpecialty);
+    if (category) {
+      const pendingRequests = await prisma.objectiveRequest.findMany({
+        where: {
+          playerId: { in: toConnect },
+          type: category,
+          reviewed: false,
+          responses: {
+            none: {}
+          }
+        },
+        select: { id: true }
+      });
+
+      for (const req of pendingRequests) {
+        const existingNotif = await prisma.notification.findFirst({
+          where: {
+            recipientId: trainerId,
+            type: "OBJECTIVES_REQUEST_CREATED",
+            objectiveRequestId: req.id
+          }
+        });
+        if (!existingNotif) {
+          await prisma.notification.create({
+            data: {
+              recipientId: trainerId,
+              type: "OBJECTIVES_REQUEST_CREATED",
+              objectiveRequestId: req.id
+            }
+          });
+        }
+      }
+    }
+  }
+
+  return updatedTrainer;
 }
 
 export async function connectPlayerToTrainerShared(trainerId: string, playerId: string) {

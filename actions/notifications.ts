@@ -135,7 +135,7 @@ export async function getNotifications(
               },
             },
           },
-          objectivesRequest: {
+          objectiveRequest: {
             include: {
               player: {
                 select: {
@@ -145,14 +145,34 @@ export async function getNotifications(
                   avatarUrl: true,
                 },
               },
-              trainer: {
-                select: {
-                  id: true,
-                  name: true,
-                  surname: true,
-                  avatarUrl: true,
+              responses: {
+                include: {
+                  trainer: {
+                    select: {
+                      id: true,
+                      name: true,
+                      surname: true,
+                      avatarUrl: true,
+                    },
+                  },
                 },
+                orderBy: { createdAt: "asc" },
               },
+            },
+          },
+          unassignedPlayer: {
+            select: {
+              id: true,
+              name: true,
+              surname: true,
+              avatarUrl: true,
+            },
+          },
+          playerObjectives: {
+            select: {
+              id: true,
+              category: true,
+              summary: true,
             },
           },
         trainingPlanAssignment: {

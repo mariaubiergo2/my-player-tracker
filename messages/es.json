@@ -10,6 +10,7 @@
     "match_feedback": "Feedback de partidos",
     "all_matches": "Todos los partidos",
     "dashboard": "Análisis de vídeo",
+    "video_objectives": "Objetivos de vídeo",
     "physical_prep": "Preparación física",
     "nutrition": "Nutrición",
     "create_match": "Crear partido",
@@ -27,7 +28,11 @@
     "training_feedback": "Bandeja de feedback"
   },
   "footer": {
-    "text": "Creado con Next.js 16 + DaisyUI — Demostrando patrones SSG, SSR, ISR y CSR"
+    "brand": "Foot-Tracker",
+    "slogan": "La plataforma que conecta a jugadores y entrenadores, partido a partido.",
+    "contact": "¿Dudas o sugerencias?",
+    "contactEmail": "hola@foot-tracker.app",
+    "copyright": "© {year} Foot-Tracker. Todos los derechos reservados."
   },
   "common": {
     "save": "Guardar",
@@ -730,7 +735,10 @@
     "TRAINING_PLAN_SENT": "El entrenador {trainerName} te ha enviado un nuevo plan de entrenamiento: {planTitle}",
     "TRAINING_PLAN_UPDATED": "El entrenador {trainerName} ha actualizado tu plan de entrenamiento",
     "SESSION_FEEDBACK_RECEIVED": "El jugador {playerName} ha enviado feedback de la sesión: {sessionTitle}",
-    "PLAN_FEEDBACK_RECEIVED": "El jugador {playerName} ha enviado feedback del plan: {planTitle}"
+    "PLAN_FEEDBACK_RECEIVED": "El jugador {playerName} ha enviado feedback del plan: {planTitle}",
+    "objectives_defined": "Se han definido tus objetivos de {section}.",
+    "player_unassigned": "El jugador {playerName} se ha registrado sin entrenador.",
+    "objective_request_no_trainer_available": "{playerName} ha solicitado objetivos de {section} pero no tiene entrenador de esa especialidad asignado."
   },
   "questionnaires": {
     "title": "Cuestionarios",

@@ -17,12 +17,14 @@ import { formatRelativeTime } from "@/lib/utils/dates";
 interface NotificationItem {
   id: string;
   recipientId: string;
-  type: "MATCH_CREATED" | "MATCH_UPDATED" | "MATCH_UPDATED_BY_TRAINER" | "FEEDBACK_MESSAGE_FROM_PLAYER" | "FEEDBACK_MESSAGE_FROM_TRAINER" | "QUESTIONNAIRE_SENT" | "QUESTIONNAIRE_RESPONDED" | "QUESTIONNAIRE_RECLAIMED" | "OBJECTIVES_REQUEST_CREATED" | "OBJECTIVES_REQUEST_REPLIED" | "TRAINING_PLAN_SENT" | "SESSION_FEEDBACK_RECEIVED" | "PLAN_FEEDBACK_RECEIVED" | "TRAINING_PLAN_UPDATED";
+  type: "MATCH_CREATED" | "MATCH_UPDATED" | "MATCH_UPDATED_BY_TRAINER" | "FEEDBACK_MESSAGE_FROM_PLAYER" | "FEEDBACK_MESSAGE_FROM_TRAINER" | "QUESTIONNAIRE_SENT" | "QUESTIONNAIRE_RESPONDED" | "QUESTIONNAIRE_RECLAIMED" | "OBJECTIVES_REQUEST_CREATED" | "OBJECTIVES_REQUEST_REPLIED" | "TRAINING_PLAN_SENT" | "SESSION_FEEDBACK_RECEIVED" | "PLAN_FEEDBACK_RECEIVED" | "TRAINING_PLAN_UPDATED" | "PLAYER_UNASSIGNED" | "OBJECTIVES_DEFINED" | "OBJECTIVE_REQUEST_NO_TRAINER_AVAILABLE";
   matchId?: string | null;
   assignmentId?: string | null;
-  objectivesRequestId?: string | null;
+  objectiveRequestId?: string | null;
   trainingPlanAssignmentId?: string | null;
   trainingFeedbackId?: string | null;
+  unassignedPlayerId?: string | null;
+  playerObjectivesId?: string | null;
   isRead: boolean;
   createdAt: string | Date;
   match?: {
@@ -66,26 +68,39 @@ interface NotificationItem {
       };
     };
   } | null;
-  objectivesRequest?: {
+  objectiveRequest?: {
     id: string;
     playerId: string;
-    trainerId: string;
-    reason: string;
-    status: string;
-    trainerReply?: string | null;
-    repliedAt?: string | Date | null;
+    reason?: string | null;
+    reviewed: boolean;
     player: {
       id: string;
       name: string;
       surname: string;
       avatarUrl?: string | null;
     };
-    trainer: {
+    responses: {
       id: string;
-      name: string;
-      surname: string;
-      avatarUrl?: string | null;
-    };
+      trainerId: string;
+      quickResponseType: string;
+      trainer: {
+        id: string;
+        name: string;
+        surname: string;
+        avatarUrl?: string | null;
+      };
+    }[];
+  } | null;
+  unassignedPlayer?: {
+    id: string;
+    name: string;
+    surname: string;
+    avatarUrl?: string | null;
+  } | null;
+  playerObjectives?: {
+    id: string;
+    category: string;
+    summary: string;
   } | null;
   trainingPlanAssignment?: {
     id: string;
@@ -158,7 +173,6 @@ function NotificationsInboxContent() {
 
   const limit = 20;
 
-  // Deriving active filters, sort, and pagination state from URL search params
   const filter = (searchParams.get("status") || "all") as "all" | "unread" | "read";
   const selectedPlayerId = searchParams.get("player") || "";
   const sortBy = (searchParams.get("sort") || "date_desc") as "date_desc" | "date_asc" | "player_asc";
@@ -168,9 +182,9 @@ function NotificationsInboxContent() {
   const isUserAuthorized =
     user?.role === "TRAINER" ||
     user?.role === "PLAYER" ||
-    user?.role === "GOAL_KEEPER";
+    user?.role === "GOAL_KEEPER" ||
+    user?.role === "ADMIN";
 
-  // Route protection
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
@@ -181,7 +195,6 @@ function NotificationsInboxContent() {
     }
   }, [isLoading, isAuthenticated, user, router, isUserAuthorized]);
 
-  // Fetch unique players who generated notifications for this trainer
   useEffect(() => {
     if (user?.role === "TRAINER" && user?.id) {
       const fetchPlayers = async () => {
@@ -218,14 +231,12 @@ function NotificationsInboxContent() {
     }
   };
 
-  // Fetch notifications when search parameters or user change
   useEffect(() => {
     if (isUserAuthorized && user?.id) {
       fetchNotifications();
     }
   }, [user?.id, page, filter, selectedPlayerId, sortBy, onlyRecent, user?.role, isUserAuthorized]);
 
-  // Listen to custom notification update events
   useEffect(() => {
     if (!isUserAuthorized || !user?.id) return;
     const handleUpdate = () => {
@@ -253,7 +264,6 @@ function NotificationsInboxContent() {
     e.preventDefault();
     e.stopPropagation();
 
-    // Optimistic update
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, isRead } : n))
     );
@@ -283,7 +293,6 @@ function NotificationsInboxContent() {
 
     if (!user?.id) return;
 
-    // Optimistic update
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
 
     startTransition(async () => {
@@ -302,7 +311,6 @@ function NotificationsInboxContent() {
 
   const hasNextPage = page * limit < totalCount;
 
-  // Custom empty state text
   let emptyStateMessage = t("notifications.empty_state");
   if (selectedPlayerId) {
     const selectedPlayer = players.find((p) => p.id === selectedPlayerId);
@@ -312,7 +320,6 @@ function NotificationsInboxContent() {
 
   return (
     <PageContainer className="py-8" maxWidthClassName="max-w-5xl">
-      {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
@@ -323,7 +330,6 @@ function NotificationsInboxContent() {
           </p>
         </div>
 
-        {/* Mark all as read button */}
         {notifications.some((n) => !n.isRead) && (
           <button
             onClick={handleMarkAllAsRead}
@@ -335,9 +341,7 @@ function NotificationsInboxContent() {
         )}
       </div>
 
-      {/* Advanced Filters & Sorting Bar */}
       <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between bg-base-200/40 p-4 rounded-xl border border-base-200/60 mb-6">
-        {/* Left Side: Status Filter Tabs */}
         <div className="tabs tabs-boxed bg-base-200/80 p-0.5 w-full md:w-auto">
           <button
             onClick={() => updateParams({ status: "all", page: 1 })}
@@ -365,9 +369,7 @@ function NotificationsInboxContent() {
           </button>
         </div>
 
-        {/* Right Side: Selectors Dropdowns & Toggle */}
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center w-full md:w-auto">
-          {/* 3 Months Toggle */}
           <div className="form-control">
             <label className="label cursor-pointer gap-2 py-0">
               <input
@@ -382,7 +384,6 @@ function NotificationsInboxContent() {
             </label>
           </div>
 
-          {/* Player Select Filter (Trainer only) */}
           {user?.role === "TRAINER" && (
             <div className="form-control w-full sm:w-44">
               <select
@@ -400,7 +401,6 @@ function NotificationsInboxContent() {
             </div>
           )}
 
-          {/* Sort order Selector */}
           <div className="form-control w-full sm:w-44">
             <select
               value={sortBy}
@@ -417,7 +417,6 @@ function NotificationsInboxContent() {
         </div>
       </div>
 
-      {/* Inbox List */}
       {loading ? (
         <div className="flex h-48 items-center justify-center">
           <span className="loading loading-spinner loading-md text-primary"></span>
@@ -433,14 +432,14 @@ function NotificationsInboxContent() {
         <div className="space-y-3">
           {notifications.map((n) => {
             const isQuestionnaire = ["QUESTIONNAIRE_SENT", "QUESTIONNAIRE_RESPONDED", "QUESTIONNAIRE_RECLAIMED"].includes(n.type);
-            const isObjectivesRequest = ["OBJECTIVES_REQUEST_CREATED", "OBJECTIVES_REQUEST_REPLIED"].includes(n.type);
+            const isObjectivesRequest = ["OBJECTIVES_REQUEST_CREATED", "OBJECTIVES_REQUEST_REPLIED", "OBJECTIVE_REQUEST_NO_TRAINER_AVAILABLE"].includes(n.type);
             const isTrainingPlan = ["TRAINING_PLAN_SENT", "TRAINING_PLAN_UPDATED"].includes(n.type);
             const isTrainingFeedback = ["SESSION_FEEDBACK_RECEIVED", "PLAN_FEEDBACK_RECEIVED"].includes(n.type);
 
             const playerName = isQuestionnaire
               ? (n.assignment?.player ? `${n.assignment.player.name} ${n.assignment.player.surname}` : "")
               : isObjectivesRequest
-              ? (n.objectivesRequest?.player ? `${n.objectivesRequest.player.name} ${n.objectivesRequest.player.surname}` : "")
+              ? (n.objectiveRequest?.player ? `${n.objectiveRequest.player.name} ${n.objectiveRequest.player.surname}` : "")
               : isTrainingPlan
               ? (n.trainingPlanAssignment?.player ? `${n.trainingPlanAssignment.player.name} ${n.trainingPlanAssignment.player.surname}` : "")
               : isTrainingFeedback
@@ -450,7 +449,9 @@ function NotificationsInboxContent() {
             const trainerName = isQuestionnaire
               ? (n.assignment?.questionnaire?.trainer ? `${n.assignment.questionnaire.trainer.name} ${n.assignment.questionnaire.trainer.surname}` : "")
               : isObjectivesRequest
-              ? (n.objectivesRequest?.trainer ? `${n.objectivesRequest.trainer.name} ${n.objectivesRequest.trainer.surname}` : "")
+              ? (n.objectiveRequest?.responses?.[0]?.trainer 
+                ? `${n.objectiveRequest.responses[0].trainer.name} ${n.objectiveRequest.responses[0].trainer.surname}`
+                : "")
               : isTrainingPlan
               ? (n.trainingPlanAssignment?.trainingPlan?.trainer ? `${n.trainingPlanAssignment.trainingPlan.trainer.name} ${n.trainingPlanAssignment.trainingPlan.trainer.surname}` : "")
               : isTrainingFeedback
@@ -490,7 +491,19 @@ function NotificationsInboxContent() {
             } else if (n.type === "OBJECTIVES_REQUEST_CREATED") {
               messageText = t("notifications.objectives_request_created", { playerName });
             } else if (n.type === "OBJECTIVES_REQUEST_REPLIED") {
-              messageText = t("notifications.objectives_request_replied", { trainerName, reply: n.objectivesRequest?.trainerReply || "" });
+              let replyText = "";
+              const lastResponse = n.objectiveRequest?.responses?.[n.objectiveRequest.responses.length - 1];
+              if (lastResponse) {
+                const rType = lastResponse.quickResponseType;
+                if (rType === "LOOKING_INTO_IT") replyText = t("questionnaires.request_quick_reply_looking");
+                else if (rType === "WORKING_ON_IT") replyText = t("questionnaires.request_quick_reply_working");
+                else if (rType === "WILL_DISCUSS_NEXT_SESSION") replyText = t("questionnaires.request_quick_reply_discuss");
+                else if (rType === "NEW_OBJECTIVES_COMING") replyText = t("questionnaires.request_quick_reply_coming");
+              }
+              const activeTrainerName = lastResponse?.trainer
+                ? `${lastResponse.trainer.name} ${lastResponse.trainer.surname}`
+                : trainerName;
+              messageText = t("notifications.objectives_request_replied", { trainerName: activeTrainerName, reply: replyText });
             } else if (n.type === "TRAINING_PLAN_SENT") {
               messageText = t("notifications.TRAINING_PLAN_SENT", { trainerName, planTitle });
             } else if (n.type === "TRAINING_PLAN_UPDATED") {
@@ -499,15 +512,30 @@ function NotificationsInboxContent() {
               messageText = t("notifications.SESSION_FEEDBACK_RECEIVED", { playerName, sessionTitle });
             } else if (n.type === "PLAN_FEEDBACK_RECEIVED") {
               messageText = t("notifications.PLAN_FEEDBACK_RECEIVED", { playerName, planTitle });
+            } else if (n.type === "PLAYER_UNASSIGNED") {
+              const uPlayerName = n.unassignedPlayer ? `${n.unassignedPlayer.name} ${n.unassignedPlayer.surname}` : "";
+              messageText = t("notifications.player_unassigned", { playerName: uPlayerName });
+            } else if (n.type === "OBJECTIVE_REQUEST_NO_TRAINER_AVAILABLE") {
+              let sectionName = "";
+              if (n.objectiveRequest?.type === "ANALYSIS_VIDEO") sectionName = t("header.video_analysis") || "Vídeo";
+              else if (n.objectiveRequest?.type === "PHYSICAL") sectionName = t("header.physical_prep") || "Físic";
+              else if (n.objectiveRequest?.type === "NUTRITION") sectionName = t("header.nutrition") || "Nutrició";
+              const pName = n.objectiveRequest?.player ? `${n.objectiveRequest.player.name} ${n.objectiveRequest.player.surname}` : "";
+              messageText = t("notifications.objective_request_no_trainer_available", { playerName: pName, section: sectionName });
+            } else if (n.type === "OBJECTIVES_DEFINED") {
+              let sectionName = "";
+              if (n.playerObjectives?.category === "ANALYSIS_VIDEO") sectionName = t("header.video_analysis");
+              else if (n.playerObjectives?.category === "PHYSICAL") sectionName = t("header.physical_prep");
+              else if (n.playerObjectives?.category === "NUTRITION") sectionName = t("header.nutrition");
+              messageText = t("notifications.objectives_defined", { section: sectionName });
             }
 
-            const isFromTrainer = n.type === "MATCH_UPDATED_BY_TRAINER" || n.type === "FEEDBACK_MESSAGE_FROM_TRAINER" || n.type === "QUESTIONNAIRE_SENT" || n.type === "OBJECTIVES_REQUEST_REPLIED" || n.type === "TRAINING_PLAN_SENT" || n.type === "TRAINING_PLAN_UPDATED";
+            const isFromTrainer = n.type === "MATCH_UPDATED_BY_TRAINER" || n.type === "FEEDBACK_MESSAGE_FROM_TRAINER" || n.type === "QUESTIONNAIRE_SENT" || n.type === "OBJECTIVES_REQUEST_REPLIED" || n.type === "TRAINING_PLAN_SENT" || n.type === "TRAINING_PLAN_UPDATED" || n.type === "OBJECTIVES_DEFINED";
             const avatarUrl = isFromTrainer
-              ? (isQuestionnaire ? (n.assignment?.questionnaire?.trainer?.avatarUrl || null) : isObjectivesRequest ? (n.objectivesRequest?.trainer?.avatarUrl || null) : isTrainingPlan ? (n.trainingPlanAssignment?.trainingPlan?.trainer?.avatarUrl || null) : (n.match?.trainer?.avatarUrl || n.match?.player?.trainers?.[0]?.avatarUrl || null))
-              : (isQuestionnaire ? (n.assignment?.player?.avatarUrl || null) : isObjectivesRequest ? (n.objectivesRequest?.player?.avatarUrl || null) : isTrainingPlan ? (n.trainingPlanAssignment?.player?.avatarUrl || null) : isTrainingFeedback ? (n.trainingFeedback?.player?.avatarUrl || null) : n.match?.player?.avatarUrl);
-            const senderName = isFromTrainer ? trainerName : playerName;
+              ? (isQuestionnaire ? (n.assignment?.questionnaire?.trainer?.avatarUrl || null) : isObjectivesRequest ? (n.objectiveRequest?.responses?.[0]?.trainer?.avatarUrl || null) : isTrainingPlan ? (n.trainingPlanAssignment?.trainingPlan?.trainer?.avatarUrl || null) : (n.match?.trainer?.avatarUrl || n.match?.player?.trainers?.[0]?.avatarUrl || null))
+              : (isQuestionnaire ? (n.assignment?.player?.avatarUrl || null) : isObjectivesRequest ? (n.objectiveRequest?.player?.avatarUrl || null) : isTrainingPlan ? (n.trainingPlanAssignment?.player?.avatarUrl || null) : isTrainingFeedback ? (n.trainingFeedback?.player?.avatarUrl || null) : n.type === "PLAYER_UNASSIGNED" ? (n.unassignedPlayer?.avatarUrl || null) : n.match?.player?.avatarUrl);
+            const senderName = isFromTrainer ? (trainerName || "Foot-Tracker") : (playerName || n.unassignedPlayer?.name || "Foot-Tracker");
 
-            // Localized full date
             const fullDateString = new Date(n.createdAt).toLocaleDateString(
               locale,
               {
@@ -530,7 +558,6 @@ function NotificationsInboxContent() {
                 }`}
               >
                 <div className="card-body p-4 flex flex-row items-center gap-4">
-                  {/* Sender Avatar */}
                   <div className="avatar placeholder flex-shrink-0">
                     <div className="bg-neutral text-neutral-content rounded-full w-10 h-10 overflow-hidden flex items-center justify-center">
                       {avatarUrl ? (
@@ -547,25 +574,31 @@ function NotificationsInboxContent() {
                     </div>
                   </div>
 
-                  {/* Notification Content */}
                   <div className="flex-1 min-w-0 pr-8">
                     <Link
                       href={
                         isQuestionnaire
                           ? `/questionnaires/assignments/${n.assignmentId}`
+                          : (n.type === "OBJECTIVE_REQUEST_NO_TRAINER_AVAILABLE" || n.type === "PLAYER_UNASSIGNED")
+                          ? `/admin/users?tab=assignments`
                           : isObjectivesRequest
                           ? `/questionnaires?tab=requests`
                           : isTrainingPlan
                           ? `/dashboard/physical`
                           : isTrainingFeedback
                           ? `/trainer/training-feedback`
+                          : n.type === "OBJECTIVES_DEFINED"
+                          ? (n.playerObjectives?.category === "ANALYSIS_VIDEO"
+                            ? `/dashboard?tab=objectives`
+                            : n.playerObjectives?.category === "PHYSICAL"
+                            ? `/dashboard/physical`
+                            : `/dashboard/nutrition`)
                           : `/matches/${n.matchId}`
                       }
                       onClick={() => handleNotificationClick(n.id, n.isRead)}
                       className="block text-sm text-base-content hover:underline font-semibold leading-snug break-words"
                     >
                       <div className="flex items-center gap-2 flex-wrap">
-                        {/* Unread blue dot */}
                         {!n.isRead && (
                           <span className="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0" />
                         )}
@@ -578,7 +611,6 @@ function NotificationsInboxContent() {
                     </span>
                   </div>
 
-                  {/* Toggle single read/unread status */}
                   <button
                     onClick={(e) => handleToggleReadState(n.id, !n.isRead, e)}
                     title={t(n.isRead ? "notifications.mark_as_unread" : "notifications.mark_as_read")}
@@ -586,7 +618,6 @@ function NotificationsInboxContent() {
                     disabled={isPending}
                   >
                     {n.isRead ? (
-                      /* Envelope icon for mark as unread */
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -602,7 +633,6 @@ function NotificationsInboxContent() {
                         />
                       </svg>
                     ) : (
-                      /* Checkmark icon for mark as read */
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
@@ -626,7 +656,6 @@ function NotificationsInboxContent() {
         </div>
       )}
 
-      {/* Pagination Controls */}
       {totalCount > limit && (
         <div className="flex items-center justify-center gap-4 mt-8">
           <button

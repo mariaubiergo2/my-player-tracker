@@ -57,6 +57,23 @@ export async function POST(request: NextRequest) {
         },
       });
 
+      // Find all admins
+      const admins = await tx.user.findMany({
+        where: { role: "ADMIN" },
+        select: { id: true },
+      });
+
+      // Create a PLAYER_UNASSIGNED notification for each admin
+      for (const admin of admins) {
+        await tx.notification.create({
+          data: {
+            recipientId: admin.id,
+            type: "PLAYER_UNASSIGNED",
+            unassignedPlayerId: user.id,
+          },
+        });
+      }
+
       // This will fail if Resend fails, rolling back the transaction
       await generateAndSendVerificationCode(user.id, tx);
 

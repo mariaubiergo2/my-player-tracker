@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { UserRole, AssignmentStatus, ObjectivesRequestStatus, QuestionnaireType } from "@prisma/client";
+import { UserRole, AssignmentStatus, QuestionnaireType } from "@prisma/client";
+import { SECTION_ENABLED } from "@/lib/config/sections";
 
 // Helper helper to verify if trainer owns player or user is admin/self
 async function checkAccess(playerId: string) {
@@ -41,6 +42,11 @@ export async function defineObjectives(
 
     if (currentUser.role !== UserRole.TRAINER) {
       return { success: false, error: "Only trainers can define objectives" };
+    }
+
+    // Feature Flag Check
+    if (SECTION_ENABLED[category] === false) {
+      return { success: false, error: "nutrition_blocked" };
     }
 
     // Verify player belongs to trainer
@@ -81,21 +87,20 @@ export async function defineObjectives(
         });
       }
 
-      // Update any PENDING or ACKNOWLEDGED objectives requests from this player to this trainer to RESOLVED
-      await tx.objectivesRequest.updateMany({
+      // Update any pending objective requests from this player for this category to reviewed = true
+      await tx.objectiveRequest.updateMany({
         where: {
           playerId,
-          trainerId: currentUser.userId,
           type: category,
-          status: { in: [ObjectivesRequestStatus.PENDING, ObjectivesRequestStatus.ACKNOWLEDGED] },
+          reviewed: false,
         },
         data: {
-          status: ObjectivesRequestStatus.RESOLVED,
+          reviewed: true,
         },
       });
 
       // Create new objectives
-      return await tx.playerObjectives.create({
+      const newObjectives = await tx.playerObjectives.create({
         data: {
           playerId,
           trainerId: currentUser.userId,
@@ -106,6 +111,17 @@ export async function defineObjectives(
           category,
         },
       });
+
+      // Send OBJECTIVES_DEFINED notification to the player
+      await tx.notification.create({
+        data: {
+          recipientId: playerId,
+          type: "OBJECTIVES_DEFINED",
+          playerObjectivesId: newObjectives.id,
+        },
+      });
+
+      return newObjectives;
     });
 
     revalidatePath("/questionnaires");

@@ -10,6 +10,7 @@
     "match_feedback": "Feedback de partits",
     "all_matches": "Tots els partits",
     "dashboard": "Anàlisi de vídeo",
+    "video_objectives": "Objectius de vídeo",
     "physical_prep": "Preparació física",
     "nutrition": "Nutrició",
     "create_match": "Crear partit",
@@ -27,7 +28,11 @@
     "training_feedback": "Bústia de feedback"
   },
   "footer": {
-    "text": "Creat amb Next.js 16 + DaisyUI — Demostrant patrons SSG, SSR, ISR i CSR"
+    "brand": "Foot-Tracker",
+    "slogan": "La plataforma que connecta jugadors i entrenadors, partit a partit.",
+    "contact": "Dubtes o suggeriments?",
+    "contactEmail": "hola@foot-tracker.app",
+    "copyright": "© {year} Foot-Tracker. Tots els drets reservats."
   },
   "common": {
     "save": "Desar",
@@ -730,7 +735,10 @@
     "TRAINING_PLAN_SENT": "L'entrenador {trainerName} t'ha enviat un nou pla d'entrenament: {planTitle}",
     "TRAINING_PLAN_UPDATED": "L'entrenador {trainerName} ha actualitzat el teu pla d'entrenament",
     "SESSION_FEEDBACK_RECEIVED": "El jugador {playerName} ha enviat feedback de la sessió: {sessionTitle}",
-    "PLAN_FEEDBACK_RECEIVED": "El jugador {playerName} ha enviat feedback del pla: {planTitle}"
+    "PLAN_FEEDBACK_RECEIVED": "El jugador {playerName} ha enviat feedback del pla: {planTitle}",
+    "objectives_defined": "S'han definit els teus objectius de {section}.",
+    "player_unassigned": "El jugador {playerName} s'ha registrat sense entrenador.",
+    "objective_request_no_trainer_available": "{playerName} ha sol·licitat objectius de {section} però no té entrenador d'aquesta especialitat assignat."
   },
   "questionnaires": {
     "title": "Qüestionaris",

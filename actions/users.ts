@@ -7,6 +7,7 @@ import { verifyToken, hashPassword, verifyPassword, generateToken } from "@/lib/
 import { UserRole, Prisma } from "@prisma/client";
 import { createUserSchema, updateUserSchema, updateProfileSchema } from "@/lib/validations/users";
 import { updateTrainerPlayersRelationShared } from "./trainer";
+import { mapSpecialtyToSection } from "@/lib/config/sections";
 
 
 /**
@@ -54,6 +55,7 @@ export async function getUsers() {
         birthDate: true,
         avatarUrl: true,
         createdAt: true,
+        trainerSpecialty: true,
       },
     });
     return { success: true, users };
@@ -107,6 +109,9 @@ export async function createUser(data: {
         role: validatedData.role,
         phone: validatedData.phone?.trim() || null,
         birthDate: validatedData.birthDate ? new Date(validatedData.birthDate) : null,
+        trainerSpecialty: (validatedData.trainerSpecialty === "" || validatedData.trainerSpecialty === null)
+          ? null
+          : validatedData.trainerSpecialty,
       },
     });
 
@@ -133,6 +138,7 @@ export async function updateUser(
     role?: UserRole;
     phone?: string;
     birthDate?: string;
+    trainerSpecialty?: string | null;
   }
 ) {
   try {
@@ -166,10 +172,84 @@ export async function updateUser(
       data.birthDate = validatedUpdates.birthDate ? new Date(validatedUpdates.birthDate) : null;
     }
 
+    if (validatedUpdates.trainerSpecialty !== undefined) {
+      data.trainerSpecialty = (validatedUpdates.trainerSpecialty === "" || validatedUpdates.trainerSpecialty === null)
+        ? null
+        : validatedUpdates.trainerSpecialty as any;
+    }
+
+    // Capture the old user info to check for specialty modification on trainers
+    const oldTrainer = await prisma.user.findUnique({
+      where: { id },
+      select: { role: true, trainerSpecialty: true }
+    });
+
     const updatedUser = await prisma.user.update({
       where: { id },
       data,
     });
+
+    // Notify trainer about existing pending requests if role is TRAINER and trainerSpecialty changed to a non-null value
+    if (
+      oldTrainer?.role === "TRAINER" &&
+      validatedUpdates.trainerSpecialty !== undefined &&
+      validatedUpdates.trainerSpecialty !== oldTrainer.trainerSpecialty
+    ) {
+      const newSpecialty = (validatedUpdates.trainerSpecialty === "" || validatedUpdates.trainerSpecialty === null)
+        ? null
+        : validatedUpdates.trainerSpecialty;
+      
+      if (newSpecialty) {
+        // Map specialty to category
+        const category = mapSpecialtyToSection(newSpecialty as any);
+        if (category) {
+          // Find players currently connected to this trainer
+          const connectedPlayers = await prisma.user.findMany({
+            where: {
+              trainers: {
+                some: { id }
+              }
+            },
+            select: { id: true }
+          });
+          const playerIds = connectedPlayers.map(p => p.id);
+
+          if (playerIds.length > 0) {
+            // Find pending requests of this category for these players
+            const pendingRequests = await prisma.objectiveRequest.findMany({
+              where: {
+                playerId: { in: playerIds },
+                type: category,
+                reviewed: false,
+                responses: {
+                  none: {}
+                }
+              },
+              select: { id: true }
+            });
+
+            for (const req of pendingRequests) {
+              const existingNotif = await prisma.notification.findFirst({
+                where: {
+                  recipientId: id,
+                  type: "OBJECTIVES_REQUEST_CREATED",
+                  objectiveRequestId: req.id
+                }
+              });
+              if (!existingNotif) {
+                await prisma.notification.create({
+                  data: {
+                    recipientId: id,
+                    type: "OBJECTIVES_REQUEST_CREATED",
+                    objectiveRequestId: req.id
+                  }
+                });
+              }
+            }
+          }
+        }
+      }
+    }
 
     revalidatePath("/admin/users");
     revalidatePath("/dashboard"); // Revalidate dashboard since roles of players/trainers changed
@@ -237,6 +317,7 @@ export async function getProfile() {
         phone: true,
         birthDate: true,
         avatarUrl: true,
+        trainerSpecialty: true,
       },
     });
 

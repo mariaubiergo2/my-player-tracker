@@ -3,14 +3,23 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
-import { UserRole, ObjectivesRequestStatus, QuestionnaireType } from "@prisma/client";
+import { UserRole, QuestionnaireType, QuickResponseType } from "@prisma/client";
 import {
-  createObjectivesRequestSchema,
-  replyObjectivesRequestSchema,
+  createObjectiveRequestSchema,
+  replyObjectiveRequestSchema,
 } from "@/lib/validations/objectivesRequests";
+import { SECTION_ENABLED, mapSpecialtyToSection } from "@/lib/config/sections";
 
-// 1. CREATE OBJECTIVES REQUEST
-export async function createObjectivesRequest(trainerId: string, reason: string, type: QuestionnaireType) {
+function specialtyMatchesType(specialty: string | null | undefined, type: QuestionnaireType): boolean {
+  if (!specialty) return false;
+  if (type === "ANALYSIS_VIDEO" && specialty === "VIDEO_ANALYSIS") return true;
+  if (type === "PHYSICAL" && specialty === "PHYSICAL_PREP") return true;
+  if (type === "NUTRITION" && specialty === "NUTRITION") return true;
+  return false;
+}
+
+// 1. CREATE OBJECTIVE REQUEST
+export async function createObjectiveRequest(reason: string, type: QuestionnaireType) {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) {
@@ -21,39 +30,72 @@ export async function createObjectivesRequest(trainerId: string, reason: string,
       return { success: false, error: "Only players can request objectives" };
     }
 
-    const validation = createObjectivesRequestSchema.safeParse({ trainerId, reason, type });
+    const validation = createObjectiveRequestSchema.safeParse({ reason, type });
     if (!validation.success) {
       return { success: false, error: validation.error.issues[0].message };
     }
 
-    // Verify trainer belongs to player
-    const player = await prisma.user.findUnique({
-      where: { id: currentUser.userId },
-      select: { trainers: { select: { id: true } } },
-    });
-    const myTrainerIds = player?.trainers.map((t) => t.id) || [];
-    if (!myTrainerIds.includes(trainerId)) {
-      return { success: false, error: "This trainer does not belong to you" };
+    // Feature Flag Check
+    if (SECTION_ENABLED[type] === false) {
+      return { success: false, error: "nutrition_blocked" };
     }
 
+    // Fetch player's trainers
+    const player = await prisma.user.findUnique({
+      where: { id: currentUser.userId },
+      select: {
+        trainers: {
+          select: {
+            id: true,
+            trainerSpecialty: true,
+          },
+        },
+      },
+    });
+
+    const activeTrainers = (player?.trainers || []).filter((t) =>
+      mapSpecialtyToSection(t.trainerSpecialty) === type
+    );
+
     const result = await prisma.$transaction(async (tx) => {
-      const request = await tx.objectivesRequest.create({
+      const request = await tx.objectiveRequest.create({
         data: {
           playerId: currentUser.userId,
-          trainerId,
-          reason: reason.trim(),
-          status: ObjectivesRequestStatus.PENDING,
           type,
+          reason: reason.trim(),
+          reviewed: false,
         },
       });
 
-      await tx.notification.create({
-        data: {
-          recipientId: trainerId,
-          type: "OBJECTIVES_REQUEST_CREATED",
-          objectivesRequestId: request.id,
-        },
-      });
+      if (activeTrainers.length > 0) {
+        // Notify all active trainers for this section
+        for (const trainer of activeTrainers) {
+          await tx.notification.create({
+            data: {
+              recipientId: trainer.id,
+              type: "OBJECTIVES_REQUEST_CREATED",
+              objectiveRequestId: request.id,
+            },
+          });
+        }
+      } else {
+        // Find all admins in the system
+        const admins = await tx.user.findMany({
+          where: { role: UserRole.ADMIN },
+          select: { id: true },
+        });
+
+        // Notify all admins using OBJECTIVE_REQUEST_NO_TRAINER_AVAILABLE
+        for (const admin of admins) {
+          await tx.notification.create({
+            data: {
+              recipientId: admin.id,
+              type: "OBJECTIVE_REQUEST_NO_TRAINER_AVAILABLE",
+              objectiveRequestId: request.id,
+            },
+          });
+        }
+      }
 
       return request;
     });
@@ -61,73 +103,152 @@ export async function createObjectivesRequest(trainerId: string, reason: string,
     revalidatePath("/questionnaires");
     return { success: true, data: result };
   } catch (error) {
-    console.error("Create objectives request error:", error);
-    return { success: false, error: "Failed to create objectives request" };
+    console.error("Create objective request error:", error);
+    return { success: false, error: "Failed to create objective request" };
   }
 }
 
-// 2. CREATE OBJECTIVES REQUEST FOR ALL TRAINERS
-export async function createObjectivesRequestForAllTrainers(reason: string, type: QuestionnaireType) {
+// 2. REPLY TO OBJECTIVE REQUEST
+export async function replyToObjectiveRequest(requestId: string, quickResponseType: QuickResponseType) {
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) {
       return { success: false, error: "Unauthorized" };
     }
 
-    if (currentUser.role !== UserRole.PLAYER && currentUser.role !== UserRole.GOAL_KEEPER) {
-      return { success: false, error: "Only players can request objectives" };
+    if (currentUser.role !== UserRole.TRAINER && currentUser.role !== UserRole.ADMIN) {
+      return { success: false, error: "Unauthorized" };
     }
 
-    // Fetch player's trainers
-    const player = await prisma.user.findUnique({
-      where: { id: currentUser.userId },
-      select: { trainers: { select: { id: true } } },
-    });
-    const trainerIds = player?.trainers.map((t) => t.id) || [];
-    if (trainerIds.length === 0) {
-      return { success: false, error: "no_trainers_assigned" };
-    }
-
-    // Validate for one of them just to check the reason constraints
-    const validation = createObjectivesRequestSchema.safeParse({ trainerId: trainerIds[0], reason, type });
+    const validation = replyObjectiveRequestSchema.safeParse({ requestId, quickResponseType });
     if (!validation.success) {
       return { success: false, error: validation.error.issues[0].message };
     }
 
-    const result = await prisma.$transaction(async (tx) => {
-      const requests = [];
-      for (const trainerId of trainerIds) {
-        const request = await tx.objectivesRequest.create({
-          data: {
-            playerId: currentUser.userId,
-            trainerId,
-            reason: reason.trim(),
-            status: ObjectivesRequestStatus.PENDING,
-            type,
-          },
-        });
+    const request = await prisma.objectiveRequest.findUnique({
+      where: { id: requestId },
+      select: { playerId: true, type: true },
+    });
 
-        await tx.notification.create({
-          data: {
-            recipientId: trainerId,
-            type: "OBJECTIVES_REQUEST_CREATED",
-            objectivesRequestId: request.id,
+    if (!request) {
+      return { success: false, error: "Request not found" };
+    }
+
+    // Verify trainer is active trainer for the player and type
+    const player = await prisma.user.findUnique({
+      where: { id: request.playerId },
+      select: {
+        trainers: {
+          select: {
+            id: true,
+            trainerSpecialty: true,
           },
-        });
-        requests.push(request);
-      }
-      return requests;
+        },
+      },
+    });
+
+    const isAssigned = (player?.trainers || []).some(
+      (t) => t.id === currentUser.userId && specialtyMatchesType(t.trainerSpecialty, request.type)
+    );
+
+    if (!isAssigned && currentUser.role !== UserRole.ADMIN) {
+      return { success: false, error: "Unauthorized: You are not assigned to this player for this section" };
+    }
+
+    const result = await prisma.$transaction(async (tx) => {
+      const response = await tx.objectiveRequestResponse.create({
+        data: {
+          requestId,
+          trainerId: currentUser.userId,
+          quickResponseType,
+        },
+      });
+
+      // Delete any previous reply notifications for this request and recipient
+      await tx.notification.deleteMany({
+        where: {
+          recipientId: request.playerId,
+          type: "OBJECTIVES_REQUEST_REPLIED",
+          objectiveRequestId: requestId,
+        },
+      });
+
+      // Create new notification for the player
+      await tx.notification.create({
+        data: {
+          recipientId: request.playerId,
+          type: "OBJECTIVES_REQUEST_REPLIED",
+          objectiveRequestId: requestId,
+        },
+      });
+
+      return response;
     });
 
     revalidatePath("/questionnaires");
     return { success: true, data: result };
   } catch (error) {
-    console.error("Create objectives request for all error:", error);
-    return { success: false, error: "Failed to request objectives for all trainers" };
+    console.error("Reply to objective request error:", error);
+    return { success: false, error: "Failed to reply to objective request" };
   }
 }
 
-// 3. GET OBJECTIVES REQUESTS FOR PLAYER
+// 3. MARK OBJECTIVE REQUEST AS REVIEWED
+export async function markObjectiveRequestAsReviewed(requestId: string, reviewed: boolean) {
+  try {
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    if (currentUser.role !== UserRole.TRAINER && currentUser.role !== UserRole.ADMIN) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const request = await prisma.objectiveRequest.findUnique({
+      where: { id: requestId },
+      select: { playerId: true, type: true },
+    });
+
+    if (!request) {
+      return { success: false, error: "Request not found" };
+    }
+
+    // Verify trainer has access to this player
+    const player = await prisma.user.findUnique({
+      where: { id: request.playerId },
+      select: {
+        trainers: {
+          select: {
+            id: true,
+            trainerSpecialty: true,
+          },
+        },
+      },
+    });
+
+    const isAssigned = (player?.trainers || []).some(
+      (t) => t.id === currentUser.userId && specialtyMatchesType(t.trainerSpecialty, request.type)
+    );
+
+    if (!isAssigned && currentUser.role !== UserRole.ADMIN) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const updated = await prisma.objectiveRequest.update({
+      where: { id: requestId },
+      data: { reviewed },
+    });
+
+    revalidatePath("/questionnaires");
+    return { success: true, data: updated };
+  } catch (error) {
+    console.error("Mark objective request as reviewed error:", error);
+    return { success: false, error: "Failed to update review status" };
+  }
+}
+
+// 4. GET OBJECTIVES REQUESTS FOR PLAYER
 export async function getObjectivesRequestsForPlayer(playerId: string) {
   try {
     const currentUser = await getCurrentUser();
@@ -139,16 +260,21 @@ export async function getObjectivesRequestsForPlayer(playerId: string) {
       return { success: false, error: "Unauthorized" };
     }
 
-    const requests = await prisma.objectivesRequest.findMany({
+    const requests = await prisma.objectiveRequest.findMany({
       where: { playerId },
       include: {
-        trainer: {
-          select: {
-            id: true,
-            name: true,
-            surname: true,
-            avatarUrl: true,
+        responses: {
+          include: {
+            trainer: {
+              select: {
+                id: true,
+                name: true,
+                surname: true,
+                avatarUrl: true,
+              },
+            },
           },
+          orderBy: { createdAt: "asc" },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -156,12 +282,12 @@ export async function getObjectivesRequestsForPlayer(playerId: string) {
 
     return { success: true, data: requests };
   } catch (error) {
-    console.error("Get player objectives requests error:", error);
-    return { success: false, error: "Failed to get objectives requests" };
+    console.error("Get player objective requests error:", error);
+    return { success: false, error: "Failed to get objective requests" };
   }
 }
 
-// 4. GET OBJECTIVES REQUESTS FOR TRAINER
+// 5. GET OBJECTIVES REQUESTS FOR TRAINER
 export async function getObjectivesRequestsForTrainer() {
   try {
     const currentUser = await getCurrentUser();
@@ -173,110 +299,66 @@ export async function getObjectivesRequestsForTrainer() {
       return { success: false, error: "Unauthorized" };
     }
 
-    const [pendingRequests, otherRequests] = await Promise.all([
-      prisma.objectivesRequest.findMany({
-        where: {
-          trainerId: currentUser.userId,
-          status: ObjectivesRequestStatus.PENDING,
+    const trainer = await prisma.user.findUnique({
+      where: { id: currentUser.userId },
+      select: { trainerSpecialty: true },
+    });
+
+    if (!trainer || !trainer.trainerSpecialty) {
+      return { success: true, data: [] };
+    }
+
+    let targetType: QuestionnaireType = "ANALYSIS_VIDEO";
+    if (trainer.trainerSpecialty === "PHYSICAL_PREP") targetType = "PHYSICAL";
+    if (trainer.trainerSpecialty === "NUTRITION") targetType = "NUTRITION";
+
+    const requests = await prisma.objectiveRequest.findMany({
+      where: {
+        type: targetType,
+        player: {
+          trainers: {
+            some: { id: currentUser.userId },
+          },
         },
-        include: {
-          player: {
-            select: {
-              id: true,
-              name: true,
-              surname: true,
-              avatarUrl: true,
+      },
+      include: {
+        player: {
+          select: {
+            id: true,
+            name: true,
+            surname: true,
+            avatarUrl: true,
+            playerObjectivesReceived: {
+              where: {
+                trainerId: currentUser.userId,
+                category: targetType,
+              },
+              orderBy: { effectiveFrom: "desc" },
+              take: 1,
             },
           },
         },
-        orderBy: { createdAt: "desc" },
-      }),
-      prisma.objectivesRequest.findMany({
-        where: {
-          trainerId: currentUser.userId,
-          status: { not: ObjectivesRequestStatus.PENDING },
-        },
-        include: {
-          player: {
-            select: {
-              id: true,
-              name: true,
-              surname: true,
-              avatarUrl: true,
+        responses: {
+          include: {
+            trainer: {
+              select: {
+                id: true,
+                name: true,
+                surname: true,
+                avatarUrl: true,
+              },
             },
           },
+          orderBy: { createdAt: "asc" },
         },
-        orderBy: { createdAt: "desc" },
-      }),
-    ]);
-
-    return { success: true, data: [...pendingRequests, ...otherRequests] };
-  } catch (error) {
-    console.error("Get trainer objectives requests error:", error);
-    return { success: false, error: "Failed to get objectives requests" };
-  }
-}
-
-// 5. REPLY TO OBJECTIVES REQUEST
-export async function replyToObjectivesRequest(requestId: string, reply: string) {
-  try {
-    const currentUser = await getCurrentUser();
-    if (!currentUser) {
-      return { success: false, error: "Unauthorized" };
-    }
-
-    const validation = replyObjectivesRequestSchema.safeParse({ requestId, reply });
-    if (!validation.success) {
-      return { success: false, error: validation.error.issues[0].message };
-    }
-
-    const request = await prisma.objectivesRequest.findUnique({
-      where: { id: requestId },
+      },
+      orderBy: { createdAt: "desc" },
     });
 
-    if (!request) {
-      return { success: false, error: "Request not found" };
-    }
-
-    if (request.trainerId !== currentUser.userId && currentUser.role !== UserRole.ADMIN) {
-      return { success: false, error: "Unauthorized" };
-    }
-
-    const result = await prisma.$transaction(async (tx) => {
-      const updated = await tx.objectivesRequest.update({
-        where: { id: requestId },
-        data: {
-          status: ObjectivesRequestStatus.ACKNOWLEDGED,
-          trainerReply: reply.trim(),
-          repliedAt: new Date(),
-        },
-      });
-
-      // Delete any previous reply notifications for this request and recipient
-      await tx.notification.deleteMany({
-        where: {
-          recipientId: request.playerId,
-          type: "OBJECTIVES_REQUEST_REPLIED",
-          objectivesRequestId: requestId,
-        },
-      });
-
-      await tx.notification.create({
-        data: {
-          recipientId: request.playerId,
-          type: "OBJECTIVES_REQUEST_REPLIED",
-          objectivesRequestId: requestId,
-        },
-      });
-
-      return updated;
-    });
-
-    revalidatePath("/questionnaires");
-    return { success: true, data: result };
+    return { success: true, data: requests };
   } catch (error) {
-    console.error("Reply to objectives request error:", error);
-    return { success: false, error: "Failed to reply to objectives request" };
+    console.error("Get trainer objective requests error:", error);
+    return { success: false, error: "Failed to get objective requests" };
   }
 }
 
@@ -297,6 +379,7 @@ export async function getPlayerTrainers(playerId: string) {
             name: true,
             surname: true,
             avatarUrl: true,
+            trainerSpecialty: true,
           },
         },
       },

@@ -26,6 +26,7 @@ interface UserListItem {
   birthDate: string | null;
   avatarUrl: string | null;
   createdAt: string;
+  trainerSpecialty?: string | null;
 }
 
 export default function AdminUsersPage() {
@@ -298,6 +299,7 @@ export default function AdminUsersPage() {
     phone: "",
     birthDate: "",
     password: "",
+    trainerSpecialty: "",
   });
 
   // Client-side authentication check
@@ -361,6 +363,7 @@ export default function AdminUsersPage() {
       phone: userItem.phone || "",
       birthDate: userItem.birthDate || "",
       password: "", // password is not edited here
+      trainerSpecialty: userItem.trainerSpecialty || "",
     });
     setIsEditOpen(true);
   };
@@ -375,6 +378,7 @@ export default function AdminUsersPage() {
       phone: "",
       birthDate: "",
       password: "",
+      trainerSpecialty: "",
     });
     setIsCreateOpen(true);
   };
@@ -399,6 +403,7 @@ export default function AdminUsersPage() {
         phone: formData.phone || undefined,
         birthDate: formData.birthDate || undefined,
         password: formData.password || undefined,
+        trainerSpecialty: formData.role === "TRAINER" ? formData.trainerSpecialty : undefined,
       });
 
       if (res.success) {
@@ -430,6 +435,7 @@ export default function AdminUsersPage() {
         role: formData.role,
         phone: formData.phone,
         birthDate: formData.birthDate,
+        trainerSpecialty: formData.role === "TRAINER" ? formData.trainerSpecialty : null,
       });
 
       if (res.success) {
@@ -1113,6 +1119,24 @@ export default function AdminUsersPage() {
                 </div>
               </div>
 
+              {formData.role === "TRAINER" && (
+                <div className="form-control">
+                  <label className="label">
+                    <span className="label-text font-semibold">Especialitat del Trainer</span>
+                  </label>
+                  <select
+                    className="select select-bordered w-full"
+                    value={formData.trainerSpecialty}
+                    onChange={(e) => setFormData({ ...formData, trainerSpecialty: e.target.value })}
+                  >
+                    <option value="">Sense especialitat / Buit</option>
+                    <option value="VIDEO_ANALYSIS">Anàlisi de Vídeo (VIDEO_ANALYSIS)</option>
+                    <option value="PHYSICAL_PREP">Preparació Física (PHYSICAL_PREP)</option>
+                    <option value="NUTRITION">Nutrició (NUTRITION)</option>
+                  </select>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="form-control">
                   <label className="label">
@@ -1250,6 +1274,24 @@ export default function AdminUsersPage() {
                   />
                 </div>
               </div>
+
+              {formData.role === "TRAINER" && (
+                <div className="form-control mb-4">
+                  <label className="label">
+                    <span className="label-text font-semibold">Especialitat del Trainer</span>
+                  </label>
+                  <select
+                    className="select select-bordered w-full"
+                    value={formData.trainerSpecialty}
+                    onChange={(e) => setFormData({ ...formData, trainerSpecialty: e.target.value })}
+                  >
+                    <option value="">Sense especialitat / Buit</option>
+                    <option value="VIDEO_ANALYSIS">Anàlisi de Vídeo (VIDEO_ANALYSIS)</option>
+                    <option value="PHYSICAL_PREP">Preparació Física (PHYSICAL_PREP)</option>
+                    <option value="NUTRITION">Nutrició (NUTRITION)</option>
+                  </select>
+                </div>
+              )}
 
               <div className="form-control">
                 <label className="label">

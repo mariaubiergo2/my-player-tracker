@@ -17,13 +17,14 @@ import {
   defineObjectives,
 } from "@/actions/objectives";
 import {
-  createObjectivesRequest,
-  createObjectivesRequestForAllTrainers,
+  createObjectiveRequest,
   getObjectivesRequestsForPlayer,
   getObjectivesRequestsForTrainer,
-  replyToObjectivesRequest,
+  replyToObjectiveRequest,
+  markObjectiveRequestAsReviewed,
   getPlayerTrainers,
 } from "@/actions/objectivesRequests";
+import { SECTION_ENABLED } from "@/lib/config/sections";
 import { formatRelativeTime } from "@/lib/utils/dates";
 import { QuestionnaireType } from "@prisma/client";
 import SegmentedTabs from "@/components/ui/SegmentedTabs";
@@ -179,7 +180,24 @@ export default function QuestionnairesPage() {
         }
       }
     }
-  }, [user, isTrainer, isPlayer, isAdmin]);
+  }, [isAuthenticated, isTrainer, isAdmin, isPlayer]);
+
+  // Pre-select first enabled category when request modal is opened
+  useEffect(() => {
+    if (isRequestModalOpen) {
+      const enabledCats = [
+        { type: "ANALYSIS_VIDEO", enabled: SECTION_ENABLED.ANALYSIS_VIDEO },
+        { type: "PHYSICAL", enabled: SECTION_ENABLED.PHYSICAL },
+        { type: "NUTRITION", enabled: SECTION_ENABLED.NUTRITION }
+      ].filter(c => c.enabled);
+
+      if (enabledCats.length > 0) {
+        if (!enabledCats.some(c => c.type === requestType)) {
+          setRequestType(enabledCats[0].type as QuestionnaireType);
+        }
+      }
+    }
+  }, [isRequestModalOpen, playerTrainers]);
 
   useEffect(() => {
     if (!isLoading) {
@@ -297,15 +315,30 @@ export default function QuestionnairesPage() {
   };
 
   const quickReplies = [
-    { emoji: "👀", text: t("questionnaires.request_quick_reply_looking") },
-    { emoji: "🛠️", text: t("questionnaires.request_quick_reply_working") },
-    { emoji: "✅", text: t("questionnaires.request_quick_reply_incoming") },
-    { emoji: "📅", text: t("questionnaires.request_quick_reply_next_training") }
+    { value: "LOOKING_INTO_IT", emoji: "👀", labelKey: "questionnaires.request_quick_reply_looking" },
+    { value: "WORKING_ON_IT", emoji: "🛠️", labelKey: "questionnaires.request_quick_reply_working" },
+    { value: "NEW_OBJECTIVES_COMING", emoji: "✅", labelKey: "questionnaires.request_quick_reply_incoming" },
+    { value: "WILL_DISCUSS_NEXT_SESSION", emoji: "📅", labelKey: "questionnaires.request_quick_reply_next_training" }
   ];
 
-  const handleReplyToRequest = async (requestId: string, replyText: string) => {
+  const handleReplyToRequest = async (requestId: string, value: any) => {
     try {
-      const res = await replyToObjectivesRequest(requestId, replyText);
+      const res = await replyToObjectiveRequest(requestId, value);
+      if (res.success) {
+        showSuccess(t("common.success"));
+        fetchData();
+      } else {
+        showError(res.error || t("common.error"));
+      }
+    } catch (err) {
+      console.error(err);
+      showError(t("common.error"));
+    }
+  };
+
+  const handleMarkAsReviewed = async (requestId: string, reviewed: boolean) => {
+    try {
+      const res = await markObjectiveRequestAsReviewed(requestId, reviewed);
       if (res.success) {
         showSuccess(t("common.success"));
         fetchData();
@@ -330,7 +363,7 @@ export default function QuestionnairesPage() {
 
     setIsSendingRequest(true);
     try {
-      const res = await createObjectivesRequestForAllTrainers(requestReason, requestType);
+      const res = await createObjectiveRequest(requestReason, requestType);
 
       if (res.success) {
         showSuccess(t("questionnaires.request_objectives_success"));
@@ -341,6 +374,8 @@ export default function QuestionnairesPage() {
       } else {
         if (res.error === "no_trainers_assigned") {
           showError(t("questionnaires.request_objectives_no_trainers") || "No tens cap entrenador assignat. No pots sol·licitar objectius.");
+        } else if (res.error === "nutrition_blocked") {
+          showError("La nutrició no està disponible en aquest moment.");
         } else {
           showError(res.error || t("common.error"));
         }
@@ -447,6 +482,145 @@ export default function QuestionnairesPage() {
     );
     
     return !hasObjAfterResponse;
+  };
+
+  const renderTrainerRequestCard = (request: any, isPending: boolean) => {
+    const fullName = `${request.player.name} ${request.player.surname}`;
+    const status = request.reviewed
+      ? "RESOLVED"
+      : (request.responses && request.responses.length > 0)
+        ? "ACKNOWLEDGED"
+        : "PENDING";
+
+    return (
+      <div
+        key={request.id}
+        className="card bg-base-100 shadow border border-base-200 hover:shadow-md transition-all duration-200"
+      >
+        <div className="card-body p-6">
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+            <div className="flex-1 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="avatar placeholder">
+                  <div className="bg-neutral text-neutral-content rounded-full w-10 h-10 overflow-hidden flex items-center justify-center">
+                    {request.player.avatarUrl ? (
+                      <img src={request.player.avatarUrl} alt={fullName} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-sm font-semibold">{fullName.charAt(0).toUpperCase()}</span>
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <h3 className="font-bold text-base text-base-content">{fullName}</h3>
+                  <p className="text-[11px] text-base-content/50">
+                    {formatRelativeTime(request.createdAt, locale)}
+                  </p>
+                </div>
+                <div className="ml-auto md:ml-0 flex items-center gap-2 flex-wrap">
+                  {getTypeBadge(request.type)}
+                  {status === "PENDING" && (
+                    <span className="badge badge-warning text-white font-semibold text-xs">
+                      {t("questionnaires.request_status_pending")}
+                    </span>
+                  )}
+                  {status === "ACKNOWLEDGED" && (
+                    <span className="badge badge-info text-white font-semibold text-xs">
+                      {t("questionnaires.request_status_acknowledged")}
+                    </span>
+                  )}
+                  {status === "RESOLVED" && (
+                    <span className="badge badge-success text-white font-semibold text-xs">
+                      {t("questionnaires.request_status_resolved")}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div className="bg-base-200/50 p-4 rounded-xl border border-base-content/5">
+                <p className="text-sm font-medium text-base-content/80 italic">
+                  &ldquo;{request.reason}&rdquo;
+                </p>
+              </div>
+
+              {request.responses && request.responses.length > 0 && (
+                <div className="mt-3 space-y-2 pt-3 border-t border-base-content/5">
+                  <p className="text-xs font-bold text-base-content/55 uppercase tracking-wider">
+                    Respostes enviades:
+                  </p>
+                  {request.responses.map((resp: any) => {
+                    const respTrainerName = `${resp.trainer.name} ${resp.trainer.surname}`;
+                    let replyEmoji = "👀";
+                    let replyText = "";
+                    if (resp.quickResponseType === "LOOKING_INTO_IT") {
+                      replyEmoji = "👀";
+                      replyText = t("questionnaires.request_quick_reply_looking");
+                    } else if (resp.quickResponseType === "WORKING_ON_IT") {
+                      replyEmoji = "🛠️";
+                      replyText = t("questionnaires.request_quick_reply_working");
+                    } else if (resp.quickResponseType === "NEW_OBJECTIVES_COMING") {
+                      replyEmoji = "✅";
+                      replyText = t("questionnaires.request_quick_reply_incoming");
+                    } else if (resp.quickResponseType === "WILL_DISCUSS_NEXT_SESSION") {
+                      replyEmoji = "📅";
+                      replyText = t("questionnaires.request_quick_reply_next_training");
+                    }
+                    return (
+                      <div key={resp.id} className="flex items-start gap-2 text-xs bg-primary/5 p-2 rounded-lg border border-primary/10">
+                        <span className="text-sm">{replyEmoji}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-primary">{respTrainerName}:</p>
+                          <p className="text-base-content/85 mt-0.5">{replyText}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <div className="w-full md:w-80 shrink-0 flex flex-col justify-between self-stretch gap-4 border-t md:border-t-0 md:border-l border-base-200/80 pt-4 md:pt-0 md:pl-6">
+              {isPending && (
+                <div>
+                  <h4 className="font-bold text-xs uppercase tracking-wider text-base-content/50 mb-3">
+                    Respostes Ràpides:
+                  </h4>
+                  <div className="grid grid-cols-1 gap-2">
+                    {quickReplies.map((qr, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleReplyToRequest(request.id, qr.value)}
+                        className="btn btn-outline btn-xs justify-start hover:scale-[1.02] active:scale-95 transition-all py-1.5 h-auto text-left font-medium"
+                      >
+                        <span className="mr-1.5">{qr.emoji}</span>
+                        <span className="truncate">{t(qr.labelKey)}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex flex-col gap-2 mt-auto pt-4">
+                <button
+                  onClick={() => handleMarkAsReviewed(request.id, !request.reviewed)}
+                  className="btn btn-neutral btn-outline btn-xs w-full"
+                >
+                  {request.reviewed ? "Marcar com a pendent" : "Marcar com a revisat"}
+                </button>
+
+                <button
+                  onClick={() => {
+                    setCategory(request.type);
+                    handleOpenModal(request.player);
+                  }}
+                  className="btn btn-primary btn-sm w-full"
+                >
+                  🎯 {t("questionnaires.define_objectives")}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   if (isLoading || loading) {
@@ -985,130 +1159,46 @@ export default function QuestionnairesPage() {
             </div>
           )}
 
-          {trainerTab === "requests" && (
-            trainerRequests.length === 0 ? (
-              <div className="hero bg-base-200 rounded-2xl p-10 text-center shadow-inner border border-base-content/5">
-                <div className="max-w-md">
-                  <span className="text-5xl">📨</span>
-                  <h3 className="text-2xl font-bold mt-4">
-                    {t("questionnaires.requests_empty_trainer")}
+          {trainerTab === "requests" && (() => {
+            const pendingRequests = trainerRequests.filter((r) => !r.reviewed);
+            const reviewedRequests = trainerRequests.filter((r) => r.reviewed);
+
+            return (
+              <div className="space-y-8">
+                {/* Pending Requests */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-base-content/75 flex items-center gap-2">
+                    <span>📋</span> Pendents de revisar ({pendingRequests.length})
                   </h3>
+                  {pendingRequests.length === 0 ? (
+                    <div className="p-6 text-center text-sm text-base-content/50 bg-base-200/30 rounded-2xl border border-dashed border-base-content/10">
+                      No hi ha sol·licituds pendents.
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {pendingRequests.map((request) => renderTrainerRequestCard(request, true))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Reviewed Requests */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-base-content/75 flex items-center gap-2">
+                    <span>✅</span> Revisades ({reviewedRequests.length})
+                  </h3>
+                  {reviewedRequests.length === 0 ? (
+                    <div className="p-6 text-center text-sm text-base-content/50 bg-base-200/30 rounded-2xl border border-dashed border-base-content/10">
+                      No hi ha sol·licituds revisades.
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {reviewedRequests.map((request) => renderTrainerRequestCard(request, false))}
+                    </div>
+                  )}
                 </div>
               </div>
-            ) : (
-              <div className="space-y-4">
-                {trainerRequests.map((request) => {
-                  const fullName = `${request.player.name} ${request.player.surname}`;
-                  return (
-                    <div
-                      key={request.id}
-                      className="card bg-base-100 shadow border border-base-200 hover:shadow-md transition-all duration-200"
-                    >
-                      <div className="card-body p-6">
-                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-                          {/* Player info & Request Details */}
-                          <div className="flex-1 space-y-3">
-                            <div className="flex items-center gap-3">
-                              <div className="avatar placeholder">
-                                <div className="bg-neutral text-neutral-content rounded-full w-10 h-10 overflow-hidden flex items-center justify-center">
-                                  {request.player.avatarUrl ? (
-                                    <img src={request.player.avatarUrl} alt={fullName} className="w-full h-full object-cover" />
-                                  ) : (
-                                    <span className="text-sm font-semibold">{fullName.charAt(0).toUpperCase()}</span>
-                                  )}
-                                </div>
-                              </div>
-                              <div>
-                                <h3 className="font-bold text-base text-base-content">{fullName}</h3>
-                                <p className="text-[11px] text-base-content/50">
-                                  {formatRelativeTime(request.createdAt, locale)}
-                                </p>
-                              </div>
-                              <div className="ml-auto md:ml-0 flex items-center gap-2 flex-wrap">
-                                {getTypeBadge(request.type)}
-                                {request.status === "PENDING" && (
-                                  <span className="badge badge-warning text-white font-semibold text-xs">
-                                    {t("questionnaires.request_status_pending")}
-                                  </span>
-                                )}
-                                {request.status === "ACKNOWLEDGED" && (
-                                  <span className="badge badge-info text-white font-semibold text-xs">
-                                    {t("questionnaires.request_status_acknowledged")}
-                                  </span>
-                                )}
-                                {request.status === "RESOLVED" && (
-                                  <span className="badge badge-success text-white font-semibold text-xs">
-                                    {t("questionnaires.request_status_resolved")}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="bg-base-200/50 p-4 rounded-xl border border-base-content/5">
-                              <p className="text-sm font-medium text-base-content/80 italic">
-                                &ldquo;{request.reason}&rdquo;
-                              </p>
-                            </div>
-                            
-                            {/* Reply info */}
-                            {request.status !== "PENDING" && request.trainerReply && (
-                              <div className="flex items-start gap-2 text-xs bg-primary/5 p-3 rounded-xl border border-primary/10">
-                                <span className="text-base">💬</span>
-                                <div>
-                                  <p className="font-bold text-primary">El teu missatge:</p>
-                                  <p className="text-base-content/85 mt-0.5 font-medium">{request.trainerReply}</p>
-                                  {request.repliedAt && (
-                                    <p className="text-[10px] text-base-content/40 mt-1">
-                                      Respost el {new Date(request.repliedAt).toLocaleDateString(locale)}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Quick replies or Actions */}
-                          <div className="w-full md:w-80 shrink-0 flex flex-col justify-between self-stretch gap-4 border-t md:border-t-0 md:border-l border-base-200/80 pt-4 md:pt-0 md:pl-6">
-                            <div>
-                              {request.status !== "RESOLVED" ? (
-                                <>
-                                  <h4 className="font-bold text-xs uppercase tracking-wider text-base-content/50 mb-3">
-                                    {t("questionnaires.request_reply_placeholder_hint")}
-                                  </h4>
-                                  <div className="grid grid-cols-1 gap-2">
-                                    {quickReplies.map((qr, idx) => (
-                                      <button
-                                        key={idx}
-                                        onClick={() => handleReplyToRequest(request.id, `${qr.emoji} ${qr.text}`)}
-                                        className="btn btn-outline btn-xs justify-start hover:scale-[1.02] active:scale-95 transition-all py-1.5 h-auto text-left font-medium"
-                                      >
-                                        <span className="mr-1.5">{qr.emoji}</span>
-                                        <span className="truncate">{qr.text}</span>
-                                      </button>
-                                    ))}
-                                  </div>
-                                </>
-                              ) : (
-                                <div className="text-xs text-base-content/50 py-2 italic">
-                                  Sol·licitud gestionada.
-                                </div>
-                              )}
-                            </div>
-
-                            <button
-                              onClick={() => handleOpenModal(request.player)}
-                              className="btn btn-primary btn-sm w-full mt-auto"
-                            >
-                              🎯 {t("questionnaires.define_objectives_from_request")}
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            )
-          )}
+            );
+          })()}
         </div>
       )}
 
@@ -1243,7 +1333,12 @@ export default function QuestionnairesPage() {
             ) : (
               <div className="space-y-4">
                 {playerRequests.map((request) => {
-                  const trainerName = `${request.trainer.name} ${request.trainer.surname}`;
+                  const status = request.reviewed
+                    ? "RESOLVED"
+                    : (request.responses && request.responses.length > 0)
+                      ? "ACKNOWLEDGED"
+                      : "PENDING";
+
                   return (
                     <div
                       key={request.id}
@@ -1254,20 +1349,20 @@ export default function QuestionnairesPage() {
                           <div className="flex-1">
                             <div className="flex items-center gap-2 flex-wrap mb-1">
                               <h2 className="text-lg font-bold text-base-content leading-tight">
-                                Sol·licitud per a {trainerName}
+                                Sol·licitud d'objectius
                               </h2>
                               {getTypeBadge(request.type)}
-                              {request.status === "PENDING" && (
+                              {status === "PENDING" && (
                                 <span className="badge badge-warning text-white font-semibold text-xs">
                                   {t("questionnaires.request_status_pending")}
                                 </span>
                               )}
-                              {request.status === "ACKNOWLEDGED" && (
+                              {status === "ACKNOWLEDGED" && (
                                 <span className="badge badge-info text-white font-semibold text-xs">
                                   {t("questionnaires.request_status_acknowledged")}
                                 </span>
                               )}
-                              {request.status === "RESOLVED" && (
+                              {status === "RESOLVED" && (
                                 <span className="badge badge-success text-white font-semibold text-xs">
                                   {t("questionnaires.request_status_resolved")}
                                 </span>
@@ -1281,26 +1376,51 @@ export default function QuestionnairesPage() {
                               &ldquo;{request.reason}&rdquo;
                             </div>
 
-                            {request.status !== "PENDING" && request.trainerReply && (
-                              <div className="bg-primary/5 p-4 rounded-xl border border-primary/10 mt-4 flex items-start gap-3">
-                                <div className="avatar placeholder flex-shrink-0">
-                                  <div className="bg-primary text-primary-content rounded-full w-8 h-8 overflow-hidden flex items-center justify-center font-bold text-sm">
-                                    {request.trainer.avatarUrl ? (
-                                      <img src={request.trainer.avatarUrl} alt="Trainer" className="w-full h-full object-cover" />
-                                    ) : (
-                                      request.trainer.name.charAt(0).toUpperCase()
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-xs font-bold text-primary">{trainerName}</p>
-                                  <p className="text-sm font-semibold text-base-content/95 mt-0.5 break-words">&ldquo;{request.trainerReply}&rdquo;</p>
-                                  {request.repliedAt && (
-                                    <p className="text-[10px] text-base-content/40 mt-1">
-                                      Respost el {new Date(request.repliedAt).toLocaleDateString(locale)}
-                                    </p>
-                                  )}
-                                </div>
+                            {request.responses && request.responses.length > 0 && (
+                              <div className="mt-4 space-y-3 pt-4 border-t border-base-content/5">
+                                <h4 className="text-xs font-bold text-base-content/60 uppercase tracking-wider">
+                                  Respostes dels entrenadors:
+                                </h4>
+                                {request.responses.map((resp: any) => {
+                                  const respTrainerName = `${resp.trainer.name} ${resp.trainer.surname}`;
+                                  let replyEmoji = "👀";
+                                  let replyText = "";
+                                  if (resp.quickResponseType === "LOOKING_INTO_IT") {
+                                    replyEmoji = "👀";
+                                    replyText = t("questionnaires.request_quick_reply_looking");
+                                  } else if (resp.quickResponseType === "WORKING_ON_IT") {
+                                    replyEmoji = "🛠️";
+                                    replyText = t("questionnaires.request_quick_reply_working");
+                                  } else if (resp.quickResponseType === "NEW_OBJECTIVES_COMING") {
+                                    replyEmoji = "✅";
+                                    replyText = t("questionnaires.request_quick_reply_incoming");
+                                  } else if (resp.quickResponseType === "WILL_DISCUSS_NEXT_SESSION") {
+                                    replyEmoji = "📅";
+                                    replyText = t("questionnaires.request_quick_reply_next_training");
+                                  }
+                                  return (
+                                    <div key={resp.id} className="bg-primary/5 p-3 rounded-xl border border-primary/10 flex items-start gap-3">
+                                      <div className="avatar placeholder flex-shrink-0">
+                                        <div className="bg-primary text-primary-content rounded-full w-8 h-8 overflow-hidden flex items-center justify-center font-bold text-sm">
+                                          {resp.trainer.avatarUrl ? (
+                                            <img src={resp.trainer.avatarUrl} alt="Trainer" className="w-full h-full object-cover" />
+                                          ) : (
+                                            resp.trainer.name.charAt(0).toUpperCase()
+                                          )}
+                                        </div>
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <p className="text-xs font-bold text-primary">{respTrainerName}</p>
+                                        <p className="text-sm font-semibold text-base-content/95 mt-0.5 break-words">
+                                          {replyEmoji} {replyText}
+                                        </p>
+                                        <p className="text-[10px] text-base-content/40 mt-1">
+                                          Respost el {new Date(resp.createdAt).toLocaleDateString(locale)} ({formatRelativeTime(resp.createdAt, locale)})
+                                        </p>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
                               </div>
                             )}
                           </div>
@@ -1314,101 +1434,103 @@ export default function QuestionnairesPage() {
           )}
 
           {/* Modal for Player Request Objectives */}
-          {isRequestModalOpen && (
-            <div className="modal modal-open">
-              <div className="modal-box max-w-lg rounded-3xl border border-base-200">
-                <h3 className="font-bold text-2xl mb-4 text-primary">
-                  {t("questionnaires.request_objectives_modal_title")}
-                </h3>
+          {isRequestModalOpen && (() => {
+            const categories = [
+              { type: "ANALYSIS_VIDEO", emoji: "📺", label: t("categories.ANALYSIS_VIDEO") || "Vídeo", enabled: SECTION_ENABLED.ANALYSIS_VIDEO, assigned: playerTrainers.some(t => t.trainerSpecialty === "VIDEO_ANALYSIS") },
+              { type: "PHYSICAL", emoji: "🏃‍♂️", label: t("categories.PHYSICAL") || "Físic", enabled: SECTION_ENABLED.PHYSICAL, assigned: playerTrainers.some(t => t.trainerSpecialty === "PHYSICAL_PREP") },
+              { type: "NUTRITION", emoji: "🍎", label: t("categories.NUTRITION") || "Nutrició", enabled: SECTION_ENABLED.NUTRITION, assigned: playerTrainers.some(t => t.trainerSpecialty === "NUTRITION") }
+            ].filter(c => c.enabled);
 
-                {errorMessage && (
-                  <div className="alert alert-error shadow-sm py-2 px-3 text-xs mb-4 border border-error/20 animate-fade-in">
-                    <span>❌ {errorMessage}</span>
+            const currentCat = categories.find(c => c.type === requestType);
+            const showNoTrainerWarning = currentCat ? !currentCat.assigned : false;
+
+            return (
+              <div className="modal modal-open">
+                <div className="modal-box max-w-lg rounded-3xl border border-base-200">
+                  <h3 className="font-bold text-2xl mb-4 text-primary">
+                    {t("questionnaires.request_objectives_modal_title")}
+                  </h3>
+
+                  {errorMessage && (
+                    <div className="alert alert-error shadow-sm py-2 px-3 text-xs mb-4 border border-error/20 animate-fade-in">
+                      <span>❌ {errorMessage}</span>
+                    </div>
+                  )}
+
+                  {showNoTrainerWarning && (
+                    <div className="alert alert-warning py-3 rounded-2xl text-xs border border-warning/20 mb-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <span>⚠️ No tens cap entrenador d'aquesta especialitat assignat per a aquesta secció. La sol·licitud s'enviarà a l'administrador perquè t'assigni un.</span>
+                    </div>
+                  )}
+
+                  {categories.length === 0 ? (
+                    <div className="alert alert-warning py-3 rounded-2xl text-xs border border-warning/20 mb-4">
+                      <span>⚠️ No hi ha cap secció de preparació disponible per sol·licitar objectius en aquest moment.</span>
+                    </div>
+                  ) : (
+                    <div className="form-control mb-4">
+                      <label className="label font-semibold text-sm">
+                        {t("questionnaires.request_objectives_area_label") || "Selecciona l'àrea dels objectius *"}
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {categories.map((c) => (
+                          <button
+                            key={c.type}
+                            type="button"
+                            onClick={() => setRequestType(c.type as QuestionnaireType)}
+                            className={`btn btn-sm py-2 h-auto flex flex-col items-center justify-center rounded-xl border transition-all ${
+                              requestType === c.type
+                                ? "btn-primary border-primary text-primary-content"
+                                : "btn-outline border-base-300"
+                            }`}
+                          >
+                            <span className="text-lg">{c.emoji}</span>
+                            <span className="text-[10px] font-bold mt-1">{c.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="form-control mb-6">
+                    <label className="label font-semibold">
+                      {t("questionnaires.request_objectives_reason_label")}
+                    </label>
+                    <textarea
+                      className="textarea textarea-bordered h-28 w-full"
+                      placeholder={t("questionnaires.request_objectives_reason_placeholder")}
+                      value={requestReason}
+                      onChange={(e) => setRequestReason(e.target.value)}
+                    />
                   </div>
-                )}
 
-                <div className="form-control mb-4">
-                  <label className="label font-semibold text-sm">
-                    {t("questionnaires.request_objectives_area_label") || "Selecciona l'àrea dels objectius *"}
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="modal-action">
                     <button
-                      type="button"
-                      onClick={() => setRequestType("ANALYSIS_VIDEO")}
-                      className={`btn btn-sm py-2 h-auto flex flex-col items-center justify-center rounded-xl border transition-all ${
-                        requestType === "ANALYSIS_VIDEO"
-                          ? "btn-primary border-primary text-primary-content"
-                          : "btn-outline border-base-300"
-                      }`}
+                      className="btn btn-ghost"
+                      onClick={() => {
+                        setIsRequestModalOpen(false);
+                        setRequestReason("");
+                        setRequestType("ANALYSIS_VIDEO");
+                      }}
                     >
-                      <span className="text-lg">📺</span>
-                      <span className="text-[10px] font-bold mt-1">{t("categories.ANALYSIS_VIDEO") || "Vídeo"}</span>
+                      {t("common.cancel")}
                     </button>
                     <button
-                      type="button"
-                      onClick={() => setRequestType("PHYSICAL")}
-                      className={`btn btn-sm py-2 h-auto flex flex-col items-center justify-center rounded-xl border transition-all ${
-                        requestType === "PHYSICAL"
-                          ? "btn-primary border-primary text-primary-content"
-                          : "btn-outline border-base-300"
-                      }`}
+                      className="btn btn-primary"
+                      onClick={handleSendRequest}
+                      disabled={isSendingRequest || categories.length === 0 || !requestReason.trim()}
                     >
-                      <span className="text-lg">🏃‍♂️</span>
-                      <span className="text-[10px] font-bold mt-1">{t("categories.PHYSICAL") || "Físic"}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRequestType("NUTRITION")}
-                      className={`btn btn-sm py-2 h-auto flex flex-col items-center justify-center rounded-xl border transition-all ${
-                        requestType === "NUTRITION"
-                          ? "btn-primary border-primary text-primary-content"
-                          : "btn-outline border-base-300"
-                      }`}
-                    >
-                      <span className="text-lg">🍎</span>
-                      <span className="text-[10px] font-bold mt-1">{t("categories.NUTRITION") || "Nutrició"}</span>
+                      {isSendingRequest ? (
+                        <span className="loading loading-spinner loading-sm"></span>
+                      ) : (
+                        t("questionnaires.request_objectives_send")
+                      )}
                     </button>
                   </div>
-                </div>
-                
-                <div className="form-control mb-6">
-                  <label className="label font-semibold">
-                    {t("questionnaires.request_objectives_reason_label")}
-                  </label>
-                  <textarea
-                    className="textarea textarea-bordered h-28"
-                    placeholder={t("questionnaires.request_objectives_reason_placeholder")}
-                    value={requestReason}
-                    onChange={(e) => setRequestReason(e.target.value)}
-                  />
-                </div>
-
-                <div className="modal-action">
-                  <button
-                    className="btn btn-ghost"
-                    onClick={() => {
-                      setIsRequestModalOpen(false);
-                      setRequestReason("");
-                      setRequestType("ANALYSIS_VIDEO");
-                    }}
-                  >
-                    {t("common.cancel")}
-                  </button>
-                  <button
-                    className="btn btn-primary"
-                    onClick={handleSendRequest}
-                    disabled={isSendingRequest}
-                  >
-                    {isSendingRequest ? (
-                      <span className="loading loading-spinner loading-sm"></span>
-                    ) : (
-                      t("questionnaires.request_objectives_send")
-                    )}
-                  </button>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
         </div>
       )}
     </PageContainer>

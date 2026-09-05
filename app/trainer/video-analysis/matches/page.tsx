@@ -8,6 +8,7 @@ import { useTranslation } from "@/components/LanguageProvider";
 import MatchCard from "@/components/matches/MatchCard";
 import type { Match } from "@/types/match";
 import PageContainer from "@/components/ui/PageContainer";
+import StatsBlock from "@/components/ui/StatsBlock";
 
 interface CompleteMatchWithPlayer extends Match {
   player?: {
@@ -153,28 +154,25 @@ export default function VideoAnalysisMatchesPage() {
             {t("video_analysis_page.all_matches_subtitle")}
           </p>
         </div>
-        <div className="badge badge-secondary p-3.5 font-bold shadow-md">
-          {matches.length} {t("trainer_my_players.history_title").toLowerCase()}
-        </div>
       </div>
 
       {matches.length > 0 && (
         <>
           {/* Statistics Block */}
-          <div className="stats stats-vertical sm:stats-horizontal shadow-md border border-base-200 mb-8 w-full bg-base-100 rounded-3xl overflow-hidden">
-            <div className="stat">
-              <div className="stat-title text-base-content/60 font-semibold">{t("video_analysis_page.stat_total_matches")}</div>
-              <div className="stat-value text-base-content">{matches.length}</div>
-            </div>
-            <div className="stat">
-              <div className="stat-title text-base-content/60 font-semibold">{t("video_analysis_page.stat_reviewed_matches")}</div>
-              <div className="stat-value text-primary">{matches.filter((m) => m.isReviewed).length}</div>
-            </div>
-            <div className="stat">
-              <div className="stat-title text-base-content/60 font-semibold">{t("video_analysis_page.stat_pending_matches")}</div>
-              <div className="stat-value text-secondary">{matches.filter((m) => !m.isReviewed).length}</div>
-            </div>
-          </div>
+          <StatsBlock className="mb-8"
+            items={[
+              { title: t("video_analysis_page.stat_total_matches"), value: matches.length },
+              {
+                title: t("video_analysis_page.stat_reviewed_matches"),
+                value: matches.filter((m) => m.isReviewed).length,
+                valueClassName: "text-primary",
+              },
+              {
+                title: t("video_analysis_page.stat_pending_matches"),
+                value: matches.filter((m) => !m.isReviewed).length,
+                valueClassName: "text-secondary",
+              },]}
+          />
 
           {/* Filters Bar */}
           <div className="card bg-base-100 shadow-md border border-base-200 mb-8">

@@ -56,8 +56,9 @@ model User {
   playerObjectivesReceived PlayerObjectives[] @relation("PlayerObjectives")
   playerObjectivesDefined  PlayerObjectives[] @relation("TrainerDefinedObjectives")
   verificationCodes EmailVerificationCode[]
-  objectivesRequestsAsPlayer  ObjectivesRequest[] @relation("ObjectivesRequestsAsPlayer")
-  objectivesRequestsAsTrainer ObjectivesRequest[] @relation("ObjectivesRequestsAsTrainer")
+  objectiveRequests  ObjectiveRequest[] @relation("PlayerObjectiveRequests")
+  objectiveResponses ObjectiveRequestResponse[] @relation("TrainerObjectiveResponses")
+  unassignedNotifications Notification[] @relation("UnassignedPlayerNotifications")
 
   trainerExercises         Exercise[]               @relation("TrainerExercises")
   trainerPlans             TrainingPlan[]           @relation("TrainerPlans")
@@ -272,6 +273,9 @@ enum NotificationType {
   SESSION_FEEDBACK_RECEIVED
   PLAN_FEEDBACK_RECEIVED
   TRAINING_PLAN_UPDATED
+  PLAYER_UNASSIGNED
+  OBJECTIVES_DEFINED
+  OBJECTIVE_REQUEST_NO_TRAINER_AVAILABLE
 }
 
 model Notification {
@@ -280,7 +284,9 @@ model Notification {
   type          NotificationType
   matchId       String?                  @map("match_id")
   assignmentId  String?                  @map("assignment_id")
-  objectivesRequestId String?            @map("objectives_request_id")
+  objectiveRequestId String?            @map("objective_request_id")
+  unassignedPlayerId String?            @map("unassigned_player_id")
+  playerObjectivesId String?            @map("player_objectives_id")
   trainingPlanAssignmentId String?       @map("training_plan_assignment_id")
   trainingFeedbackId String?             @map("training_feedback_id")
   isRead        Boolean                  @default(false) @map("is_read")
@@ -289,13 +295,15 @@ model Notification {
   recipient     User                     @relation("UserNotifications", fields: [recipientId], references: [id], onDelete: Cascade)
   match         Match?                   @relation("MatchNotifications", fields: [matchId], references: [id], onDelete: Cascade)
   assignment    QuestionnaireAssignment? @relation("AssignmentNotifications", fields: [assignmentId], references: [id], onDelete: Cascade)
-  objectivesRequest ObjectivesRequest?   @relation("ObjectivesRequestNotifications", fields: [objectivesRequestId], references: [id], onDelete: Cascade)
+  objectiveRequest ObjectiveRequest?     @relation("ObjectiveRequestNotifications", fields: [objectiveRequestId], references: [id], onDelete: Cascade)
+  unassignedPlayer User?                 @relation("UnassignedPlayerNotifications", fields: [unassignedPlayerId], references: [id], onDelete: Cascade)
+  playerObjectives PlayerObjectives?     @relation("PlayerObjectivesNotifications", fields: [playerObjectivesId], references: [id], onDelete: Cascade)
   trainingPlanAssignment TrainingPlanAssignment? @relation("NotificationTrainingPlanAssignment", fields: [trainingPlanAssignmentId], references: [id], onDelete: Cascade)
   trainingFeedback TrainingFeedback? @relation("NotificationTrainingFeedback", fields: [trainingFeedbackId], references: [id], onDelete: Cascade)
 
   @@index([recipientId, isRead])
   @@index([recipientId, createdAt(sort: Desc)])
-  @@index([objectivesRequestId])
+  @@index([objectiveRequestId])
   @@map("notifications")
 }
 
@@ -316,36 +324,47 @@ model PlayerObjectives {
   effectiveTo   DateTime? @map("effective_to")   // null = objetivo actualmente activo
 
   createdAt     DateTime  @default(now()) @map("created_at")
+  notifications Notification[] @relation("PlayerObjectivesNotifications")
 
   @@index([playerId, effectiveFrom])
   @@index([playerId, effectiveTo])
   @@map("player_objectives")
 }
 
-enum ObjectivesRequestStatus {
-  PENDING
-  ACKNOWLEDGED   // el trainer ha respondido con un mensaje/icono ("lo estoy mirando")
-  RESOLVED       // el trainer ha definido/redefinido objetivos como consecuencia (opcional, ligar a PlayerObjectives si se detecta)
+enum QuickResponseType {
+  LOOKING_INTO_IT
+  WORKING_ON_IT
+  WILL_DISCUSS_NEXT_SESSION
+  NEW_OBJECTIVES_COMING
 }
 
-model ObjectivesRequest {
-  id          String   @id @default(cuid())
-  playerId    String   @map("player_id")
-  trainerId   String   @map("trainer_id")   // a qué entrenador concreto va dirigida
-  reason      String                        // descripción corta escrita por el jugador
-  status      ObjectivesRequestStatus @default(PENDING)
-  trainerReply String? @map("trainer_reply") // mensaje/icono predefinido del trainer
-  repliedAt   DateTime? @map("replied_at")
-  createdAt   DateTime @default(now()) @map("created_at")
-  type        QuestionnaireType       @default(ANALYSIS_VIDEO)
+model ObjectiveRequest {
+  id        String            @id @default(cuid())
+  playerId  String            @map("player_id")
+  player    User              @relation("PlayerObjectiveRequests", fields: [playerId], references: [id], onDelete: Cascade)
+  type      QuestionnaireType @default(ANALYSIS_VIDEO)
+  reason    String?
+  reviewed  Boolean           @default(false)
+  createdAt DateTime          @default(now()) @map("created_at")
 
-  player      User @relation("ObjectivesRequestsAsPlayer", fields: [playerId], references: [id], onDelete: Cascade)
-  trainer     User @relation("ObjectivesRequestsAsTrainer", fields: [trainerId], references: [id], onDelete: Cascade)
-  notifications Notification[] @relation("ObjectivesRequestNotifications")
+  responses     ObjectiveRequestResponse[]
+  notifications Notification[]             @relation("ObjectiveRequestNotifications")
 
   @@index([playerId, createdAt(sort: Desc)])
-  @@index([trainerId, status, createdAt(sort: Desc)])
-  @@map("objectives_requests")
+  @@map("objective_requests")
+}
+
+model ObjectiveRequestResponse {
+  id                String            @id @default(cuid())
+  requestId         String            @map("request_id")
+  request           ObjectiveRequest  @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  trainerId         String            @map("trainer_id")
+  trainer           User              @relation("TrainerObjectiveResponses", fields: [trainerId], references: [id], onDelete: Cascade)
+  quickResponseType QuickResponseType @map("quick_response_type")
+  createdAt         DateTime          @default(now()) @map("created_at")
+
+  @@index([requestId])
+  @@map("objective_request_responses")
 }
 
 enum PlanStatus {

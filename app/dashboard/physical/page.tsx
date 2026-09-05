@@ -8,8 +8,6 @@ import { useTranslation } from "@/components/LanguageProvider";
 import PageContainer from "@/components/ui/PageContainer";
 import { getPlayerActivePlans } from "@/actions/training-plans";
 import { getActiveObjectives, getObjectivesHistory } from "@/actions/objectives";
-import { getAssignmentsByPlayer } from "@/actions/questionnaires";
-import { QuestionnaireType } from "@prisma/client";
 import SegmentedTabs from "@/components/ui/SegmentedTabs";
 
 interface Exercise {
@@ -115,11 +113,10 @@ export default function PhysicalPrepPage() {
   const [assignments, setAssignments] = useState<TrainingPlanAssignment[]>([]);
   const [activeObjective, setActiveObjective] = useState<any>(null);
   const [objectivesHistory, setObjectivesHistory] = useState<any[]>([]);
-  const [questionnaires, setQuestionnaires] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Tabs for the page
-  const [activeTab, setActiveTab] = useState<"checklist" | "objectives" | "questionnaires">("checklist");
+  const [activeTab, setActiveTab] = useState<"checklist" | "objectives">("checklist");
 
   // Calendar states
   const [viewMode, setViewMode] = useState<"month" | "week" >("week");
@@ -181,11 +178,10 @@ export default function PhysicalPrepPage() {
     if (!user) return;
     setLoading(true);
     try {
-      const [plansRes, activeObjRes, historyObjRes, questRes] = await Promise.all([
+      const [plansRes, activeObjRes, historyObjRes] = await Promise.all([
         getPlayerActivePlans(user.id),
         getActiveObjectives(user.id, "PHYSICAL"),
         getObjectivesHistory(user.id, "PHYSICAL"),
-        getAssignmentsByPlayer(user.id, "PHYSICAL"),
       ]);
 
       if (plansRes.success && plansRes.data) {
@@ -198,9 +194,6 @@ export default function PhysicalPrepPage() {
       }
       if (historyObjRes.success && historyObjRes.data) {
         setObjectivesHistory(historyObjRes.data.history || []);
-      }
-      if (questRes.success && questRes.pending) {
-        setQuestionnaires(questRes.pending);
       }
     } catch (err) {
       console.error(err);
@@ -386,10 +379,9 @@ export default function PhysicalPrepPage() {
           tabs={[
             { id: "checklist", label: `📅 ${t("physical_prep_page.session_checklist") || "Calendari"}` },
             { id: "objectives", label: `🎯 ${t("physical_prep_page.objectives_title") || "Objectius"}` },
-            { id: "questionnaires", label: `📝 ${t("questionnaires.title")} (${questionnaires.length})` },
           ]}
           activeTab={activeTab}
-          onChange={setActiveTab}
+          onChange={(tab) => setActiveTab(tab as any)}
           className="shadow-sm bg-base-100 border border-base-200"
         />
       </div>
@@ -642,39 +634,6 @@ export default function PhysicalPrepPage() {
               </div>
             )}
           </div>
-        </div>
-      )}
-
-      {activeTab === "questionnaires" && (
-        <div className="card bg-base-100 shadow border border-base-200 p-6 space-y-4 rounded-3xl">
-          <h2 className="text-2xl font-bold text-secondary">Qüestionaris Físics Pendents</h2>
-          {questionnaires.length === 0 ? (
-            <p className="text-sm text-base-content/50 italic py-4">
-              Estàs al dia! No tens cap qüestionari físic pendent de respondre.
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {questionnaires.map((q) => (
-                <div key={q.id} className="p-4 border border-base-200 rounded-2xl bg-base-50/50 flex flex-col justify-between items-start">
-                  <div>
-                    <h3 className="font-bold text-lg text-secondary mb-1">{q.questionnaire.title}</h3>
-                    {q.questionnaire.description && (
-                      <p className="text-xs text-base-content/70 mb-3">{q.questionnaire.description}</p>
-                    )}
-                    <span className="text-[10px] text-base-content/50">
-                      Enviat per {q.questionnaire.trainer.name} el {new Date(q.sentAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <Link
-                    href={`/questionnaires/assignments/${q.id}`}
-                    className="btn btn-sm btn-primary mt-4 font-semibold w-full rounded-xl shadow"
-                  >
-                    Respondre Ara
-                  </Link>
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       )}
     </PageContainer>
