@@ -909,5 +909,81 @@
     "filter_match_type": "Tipo de partido",
     "filter_match_type_all": "Todos",
     "filter_clear": "Limpiar filtros"
+  },
+  "landing": {
+    "meta": {
+      "title": "NEXA | See. Understand. Evolve.",
+      "desc": "Convertimos rendimiento en conocimiento y conocimiento en evolución. Metodología de desarrollo y rendimiento aplicada al fútbol."
+    },
+    "motto": "SEE. UNDERSTAND. EVOLVE.",
+    "motto_see_understand": "SEE. UNDERSTAND.",
+    "motto_evolve": "EVOLVE.",
+    "performance": "PERFORMANCE",
+    "navbar": {
+      "environments": "Entornos"
+    },
+    "hero": {
+      "badge": "Desarrollo & Rendimiento aplicado al fútbol",
+      "promise": "Convertimos rendimiento en conocimiento y conocimiento en evolución.",
+      "cta_doors": "Acceder a los entornos",
+      "cta_about": "Qué es NEXA",
+      "bottom_accent": "Precisión // Metodología // Rendimiento"
+    },
+    "about": {
+      "tag": "Identidad & Propósito",
+      "title_prefix": "Qué es",
+      "title_highlight": "NEXA",
+      "p1": "NEXA es una marca de desarrollo y rendimiento aplicada al fútbol, que conecta el rendimiento actual del deportista con su potencial de mejora.",
+      "p2": "Analizamos el comportamiento en el campo mediante métricas objetivas y seguimiento individualizado, transformando cada acción de partido en conocimiento preciso para acelerar la evolución del futbolista.",
+      "p3": "Una plataforma tecnológica y metodológica diseñada para que jugadores, porteros y cuerpos técnicos compartan una misma dirección: optimizar el talento hacia su máxima cota competitiva.",
+      "phase1_tag": "Fase 01",
+      "phase1_code": "[ 45°_CAPTURE ]",
+      "phase1_title": "SEE.",
+      "phase1_desc": "Captura objetiva y registro detallado de cada acción técnica, biomecánica y posicional durante el juego y el entrenamiento.",
+      "phase2_tag": "Fase 02",
+      "phase2_code": "[ 45°_ANALYZE ]",
+      "phase2_title": "UNDERSTAND.",
+      "phase2_desc": "Descodificación de métricas en contexto real de partido. Convertimos datos brutos en lecturas claras que el deportista y el cuerpo técnico comprenden al instante.",
+      "phase3_tag": "Fase 03",
+      "phase3_code": "[ 45°_UPGRADE ]",
+      "phase3_title": "EVOLVE.",
+      "phase3_desc": "Planificación individualizada de objetivos, corrección en vídeo y evolución continua para transformar el rendimiento actual en dominio técnico constante."
+    },
+    "doors": {
+      "tag": "Plataforma & Acceso",
+      "title_prefix": "Puertas de",
+      "title_highlight": "Entorno",
+      "subtitle": "Entornos especializados diseñados para la perspectiva de cada rol. Selecciona tu puerta de acceso a la metodología NEXA.",
+      "player": {
+        "name": "NEXA Player",
+        "role_code": "ENV // 01 [PLAYER]",
+        "desc": "Seguimiento integral de rendimiento individual, métricas biométricas, evolución técnica y análisis de acciones de partido."
+      },
+      "women": {
+        "name": "NEXA Women",
+        "role_code": "ENV // 02 [WOMEN]",
+        "desc": "Seguimiento integral de rendimiento individual, métricas biométricas, evolución técnica y análisis de acciones de partido."
+      },
+      "goalkeeper": {
+        "name": "NEXA Goalkeeper",
+        "role_code": "ENV // 03 [GOALKEEPER]",
+        "desc": "Análisis específico bajo palos: posicionamiento, toma de decisión, tiempo de reacción y cobertura de ángulos de tiro."
+      },
+      "staff": {
+        "name": "NEXA Staff",
+        "role_code": "ENV // 04 [STAFF]",
+        "desc": "Control metodológico, asignación de futbolistas, feedback de vídeo, análisis táctico global y gestión técnica de plantilla."
+      }
+    },
+    "door_card": {
+      "active_env": "ENV_ACTIVO",
+      "cta": "Acceder al entorno"
+    },
+    "footer": {
+      "nav_about": "Qué es NEXA",
+      "nav_doors": "Entornos",
+      "copyright": "© {year} NEXA Performance. Todos los derechos reservados.",
+      "team_access": "Acceso equipo NEXA"
+    }
   }
 }

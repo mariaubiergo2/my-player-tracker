@@ -1,21 +1,20 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Header from "@/components/ui/Header";
-import Footer from "@/components/ui/Footer";
+import ConditionalChrome from "@/components/layout/ConditionalChrome";
 import { Providers } from "@/components/Providers";
 import { cookies } from "next/headers";
 import { defaultLocale, Locale } from "@/lib/i18n";
 
 export const metadata: Metadata = {
-  title: "Foot-Tracker",
+  title: "NEXA | See. Understand. Evolve.",
   description:
-    "Track player matches and give feedback. A Next.js application showcasing player performance monitoring with Prisma and DaisyUI.",
+    "Convertimos rendimiento en conocimiento y conocimiento en evolución. Metodología de desarrollo y rendimiento aplicada al fútbol.",
   icons: {
     icon: "/favicon.svg?v=1",
   },
   openGraph: {
-    title: "Foot-Tracker",
-    description: "Track player matches and give feedback publicly",
+    title: "NEXA | See. Understand. Evolve.",
+    description: "Convertimos rendimiento en conocimiento y conocimiento en evolución.",
     type: "website",
   },
 };
@@ -60,9 +59,7 @@ export default async function RootLayout({
         className="antialiased min-h-screen flex flex-col"
       >
         <Providers initialLocale={locale} initialTheme={theme}>
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
+          <ConditionalChrome>{children}</ConditionalChrome>
         </Providers>
       </body>
     </html>
