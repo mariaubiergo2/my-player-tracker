@@ -26,6 +26,7 @@ export default function ProfilePage() {
     phone: "",
     birthDate: "",
     avatarUrl: "",
+    sex: "",
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
@@ -54,6 +55,7 @@ export default function ProfilePage() {
           phone: res.user.phone || "",
           birthDate: res.user.birthDate || "",
           avatarUrl: res.user.avatarUrl || "",
+          sex: res.user.sex || "",
           currentPassword: "",
           newPassword: "",
           confirmPassword: "",
@@ -80,7 +82,9 @@ export default function ProfilePage() {
     }
   }, [isLoading, isAuthenticated, router]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -159,6 +163,7 @@ export default function ProfilePage() {
         phone: formData.phone || null,
         birthDate: formData.birthDate || null,
         avatarUrl: formData.avatarUrl || null,
+        sex: (formData.sex as "MALE" | "FEMALE") || null,
         currentPassword: formData.newPassword ? formData.currentPassword : undefined,
         newPassword: formData.newPassword ? formData.newPassword : undefined,
         confirmPassword: formData.confirmPassword ? formData.confirmPassword : undefined,
@@ -411,6 +416,26 @@ export default function ProfilePage() {
                     value={formData.birthDate}
                     onChange={handleInputChange}
                   />
+                </div>
+              </div>
+
+              {/* Sex / Gender Selector */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <div className="form-control">
+                  <label className="label" htmlFor="select-sex">
+                    <span className="label-text font-semibold">{t("profile_page.sex")}</span>
+                  </label>
+                  <select
+                    name="sex"
+                    id="select-sex"
+                    className="select select-bordered w-full"
+                    value={formData.sex}
+                    onChange={handleInputChange}
+                  >
+                    <option value="">{t("profile_page.sex_placeholder")}</option>
+                    <option value="MALE">{t("profile_page.sex_male")}</option>
+                    <option value="FEMALE">{t("profile_page.sex_female")}</option>
+                  </select>
                 </div>
               </div>
             </div>

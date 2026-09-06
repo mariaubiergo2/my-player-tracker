@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { UserRole } from "@prisma/client";
+import { UserRole, Sex } from "@prisma/client";
 import { createUserSchema, updateUserSchema, updateProfileSchema } from "../users";
 
 describe("users validations", () => {
@@ -107,6 +107,68 @@ describe("users validations", () => {
 
       expect(updateProfileSchema.safeParse(emptyName).success).toBe(false);
       expect(updateProfileSchema.safeParse(emptySurname).success).toBe(false);
+    });
+
+    it("should accept valid sex enum values", () => {
+      const malePayload = {
+        name: "John",
+        surname: "Doe",
+        email: "john@example.com",
+        sex: Sex.MALE,
+      };
+      const femalePayload = {
+        name: "Jane",
+        surname: "Doe",
+        email: "jane@example.com",
+        sex: Sex.FEMALE,
+      };
+
+      const parsedMale = updateProfileSchema.safeParse(malePayload);
+      const parsedFemale = updateProfileSchema.safeParse(femalePayload);
+
+      expect(parsedMale.success).toBe(true);
+      expect(parsedFemale.success).toBe(true);
+      if (parsedMale.success) {
+        expect(parsedMale.data.sex).toBe(Sex.MALE);
+      }
+      if (parsedFemale.success) {
+        expect(parsedFemale.data.sex).toBe(Sex.FEMALE);
+      }
+    });
+
+    it("should accept null, empty string or undefined for sex without forcing default", () => {
+      const nullPayload = {
+        name: "John",
+        surname: "Doe",
+        email: "john@example.com",
+        sex: null,
+      };
+      const emptyPayload = {
+        name: "John",
+        surname: "Doe",
+        email: "john@example.com",
+        sex: "",
+      };
+      const undefinedPayload = {
+        name: "John",
+        surname: "Doe",
+        email: "john@example.com",
+      };
+
+      expect(updateProfileSchema.safeParse(nullPayload).success).toBe(true);
+      expect(updateProfileSchema.safeParse(emptyPayload).success).toBe(true);
+      expect(updateProfileSchema.safeParse(undefinedPayload).success).toBe(true);
+    });
+
+    it("should reject invalid sex values", () => {
+      const invalidPayload = {
+        name: "John",
+        surname: "Doe",
+        email: "john@example.com",
+        sex: "INVALID_SEX",
+      };
+
+      expect(updateProfileSchema.safeParse(invalidPayload).success).toBe(false);
     });
   });
 });

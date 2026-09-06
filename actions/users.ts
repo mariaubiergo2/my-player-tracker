@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { prisma } from "@/lib/prisma";
 import { verifyToken, hashPassword, verifyPassword, generateToken } from "@/lib/auth";
-import { UserRole, Prisma } from "@prisma/client";
+import { UserRole, Prisma, Sex } from "@prisma/client";
 import { createUserSchema, updateUserSchema, updateProfileSchema } from "@/lib/validations/users";
 import { updateTrainerPlayersRelationShared } from "./trainer";
 import { mapSpecialtyToSection } from "@/lib/config/sections";
@@ -56,6 +56,7 @@ export async function getUsers() {
         avatarUrl: true,
         createdAt: true,
         trainerSpecialty: true,
+        sex: true,
       },
     });
     return { success: true, users };
@@ -79,6 +80,8 @@ export async function createUser(data: {
   phone?: string;
   birthDate?: string;
   password?: string;
+  trainerSpecialty?: any;
+  sex?: Sex | "" | null;
 }) {
   try {
     await checkAdmin();
@@ -112,6 +115,9 @@ export async function createUser(data: {
         trainerSpecialty: (validatedData.trainerSpecialty === "" || validatedData.trainerSpecialty === null)
           ? null
           : validatedData.trainerSpecialty,
+        sex: (validatedData.sex === "" || validatedData.sex === null || validatedData.sex === undefined)
+          ? null
+          : validatedData.sex,
       },
     });
 
@@ -176,6 +182,12 @@ export async function updateUser(
       data.trainerSpecialty = (validatedUpdates.trainerSpecialty === "" || validatedUpdates.trainerSpecialty === null)
         ? null
         : validatedUpdates.trainerSpecialty as any;
+    }
+
+    if (validatedUpdates.sex !== undefined) {
+      data.sex = (validatedUpdates.sex === "" || validatedUpdates.sex === null)
+        ? null
+        : validatedUpdates.sex as any;
     }
 
     // Capture the old user info to check for specialty modification on trainers
@@ -318,6 +330,7 @@ export async function getProfile() {
         birthDate: true,
         avatarUrl: true,
         trainerSpecialty: true,
+        sex: true,
       },
     });
 
@@ -351,6 +364,7 @@ export async function updateProfile(updates: {
   phone?: string | null;
   birthDate?: string | null;
   avatarUrl?: string | null;
+  sex?: Sex | "" | null;
   currentPassword?: string;
   newPassword?: string;
   confirmPassword?: string;
@@ -426,6 +440,12 @@ export async function updateProfile(updates: {
       avatarUrl: validatedUpdates.avatarUrl?.trim() || null,
     };
 
+    if (validatedUpdates.sex !== undefined) {
+      data.sex = (validatedUpdates.sex === "" || validatedUpdates.sex === null)
+        ? null
+        : validatedUpdates.sex;
+    }
+
     // Handle password update if requested
     if (validatedUpdates.newPassword || validatedUpdates.confirmPassword) {
       if (validatedUpdates.newPassword !== validatedUpdates.confirmPassword) {
@@ -490,6 +510,7 @@ export async function updateProfile(updates: {
         phone: updatedUser.phone,
         birthDate: updatedUser.birthDate,
         avatarUrl: updatedUser.avatarUrl,
+        sex: updatedUser.sex,
       },
     };
   } catch (error) {

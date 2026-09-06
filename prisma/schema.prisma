@@ -19,6 +19,11 @@ enum TrainerSpecialty {
   NUTRITION
 }
 
+enum Sex {
+  MALE
+  FEMALE
+}
+
 
 enum MatchType {
   FRIENDLY
@@ -39,6 +44,7 @@ model User {
   phone     String?
   avatarUrl String?
   birthDate DateTime?
+  sex       Sex?     @map("sex")
   emailVerified Boolean @default(false) @map("email_verified")
 
   createdAt DateTime @default(now()) @map("created_at")

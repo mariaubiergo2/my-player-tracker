@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { UserRole, TrainerSpecialty } from "@prisma/client";
+import { UserRole, TrainerSpecialty, Sex } from "@prisma/client";
 
 export const createUserSchema = z.object({
   name: z.string().min(1, "Name is required"),
@@ -10,6 +10,7 @@ export const createUserSchema = z.object({
   birthDate: z.string().optional(),
   password: z.string().optional(),
   trainerSpecialty: z.union([z.nativeEnum(TrainerSpecialty), z.literal(""), z.null()]).optional(),
+  sex: z.union([z.nativeEnum(Sex), z.literal(""), z.null()]).optional(),
 });
 
 export const updateUserSchema = z.object({
@@ -20,6 +21,7 @@ export const updateUserSchema = z.object({
   phone: z.string().nullable().optional(),
   birthDate: z.string().nullable().optional(),
   trainerSpecialty: z.union([z.nativeEnum(TrainerSpecialty), z.literal(""), z.null()]).optional(),
+  sex: z.union([z.nativeEnum(Sex), z.literal(""), z.null()]).optional(),
 });
 
 export const updateProfileSchema = z.object({
@@ -29,6 +31,7 @@ export const updateProfileSchema = z.object({
   phone: z.string().nullable().optional(),
   birthDate: z.string().nullable().optional(),
   avatarUrl: z.string().nullable().optional(),
+  sex: z.union([z.nativeEnum(Sex), z.literal(""), z.null()]).optional(),
   currentPassword: z.string().optional(),
   newPassword: z.string().optional(),
   confirmPassword: z.string().optional(),
