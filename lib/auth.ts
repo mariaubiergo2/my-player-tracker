@@ -2,11 +2,12 @@ import { UserRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { SignJWT, jwtVerify } from "jose";
 
 const SALT_ROUNDS = 10;
 const TOKEN_EXPIRY_HOURS = parseInt(process.env.AUTH_TOKEN_EXPIRY_HOURS || "24");
-const AUTH_COOKIE_NAME = "auth_token";
+export const AUTH_COOKIE_NAME = "auth_token";
 
 const secret = process.env.JWT_SECRET || process.env.AUTH_SECRET;
 
@@ -131,18 +132,28 @@ export function clearAuthCookie(response: NextResponse): void {
 }
 
 /**
- * Get auth token from cookies (for server components/actions)
+ * Get auth token from cookies (for server components/actions, or from NextRequest/Request)
  */
-export async function getAuthToken(): Promise<string | null> {
-  const cookieStore = await cookies();
-  return cookieStore.get(AUTH_COOKIE_NAME)?.value ?? null;
+export async function getAuthToken(request?: Request | NextRequest): Promise<string | null> {
+  if (request) {
+    if ("cookies" in request && typeof (request as any).cookies?.get === "function") {
+      return (request as any).cookies.get(AUTH_COOKIE_NAME)?.value ?? null;
+    }
+    return extractTokenFromRequest(request);
+  }
+  try {
+    const cookieStore = await cookies();
+    return cookieStore.get(AUTH_COOKIE_NAME)?.value ?? null;
+  } catch {
+    return null;
+  }
 }
 
 /**
- * Get current user from cookie (for server components/actions)
+ * Get current user from cookie (for server components/actions, or from NextRequest/Request)
  */
-export async function getCurrentUser(): Promise<TokenPayload | null> {
-  const token = await getAuthToken();
+export async function getCurrentUser(request?: Request | NextRequest): Promise<TokenPayload | null> {
+  const token = await getAuthToken(request);
   if (!token) return null;
   return await verifyToken(token);
 }
