@@ -1,81 +1,47 @@
 @import "tailwindcss";
 @plugin "daisyui" {
-  themes: light --default, dark;
+  themes: nexa --default;
 }
 
-:root, [data-theme="light"] {
-  --bg: #F7F5EC;
-  --surface: #FFFFFF;
-  --surface-alt: #EAE7DA;
-  --text: #12210E;
-  --text-muted: #4B6350;
-  --accent: #E4572E;
-  --accent-secondary: #1A3F24;
-  --background: var(--bg);
-  --foreground: var(--text);
-  color-scheme: light;
-  
-  --font-body: 'Nunito', sans-serif;
-  --font-display: 'Lilita One', sans-serif;
-  
-  /* Grass variables */
-  --grass-texture-opacity: 0.08;
-  --grass-sweep-opacity: 0.04;
-  --accent-secondary-alpha: rgba(26, 63, 36, 0.08);
-}
-
-[data-theme="dark"] {
-  --bg: #0B2818;
-  --surface: #17381F;
-  --surface-alt: #1D4326;
-  --text: #F2F5EC;
-  --text-muted: #A9C3AC;
-  --accent: #E4572E;
-  --accent-secondary: #D9A94A;
+:root, [data-theme="nexa"] {
+  --bg: #1A1B1B;
+  --surface: #222424;
+  --surface-alt: #2C2F2F;
+  --text: #EDEDED;
+  --text-muted: #9E9E9E;
+  --accent: #BFF137;
+  --accent-secondary: #303434;
   --background: var(--bg);
   --foreground: var(--text);
   color-scheme: dark;
   
-  --font-body: 'Nunito', sans-serif;
-  --font-display: 'Lilita One', sans-serif;
-  
-  /* Grass variables */
-  --grass-texture-opacity: 0.18;
-  --grass-sweep-opacity: 0.12;
-  --accent-secondary-alpha: rgba(217, 169, 74, 0.15);
+  --font-body: var(--font-poppins), system-ui, -apple-system, sans-serif;
+  --font-display: var(--font-montserrat), system-ui, -apple-system, sans-serif;
 }
 
 @plugin "daisyui/theme" {
-  name: "light";
+  name: "nexa";
   default: true;
-  --color-primary: #C84620; /* High-contrast coral for primary CTAs */
-  --color-primary-content: #ffffff;
-  --color-secondary: var(--accent-secondary);
-  --color-secondary-content: #ffffff;
-  --color-accent: var(--accent);
-  --color-accent-content: #ffffff;
-  --color-neutral: var(--text-muted);
-  --color-neutral-content: #ffffff;
-  --color-base-100: var(--surface);
-  --color-base-200: var(--surface-alt);
-  --color-base-300: #D8D4C3;
-  --color-base-content: var(--text);
-}
-
-@plugin "daisyui/theme" {
-  name: "dark";
-  --color-primary: #C13F17; /* High-contrast coral for dark theme primary CTAs */
-  --color-primary-content: var(--text);
-  --color-secondary: var(--accent-secondary);
-  --color-secondary-content: #0B2818;
-  --color-accent: var(--accent);
-  --color-accent-content: #ffffff;
-  --color-neutral: var(--text-muted);
-  --color-neutral-content: #0B2818;
-  --color-base-100: var(--surface);
-  --color-base-200: var(--surface-alt);
-  --color-base-300: #102615;
-  --color-base-content: var(--text);
+  --color-primary: #BFF137;
+  --color-primary-content: #1A1B1B;
+  --color-secondary: #303434;
+  --color-secondary-content: #EDEDED;
+  --color-accent: #BFF137;
+  --color-accent-content: #1A1B1B;
+  --color-neutral: #141515;
+  --color-neutral-content: #EDEDED;
+  --color-base-100: #1A1B1B;
+  --color-base-200: #222424;
+  --color-base-300: #2C2F2F;
+  --color-base-content: #EDEDED;
+  --color-info: #38bdf8;
+  --color-info-content: #082f49;
+  --color-success: #4ade80;
+  --color-success-content: #052e16;
+  --color-warning: #facc15;
+  --color-warning-content: #422006;
+  --color-error: #f87171;
+  --color-error-content: #450a0a;
 }
 
 @theme {
@@ -97,7 +63,7 @@ body {
   transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
-/* Smooth transitions for theme toggle across key interactive/themeable elements */
+/* Smooth transitions across key interactive/themeable elements */
 .card,
 .btn,
 .navbar,
@@ -142,7 +108,7 @@ progress {
 }
 
 .input, .select, .textarea {
-  border-radius: 10px;
+  border-radius: 6px;
   border-color: var(--surface-alt);
 }
 .input:focus, .select:focus, .textarea:focus {
@@ -150,102 +116,23 @@ progress {
   border-color: var(--accent);
 }
 
-/* Headings with sports font */
+/* Headings with brand display font (Montserrat) */
 h1, h2, h3, h4, h5, h6, .font-display {
   font-family: var(--font-display);
-  font-weight: 400;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* Button styling with brand font */
+.btn {
+  font-family: var(--font-display);
+  font-weight: 600;
   letter-spacing: 0.02em;
 }
 
-/* Styling overlays for club feel */
-.btn {
-  font-family: var(--font-display);
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  border-radius: 12px;
-  text-transform: uppercase;
-}
-
 .card {
-  border-radius: 20px;
+  border-radius: 12px;
   overflow: hidden;
-}
-
-/* Grass CSS Background Layer styling */
-.grass-bg {
-  position: relative;
-  overflow: hidden;
-  background-color: var(--surface);
-}
-
-.grass-bg::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    115deg,
-    var(--surface),
-    var(--surface) 50px,
-    var(--surface-alt) 50px,
-    var(--surface-alt) 100px
-  );
-  z-index: 0;
-  pointer-events: none;
-}
-
-.grass-bg::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.08) 0px,
-    rgba(255, 255, 255, 0.08) 1px,
-    transparent 1px,
-    transparent 5px
-  );
-  mix-blend-mode: overlay;
-  opacity: var(--grass-texture-opacity);
-  z-index: 1;
-  pointer-events: none;
-}
-
-.grass-sweep {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    var(--accent-secondary-alpha),
-    transparent
-  );
-  width: 200%;
-  height: 100%;
-  z-index: 2;
-  pointer-events: none;
-  transform: translateX(-100%);
-  animation: sweep 9s ease-in-out infinite;
-  will-change: transform;
-}
-
-@keyframes sweep {
-  0% {
-    transform: translateX(-100%);
-  }
-  50% {
-    transform: translateX(50%);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .grass-sweep {
-    animation: none;
-    transform: translateX(-30%);
-    opacity: 0.5;
-  }
 }
 
 @media print {
@@ -266,4 +153,5 @@ h1, h2, h3, h4, h5, h6, .font-display {
     page-break-inside: avoid;
   }
 }
+
 

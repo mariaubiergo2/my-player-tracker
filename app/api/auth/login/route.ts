@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
         name: user.name,
         surname: user.surname,
         role: user.role,
+        sex: user.sex,
         avatarUrl: user.avatarUrl,
       },
     });

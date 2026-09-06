@@ -15,6 +15,7 @@ interface User {
   email: string;
   name: string;
   role: string;
+  sex?: string | null;
   avatarUrl?: string | null;
 }
 
@@ -32,6 +33,8 @@ interface LoginCredentials {
 interface RegisterCredentials extends LoginCredentials {
   name: string;
   surname: string;
+  role?: string;
+  sex?: string | null;
 }
 
 interface AuthResponse {

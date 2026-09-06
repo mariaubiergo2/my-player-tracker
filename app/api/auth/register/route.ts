@@ -7,7 +7,7 @@ import crypto from "crypto";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { email, password, name, surname } = body;
+    const { email, password, name, surname, role, sex } = body;
 
     // Validate input
     if (!email || !password || !name || !surname) {
@@ -46,6 +46,13 @@ export async function POST(request: NextRequest) {
     // Hash password
     const hashedPassword = await hashPassword(password);
 
+    // Sanitize role (never allow public self-registration as ADMIN)
+    const allowedRoles: string[] = ["PLAYER", "GOAL_KEEPER", "TRAINER"];
+    const userRole = (role && allowedRoles.includes(role)) ? (role as "PLAYER" | "GOAL_KEEPER" | "TRAINER") : "PLAYER";
+
+    // Sanitize sex (only allow MALE or FEMALE)
+    const userSex = (sex === "MALE" || sex === "FEMALE") ? (sex as "MALE" | "FEMALE") : null;
+
     // Create user and generate code inside a single Prisma transaction (rollback if email fails)
     const result = await prisma.$transaction(async (tx) => {
       const user = await tx.user.create({
@@ -54,24 +61,28 @@ export async function POST(request: NextRequest) {
           password: hashedPassword,
           name: name.trim(),
           surname: surname.trim(),
+          role: userRole,
+          sex: userSex,
         },
       });
 
-      // Find all admins
-      const admins = await tx.user.findMany({
-        where: { role: "ADMIN" },
-        select: { id: true },
-      });
-
-      // Create a PLAYER_UNASSIGNED notification for each admin
-      for (const admin of admins) {
-        await tx.notification.create({
-          data: {
-            recipientId: admin.id,
-            type: "PLAYER_UNASSIGNED",
-            unassignedPlayerId: user.id,
-          },
+      // Only notify admins of unassigned players if the user role is a player
+      if (userRole === "PLAYER" || userRole === "GOAL_KEEPER") {
+        const admins = await tx.user.findMany({
+          where: { role: "ADMIN" },
+          select: { id: true },
         });
+
+        // Create a PLAYER_UNASSIGNED notification for each admin
+        for (const admin of admins) {
+          await tx.notification.create({
+            data: {
+              recipientId: admin.id,
+              type: "PLAYER_UNASSIGNED",
+              unassignedPlayerId: user.id,
+            },
+          });
+        }
       }
 
       // This will fail if Resend fails, rolling back the transaction
