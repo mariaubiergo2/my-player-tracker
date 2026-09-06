@@ -71,6 +71,7 @@ interface NotificationItem {
   objectiveRequest?: {
     id: string;
     playerId: string;
+    type?: string | null;
     reason?: string | null;
     reviewed: boolean;
     player: {

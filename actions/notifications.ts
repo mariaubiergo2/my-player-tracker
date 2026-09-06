@@ -427,7 +427,7 @@ export async function getNotificationPlayers(recipientId: string) {
             },
           },
         },
-        objectivesRequest: {
+        objectiveRequest: {
           select: {
             player: {
               select: {
@@ -450,8 +450,8 @@ export async function getNotificationPlayers(recipientId: string) {
       if (n.assignment?.player) {
         playerMap.set(n.assignment.player.id, n.assignment.player);
       }
-      if (n.objectivesRequest?.player) {
-        playerMap.set(n.objectivesRequest.player.id, n.objectivesRequest.player);
+      if (n.objectiveRequest?.player) {
+        playerMap.set(n.objectiveRequest.player.id, n.objectiveRequest.player);
       }
     }
     const players = Array.from(playerMap.values()).sort((a, b) => a.name.localeCompare(b.name));
