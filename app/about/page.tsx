@@ -1,234 +1,191 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { useTranslation } from "@/components/LanguageProvider";
 
 export default function AboutPage() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<string>("tracking");
 
-  const tabKeys = ["tracking", "performance", "metrics", "collaboration", "growth"];
-  const tabEmojis: Record<string, string> = {
-    tracking: "⚽",
-    performance: "📈",
-    metrics: "🎯",
-    collaboration: "💬",
-    growth: "🚀"
-  };
+  const phases = [
+    {
+      tag: t("landing.about.phase1_tag"),
+      code: t("landing.about.phase1_code"),
+      title: t("landing.about.phase1_title"),
+      desc: t("landing.about.phase1_desc"),
+    },
+    {
+      tag: t("landing.about.phase2_tag"),
+      code: t("landing.about.phase2_code"),
+      title: t("landing.about.phase2_title"),
+      desc: t("landing.about.phase2_desc"),
+    },
+    {
+      tag: t("landing.about.phase3_tag"),
+      code: t("landing.about.phase3_code"),
+      title: t("landing.about.phase3_title"),
+      desc: t("landing.about.phase3_desc"),
+    },
+  ];
 
-  const activeTabBadge = t(`about_page.tabs.${activeTab}.badge`);
-  const activeTabTitle = t(`about_page.tabs.${activeTab}.title`);
-  const activeTabDescription = t(`about_page.tabs.${activeTab}.description`);
-  
-  // Safely parse array / object from translations
-  const activeTabFeatures = (t(`about_page.tabs.${activeTab}.features`) as unknown as string[]) || [];
-  const activeTabMockData = (t(`about_page.tabs.${activeTab}.mockData`) as unknown as Record<string, string | number | string[]>) || {};
+  const doors = [
+    {
+      name: t("landing.doors.player.name"),
+      roleCode: t("landing.doors.player.role_code"),
+      desc: t("landing.doors.player.desc"),
+      href: "/entrar/jugador",
+    },
+    {
+      name: t("landing.doors.women.name"),
+      roleCode: t("landing.doors.women.role_code"),
+      desc: t("landing.doors.women.desc"),
+      href: "/entrar/jugadora",
+    },
+    {
+      name: t("landing.doors.goalkeeper.name"),
+      roleCode: t("landing.doors.goalkeeper.role_code"),
+      desc: t("landing.doors.goalkeeper.desc"),
+      href: "/entrar/portero",
+    },
+    {
+      name: t("landing.doors.staff.name"),
+      roleCode: t("landing.doors.staff.role_code"),
+      desc: t("landing.doors.staff.desc"),
+      href: "/entrar/staff",
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-base-300 via-base-200 to-base-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto space-y-12">
-        
-        {/* Header Hero Section */}
-        <div className="text-center space-y-4 max-w-3xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold uppercase tracking-wider mb-2">
-            <span>{t("about_page.badge")}</span>
+    <div className="min-h-screen bg-base-100 text-base-content py-16 px-4 sm:px-6 lg:px-8 font-sans">
+      <div className="max-w-6xl mx-auto space-y-20">
+
+        {/* Hero Section */}
+        <section className="text-center space-y-6 max-w-3xl mx-auto">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-base-200 border border-primary/25 text-primary text-xs font-mono uppercase tracking-wider">
+            {t("landing.about.tag")}
           </div>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
-            {t("about_page.title")}
+
+          <h1 className="text-4xl sm:text-6xl font-display font-black tracking-tight">
+            {t("landing.about.title_prefix")}{" "}
+            <span className="text-primary">{t("landing.about.title_highlight")}</span>
           </h1>
-          <p className="text-lg text-base-content/75 leading-relaxed">
-            {t("about_page.subtitle")}
+
+          <p className="text-lg sm:text-xl text-base-content/80 leading-relaxed font-light">
+            {t("landing.hero.promise")}
           </p>
-          <div className="flex justify-center gap-4 pt-2">
-            <Link href="/dashboard" className="btn btn-primary shadow-lg hover:scale-105 active:scale-95 transition-all">
-              {t("about_page.btn_dashboard")}
-            </Link>
-            <a href="#features" className="btn btn-outline btn-secondary hover:scale-105 active:scale-95 transition-all">
-              {t("about_page.btn_explore")}
-            </a>
-          </div>
-        </div>
 
-        {/* Highlight Stats Dashboard */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-6 bg-base-100/50 backdrop-blur-md rounded-2xl border border-base-content/10 shadow-xl">
-          <div className="text-center space-y-1">
-            <span className="text-3xl sm:text-4xl">⚽</span>
-            <div className="text-2xl font-bold text-primary">{t("about_page.stats.log")}</div>
-            <div className="text-xs text-base-content/65">{t("about_page.stats.log_sub")}</div>
-          </div>
-          <div className="text-center space-y-1">
-            <span className="text-3xl sm:text-4xl">📊</span>
-            <div className="text-2xl font-bold text-secondary">{t("about_page.stats.track")}</div>
-            <div className="text-xs text-base-content/65">{t("about_page.stats.track_sub")}</div>
-          </div>
-          <div className="text-center space-y-1">
-            <span className="text-3xl sm:text-4xl">🎯</span>
-            <div className="text-2xl font-bold text-accent">{t("about_page.stats.rate")}</div>
-            <div className="text-xs text-base-content/65">{t("about_page.stats.rate_sub")}</div>
-          </div>
-          <div className="text-center space-y-1">
-            <span className="text-3xl sm:text-4xl">🤝</span>
-            <div className="text-2xl font-bold text-info">{t("about_page.stats.collab")}</div>
-            <div className="text-xs text-base-content/65">{t("about_page.stats.collab_sub")}</div>
-          </div>
-        </div>
+          <p className="text-xs font-mono tracking-widest text-base-content/50 uppercase">
+            {t("landing.hero.bottom_accent")}
+          </p>
+        </section>
 
-        {/* Main Features Exploration Section */}
-        <div id="features" className="space-y-8 scroll-mt-6">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold">{t("about_page.features_title")}</h2>
-            <p className="text-base-content/60 mt-1">{t("about_page.features_subtitle")}</p>
+        {/* Narrative Cards */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-base-200/70 border border-base-content/10 p-8 rounded-2xl flex flex-col justify-between">
+            <span className="text-xs font-mono text-primary/80 uppercase tracking-widest mb-4">
+              01 // ORIGIN
+            </span>
+            <p className="text-sm text-base-content/85 leading-relaxed">
+              {t("landing.about.p1")}
+            </p>
           </div>
 
-          {/* Feature Tabs Buttons */}
-          <div className="flex flex-wrap justify-center gap-2 p-1.5 bg-base-300 rounded-xl max-w-4xl mx-auto">
-            {tabKeys.map((tabKey) => {
-              const tabTitle = t(`about_page.tabs.${tabKey}.title`);
-              return (
-                <button
-                  key={tabKey}
-                  onClick={() => setActiveTab(tabKey)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 ${
-                    activeTab === tabKey
-                      ? "bg-primary text-primary-content shadow-md scale-105"
-                      : "hover:bg-base-200 text-base-content/80"
-                  }`}
-                >
-                  <span>{tabEmojis[tabKey]}</span>
-                  <span>{tabTitle.split(" ")[0]}</span>
-                </button>
-              );
-            })}
+          <div className="bg-base-200/70 border border-base-content/10 p-8 rounded-2xl flex flex-col justify-between">
+            <span className="text-xs font-mono text-primary/80 uppercase tracking-widest mb-4">
+              02 // ANALYSIS
+            </span>
+            <p className="text-sm text-base-content/85 leading-relaxed">
+              {t("landing.about.p2")}
+            </p>
           </div>
 
-          {/* Active Tab Panel */}
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 max-w-5xl mx-auto bg-base-100 rounded-3xl p-6 sm:p-8 border border-base-content/10 shadow-2xl transition-all duration-300">
-            {/* Tab Info */}
-            <div className="lg:col-span-3 space-y-6 flex flex-col justify-center">
-              <div className="space-y-3">
-                <div className="badge badge-accent font-semibold">{activeTabBadge}</div>
-                <h3 className="text-2xl sm:text-3xl font-bold text-base-content flex items-center gap-3">
-                  <span>{tabEmojis[activeTab]}</span>
-                  <span>{activeTabTitle}</span>
+          <div className="bg-base-200/70 border border-base-content/10 p-8 rounded-2xl flex flex-col justify-between">
+            <span className="text-xs font-mono text-primary/80 uppercase tracking-widest mb-4">
+              03 // DIRECTION
+            </span>
+            <p className="text-sm text-base-content/85 leading-relaxed">
+              {t("landing.about.p3")}
+            </p>
+          </div>
+        </section>
+
+        {/* Methodology: The 3 Phases */}
+        <section className="space-y-8">
+          <div className="text-center space-y-2">
+            <div className="text-xs font-mono text-primary tracking-widest uppercase">
+              {t("landing.hero.badge")}
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-display font-black tracking-tight">
+              {t("landing.motto")}
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {phases.map((phase, idx) => (
+              <div
+                key={idx}
+                className="bg-base-200 border border-base-content/10 p-8 rounded-2xl hover:border-primary/40 transition-colors space-y-4"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-mono text-primary uppercase tracking-widest">
+                    {phase.tag}
+                  </span>
+                  <span className="text-[11px] font-mono text-base-content/50">
+                    {phase.code}
+                  </span>
+                </div>
+                <h3 className="text-2xl font-display font-extrabold text-base-content">
+                  {phase.title}
                 </h3>
-                <p className="text-base-content/75 leading-relaxed text-base sm:text-lg">
-                  {activeTabDescription}
+                <p className="text-sm text-base-content/75 leading-relaxed">
+                  {phase.desc}
                 </p>
               </div>
-
-              <div className="divider">{t("about_page.core_highlights")}</div>
-
-              <ul className="space-y-3">
-                {activeTabFeatures.map((feature, idx) => (
-                  <li key={idx} className="flex items-start gap-2.5 text-sm sm:text-base text-base-content/85">
-                    <span className="text-success text-lg mt-0.5">✔</span>
-                    <span>{feature}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Visual Preview / Mockup Card */}
-            <div className="lg:col-span-2 bg-base-200/80 rounded-2xl p-6 border border-base-300/50 shadow-inner flex flex-col justify-between min-h-[300px]">
-              <div>
-                <div className="flex items-center justify-between mb-4 border-b border-base-300 pb-2">
-                  <span className="text-xs font-bold uppercase tracking-wider text-base-content/40">{t("about_page.db_preview")}</span>
-                  <span className="badge badge-sm badge-success">{t("about_page.live_fields")}</span>
-                </div>
-                
-                <div className="space-y-4">
-                  {Object.entries(activeTabMockData).map(([key, val]) => (
-                    <div key={key} className="space-y-1">
-                      <div className="text-xs font-semibold text-base-content/50">{key}</div>
-                      {Array.isArray(val) ? (
-                        <div className="flex flex-wrap gap-1.5 pt-0.5">
-                          {val.map((item) => (
-                            <span key={item} className="badge badge-sm badge-outline text-xs">{item}</span>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-sm font-bold bg-base-100 p-2.5 rounded-lg border border-base-300 shadow-sm text-primary">
-                          {val}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-6 pt-4 border-t border-base-300 text-center">
-                <span className="text-xs text-base-content/40 italic">
-                  {t("about_page.db_note")}
-                </span>
-              </div>
-            </div>
+            ))}
           </div>
-        </div>
+        </section>
 
-        {/* Target Roles section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-          {/* Player Role Card */}
-          <div className="card bg-gradient-to-br from-primary/10 to-base-100 border border-primary/20 hover:border-primary/40 transition-all duration-300 shadow-xl">
-            <div className="card-body space-y-3">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">🏃‍♂️</span>
-                <div>
-                  <h3 className="card-title text-xl font-bold">{t("about_page.roles.player_title")}</h3>
-                  <p className="text-xs text-primary font-semibold">{t("about_page.roles.player_subtitle")}</p>
-                </div>
-              </div>
-              <p className="text-sm text-base-content/75 leading-relaxed">
-                {t("about_page.roles.player_desc")}
-              </p>
-              <div className="card-actions justify-end pt-2">
-                <div className="badge badge-primary badge-outline text-xs">{t("about_page.roles.self_reflection")}</div>
-                <div className="badge badge-primary badge-outline text-xs">{t("about_page.roles.personal_ledger")}</div>
-              </div>
+        {/* Specialized Environments / Doors */}
+        <section className="space-y-8">
+          <div className="text-center space-y-2">
+            <div className="text-xs font-mono text-primary tracking-widest uppercase">
+              {t("landing.doors.tag")}
             </div>
-          </div>
-
-          {/* Trainer Role Card */}
-          <div className="card bg-gradient-to-br from-secondary/10 to-base-100 border border-secondary/20 hover:border-secondary/40 transition-all duration-300 shadow-xl">
-            <div className="card-body space-y-3">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">📋</span>
-                <div>
-                  <h3 className="card-title text-xl font-bold">{t("about_page.roles.trainer_title")}</h3>
-                  <p className="text-xs text-secondary font-semibold">{t("about_page.roles.trainer_subtitle")}</p>
-                </div>
-              </div>
-              <p className="text-sm text-base-content/75 leading-relaxed">
-                {t("about_page.roles.trainer_desc")}
-              </p>
-              <div className="card-actions justify-end pt-2">
-                <div className="badge badge-secondary badge-outline text-xs">{t("about_page.roles.grading_metrics")}</div>
-                <div className="badge badge-secondary badge-outline text-xs">{t("about_page.roles.review_portal")}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Closing Call to Action */}
-        <div className="hero bg-base-100 rounded-3xl border border-base-content/10 shadow-2xl p-6 sm:p-12 text-center max-w-5xl mx-auto relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-secondary/5 pointer-events-none" />
-          <div className="max-w-md mx-auto space-y-6 relative z-10">
-            <h2 className="text-3xl font-extrabold">{t("about_page.ready_title")}</h2>
-            <p className="text-sm sm:text-base text-base-content/70">
-              {t("about_page.ready_desc")}
+            <h2 className="text-3xl sm:text-4xl font-display font-black tracking-tight">
+              {t("landing.doors.title_prefix")}{" "}
+              <span className="text-primary">{t("landing.doors.title_highlight")}</span>
+            </h2>
+            <p className="text-sm text-base-content/70 max-w-xl mx-auto">
+              {t("landing.doors.subtitle")}
             </p>
-            <div className="flex justify-center gap-4">
-              <Link href="/dashboard" className="btn btn-primary hover:scale-105 active:scale-95 transition-all px-6">
-                {t("about_page.btn_dashboard")}
-              </Link>
-              <Link href="/" className="btn btn-ghost hover:scale-105 active:scale-95 transition-all">
-                {t("about_page.btn_home")}
-              </Link>
-            </div>
           </div>
-        </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {doors.map((door, idx) => (
+              <Link
+                key={idx}
+                href={door.href}
+                className="group bg-base-200/80 border border-base-content/10 hover:border-primary/50 p-6 rounded-2xl transition-all duration-200 flex flex-col justify-between space-y-4"
+              >
+                <div className="space-y-2">
+                  <span className="text-[11px] font-mono text-primary/80 uppercase tracking-widest block">
+                    {door.roleCode}
+                  </span>
+                  <h4 className="font-display font-bold text-lg text-base-content group-hover:text-primary transition-colors">
+                    {door.name}
+                  </h4>
+                  <p className="text-xs text-base-content/70 leading-relaxed">
+                    {door.desc}
+                  </p>
+                </div>
+                <span className="text-xs font-mono text-primary group-hover:underline flex items-center gap-1 pt-2">
+                  {t("landing.door_card.cta")} &rarr;
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
 
       </div>
     </div>
   );
-}
+}
