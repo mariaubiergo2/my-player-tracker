@@ -458,12 +458,12 @@ export default function SessionDetailPage({
                         {new Date(fb.createdAt).toLocaleDateString()}
                       </span>
                       {fb.isReviewed ? (
-                        <span className="badge !bg-teal-600 !text-white border border-teal-600/20 dark:bg-teal-900/30 dark:text-teal-300 dark:border-teal-900/40 badge-xs font-bold px-2 py-1 rounded-md flex items-center gap-1">
+                        <span className="badge badge-status-reviewed badge-xs font-bold px-2 py-1 rounded-md flex items-center gap-1">
                           {getStateIcon("feedback_reviewed", "w-3 h-3 shrink-0")}
                           <span>{t("physical_prep_page.feedback_reviewed")}</span>
                         </span>
                       ) : (
-                        <span className="badge !bg-amber-500 !text-amber-950 border border-amber-500/20 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-900/50 badge-xs font-bold px-2 py-1 rounded-md flex items-center gap-1">
+                        <span className="badge badge-status-feedback-sent badge-xs font-bold px-2 py-1 rounded-md flex items-center gap-1">
                           {getStateIcon("feedback_sent", "w-3 h-3 shrink-0")}
                           <span>{t("physical_prep_page.pending_review")}</span>
                         </span>

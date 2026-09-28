@@ -17,6 +17,11 @@
   
   --font-body: var(--font-poppins), system-ui, -apple-system, sans-serif;
   --font-display: var(--font-montserrat), system-ui, -apple-system, sans-serif;
+
+  /* Category tokens (contrast on #1A1B1B) */
+  --cat-video: #38bdf8;
+  --cat-physical: #4ade80;
+  --cat-nutrition: #facc15;
 }
 
 @plugin "daisyui/theme" {
@@ -133,6 +138,56 @@ h1, h2, h3, h4, h5, h6, .font-display {
 .card {
   border-radius: 12px;
   overflow: hidden;
+}
+
+/* NEXA Category Badges (consistent dark-theme palette) */
+.badge-cat-video {
+  background-color: rgba(56, 189, 248, 0.15) !important;
+  color: #7dd3fc !important;
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+}
+
+.badge-cat-physical {
+  background-color: rgba(74, 222, 128, 0.15) !important;
+  color: #86efac !important;
+  border: 1px solid rgba(74, 222, 128, 0.35) !important;
+}
+
+.badge-cat-nutrition {
+  background-color: rgba(250, 204, 21, 0.15) !important;
+  color: #fde047 !important;
+  border: 1px solid rgba(250, 204, 21, 0.35) !important;
+}
+
+/* NEXA Physical Session Status Badges */
+.badge-status-pending {
+  background-color: rgba(158, 158, 158, 0.12) !important;
+  color: #d4d4d4 !important;
+  border: 1px solid rgba(158, 158, 158, 0.25) !important;
+}
+
+.badge-status-feedback-sent {
+  background-color: rgba(250, 204, 21, 0.15) !important;
+  color: #fde047 !important;
+  border: 1px solid rgba(250, 204, 21, 0.35) !important;
+}
+
+.badge-status-completed {
+  background-color: rgba(56, 189, 248, 0.15) !important;
+  color: #7dd3fc !important;
+  border: 1px solid rgba(56, 189, 248, 0.35) !important;
+}
+
+.badge-status-completed-feedback {
+  background-color: rgba(191, 241, 55, 0.15) !important;
+  color: #BFF137 !important;
+  border: 1px solid rgba(191, 241, 55, 0.35) !important;
+}
+
+.badge-status-reviewed {
+  background-color: rgba(74, 222, 128, 0.15) !important;
+  color: #86efac !important;
+  border: 1px solid rgba(74, 222, 128, 0.35) !important;
 }
 
 @media print {

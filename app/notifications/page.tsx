@@ -601,7 +601,7 @@ function NotificationsInboxContent() {
                     >
                       <div className="flex items-center gap-2 flex-wrap">
                         {!n.isRead && (
-                          <span className="h-2 w-2 rounded-full bg-blue-500 flex-shrink-0" />
+                          <span className="h-2 w-2 rounded-full bg-primary flex-shrink-0" />
                         )}
                         <span>{messageText}</span>
                       </div>

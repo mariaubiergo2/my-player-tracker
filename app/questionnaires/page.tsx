@@ -450,19 +450,19 @@ export default function QuestionnairesPage() {
     switch (type) {
       case "ANALYSIS_VIDEO":
         return (
-          <span className="badge bg-blue-600 text-white border border-blue-600/20 dark:bg-blue-950 dark:text-blue-200 dark:border dark:border-blue-800/80 font-bold text-[11px] uppercase tracking-wide">
+          <span className="badge badge-cat-video font-bold text-[11px] uppercase tracking-wide">
             {t("categories.ANALYSIS_VIDEO") || "Vídeo"}
           </span>
         );
       case "PHYSICAL":
         return (
-          <span className="badge bg-emerald-500 text-white border border-emerald-500/20 dark:bg-emerald-950 dark:text-emerald-200 dark:border dark:border-emerald-800/80 font-bold text-[11px] uppercase tracking-wide">
+          <span className="badge badge-cat-physical font-bold text-[11px] uppercase tracking-wide">
             {t("categories.PHYSICAL") || "Físic"}
           </span>
         );
       case "NUTRITION":
         return (
-          <span className="badge bg-amber-500 text-black border border-amber-500/20 dark:bg-amber-950 dark:text-amber-200 dark:border dark:border-amber-900/80 font-bold text-[11px] uppercase tracking-wide">
+          <span className="badge badge-cat-nutrition font-bold text-[11px] uppercase tracking-wide">
             {t("categories.NUTRITION") || "Nutrició"}
           </span>
         );

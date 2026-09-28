@@ -506,24 +506,24 @@ export default function PhysicalPrepPage() {
 
                           switch (occ.state) {
                             case "feedback_reviewed":
-                              badgeClass = "!bg-teal-600 !text-white border border-teal-600/20 !dark:bg-teal-900/30 !dark:text-teal-300 dark:border-teal-900/40";
+                              badgeClass = "badge-status-reviewed";
                               stateLabel = t("physical_prep_page.feedback_reviewed");
                               break;
                             case "completed_feedback_sent":
-                              badgeClass = "!bg-lime-500 !text-lime-950 border border-lime-500/20 !dark:bg-lime-900/30 !dark:text-lime-300 dark:border-lime-900/50";
+                              badgeClass = "badge-status-completed-feedback";
                               stateLabel = t("physical_prep_page.completed_feedback_sent");
                               break;
                             case "completed":
-                              badgeClass = "!bg-indigo-600 !text-white border border-indigo-600/20 !dark:bg-indigo-900/30 !dark:text-indigo-300 dark:border-indigo-900/50";
+                              badgeClass = "badge-status-completed";
                               stateLabel = t("physical_prep_page.completed");
                               break;
                             case "feedback_sent":
-                              badgeClass = "!bg-amber-500 !text-amber-950 border border-amber-500/20 !dark:bg-amber-900/30 !dark:text-amber-300 dark:border-amber-900/50";
+                              badgeClass = "badge-status-feedback-sent";
                               stateLabel = t("physical_prep_page.feedback_sent");
                               break;
                             case "pending":
                             default:
-                              badgeClass = "!bg-slate-500 !text-white border border-slate-500/20 !dark:bg-slate-800/40 !dark:text-slate-400 dark:border-slate-800/50";
+                              badgeClass = "badge-status-pending";
                               stateLabel = t("physical_prep_page.pending");
                               break;
                           }
@@ -555,23 +555,23 @@ export default function PhysicalPrepPage() {
                   {t("physical_prep_page.legend_title")}
                 </span>
                 <span className="flex items-center gap-1.5 text-base-content/70">
-                  <span className="text-slate-500 shrink-0">{getStateIcon("pending", "w-4 h-4")}</span>
+                  <span className="text-base-content/50 shrink-0">{getStateIcon("pending", "w-4 h-4")}</span>
                   <span>{t("physical_prep_page.pending")}</span>
                 </span>
                 <span className="flex items-center gap-1.5 text-base-content/70">
-                  <span className="text-amber-500 shrink-0">{getStateIcon("feedback_sent", "w-4 h-4")}</span>
+                  <span className="text-warning shrink-0">{getStateIcon("feedback_sent", "w-4 h-4")}</span>
                   <span>{t("physical_prep_page.feedback_sent")}</span>
                 </span>
                 <span className="flex items-center gap-1.5 text-base-content/70">
-                  <span className="text-indigo-600 shrink-0">{getStateIcon("completed", "w-4 h-4")}</span>
+                  <span className="text-info shrink-0">{getStateIcon("completed", "w-4 h-4")}</span>
                   <span>{t("physical_prep_page.completed")}</span>
                 </span>
                 <span className="flex items-center gap-1.5 text-base-content/70">
-                  <span className="text-lime-500 shrink-0">{getStateIcon("completed_feedback_sent", "w-4 h-4")}</span>
+                  <span className="text-primary shrink-0">{getStateIcon("completed_feedback_sent", "w-4 h-4")}</span>
                   <span>{t("physical_prep_page.completed_feedback_sent")}</span>
                 </span>
                 <span className="flex items-center gap-1.5 text-base-content/70">
-                  <span className="text-teal-600 shrink-0">{getStateIcon("feedback_reviewed", "w-4 h-4")}</span>
+                  <span className="text-success shrink-0">{getStateIcon("feedback_reviewed", "w-4 h-4")}</span>
                   <span>{t("physical_prep_page.feedback_reviewed")}</span>
                 </span>
               </div>

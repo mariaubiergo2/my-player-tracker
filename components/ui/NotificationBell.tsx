@@ -479,7 +479,7 @@ export default function NotificationBell() {
                     className="flex gap-3 px-3.5 py-3 pr-10 items-start select-none"
                   >
                     {!n.isRead && (
-                      <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-blue-500" />
+                      <span className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-primary" />
                     )}
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-base-content/90 leading-relaxed break-words">
