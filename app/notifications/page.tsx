@@ -535,7 +535,7 @@ function NotificationsInboxContent() {
             const avatarUrl = isFromTrainer
               ? (isQuestionnaire ? (n.assignment?.questionnaire?.trainer?.avatarUrl || null) : isObjectivesRequest ? (n.objectiveRequest?.responses?.[0]?.trainer?.avatarUrl || null) : isTrainingPlan ? (n.trainingPlanAssignment?.trainingPlan?.trainer?.avatarUrl || null) : (n.match?.trainer?.avatarUrl || n.match?.player?.trainers?.[0]?.avatarUrl || null))
               : (isQuestionnaire ? (n.assignment?.player?.avatarUrl || null) : isObjectivesRequest ? (n.objectiveRequest?.player?.avatarUrl || null) : isTrainingPlan ? (n.trainingPlanAssignment?.player?.avatarUrl || null) : isTrainingFeedback ? (n.trainingFeedback?.player?.avatarUrl || null) : n.type === "PLAYER_UNASSIGNED" ? (n.unassignedPlayer?.avatarUrl || null) : n.match?.player?.avatarUrl);
-            const senderName = isFromTrainer ? (trainerName || "Foot-Tracker") : (playerName || n.unassignedPlayer?.name || "Foot-Tracker");
+            const senderName = isFromTrainer ? (trainerName || "NEXA") : (playerName || n.unassignedPlayer?.name || "NEXA");
 
             const fullDateString = new Date(n.createdAt).toLocaleDateString(
               locale,

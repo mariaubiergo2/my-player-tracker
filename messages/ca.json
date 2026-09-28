@@ -1,6 +1,6 @@
 {
   "header": {
-    "brand": "Foot-Tracker",
+    "brand": "NEXA",
     "about": "Com funciona",
     "users": "Usuaris",
     "players": "Jugadors",
@@ -24,11 +24,11 @@
     "training_feedback": "Bústia de feedback"
   },
   "footer": {
-    "brand": "Foot-Tracker",
-    "slogan": "La plataforma que connecta jugadors i entrenadors, partit a partit.",
+    "brand": "NEXA",
+    "slogan": "Convertim rendiment en coneixement i coneixement en evolució. Metodologia de desenvolupament i rendiment aplicada al futbol.",
     "contact": "Dubtes o suggeriments?",
-    "contactEmail": "hola@foot-tracker.app",
-    "copyright": "© {year} Foot-Tracker. Tots els drets reservats."
+    "contactEmail": "hola@nexa.app",
+    "copyright": "© {year} NEXA. Tots els drets reservats."
   },
   "common": {
     "save": "Desar",
@@ -119,8 +119,8 @@
   },
   "about_page": {
     "badge": "⚡ Analítica esportiva de nova generació",
-    "title": "Foot-Tracker Hub",
-    "subtitle": "Benvingut a l'aplicació definitiva de seguiment de jugadors. Dissenyada per a equips, entrenadors i atletes, connecta estadístiques quantitatives amb comentaris qualitatius.",
+    "title": "NEXA Hub",
+    "subtitle": "Benvingut a NEXA. Metodologia de desenvolupament i rendiment aplicada al futbol. Connectem anàlisi quantitatiu amb coneixement qualitatiu per impulsar la teva evolució.",
     "btn_dashboard": "Anar a l'anàlisi de vídeo",
     "btn_explore": "Explorar funcions",
     "stats": {
@@ -265,10 +265,10 @@
     "resend_success": "S'ha enviat un nou codi de verificació."
   },
   "email": {
-    "subject": "Codi de Verificació - Foot-Tracker",
+    "subject": "Codi de Verificació - NEXA",
     "title": "Verifica el teu correu electrònic",
     "greeting": "Hola {name},",
-    "body": "Gràcies per registrar-te a Foot-Tracker. Si us plau, utilitza el següent codi de verificació per completar el teu registre:",
+    "body": "Gràcies per registrar-te a NEXA. Si us plau, utilitza el següent codi de verificació per completar el teu registre:",
     "expiration": "Aquest codi caducarà en 10 minuts.",
     "security_notice": "Si no has sol·licitat aquest registre, si us plau ignora aquest correu electrònic."
   },

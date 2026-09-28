@@ -1,5 +1,5 @@
 # Resumen del Proyecto
-**Foot-Tracker** (My Player Tracker) es una aplicación web colaborativa para el seguimiento del rendimiento deportivo de futbolistas. Permite a los jugadores registrar sus partidos, reflejar autoevaluaciones y subir videos de juego, mientras que proporciona a los entrenadores herramientas para vincularse con sus jugadores, definir objetivos personalizados, enviar cuestionarios de evaluación y entablar hilos de discusión interactivos tras cada encuentro.
+**NEXA** (My Player Tracker) es una plataforma metodológica de desarrollo y rendimiento aplicada al fútbol. Permite a los jugadores registrar sus partidos, reflejar autoevaluaciones y subir videos de juego, mientras que proporciona a los entrenadores herramientas para vincularse con sus jugadores, definir objetivos personalizados, enviar cuestionarios de evaluación y entablar hilos de discusión interactivos tras cada encuentro.
 
 ---
 

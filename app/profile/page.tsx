@@ -39,7 +39,7 @@ export default function ProfilePage() {
 
   // Set page title for SEO
   useEffect(() => {
-    document.title = `${t("profile_page.title")} | Foot-Tracker`;
+    document.title = `${t("profile_page.title")} | NEXA`;
   }, [t]);
 
   const fetchProfile = async () => {

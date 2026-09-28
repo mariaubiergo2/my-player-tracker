@@ -1,6 +1,6 @@
 {
   "header": {
-    "brand": "Foot-Tracker",
+    "brand": "NEXA",
     "about": "How it works",
     "users": "Users",
     "players": "Players",
@@ -24,11 +24,11 @@
     "training_feedback": "Feedback inbox"
   },
   "footer": {
-    "brand": "Foot-Tracker",
-    "slogan": "The application that connects players and coaches, match by match.",
+    "brand": "NEXA",
+    "slogan": "Converting performance into knowledge and knowledge into evolution. Methodology of development and performance applied to football.",
     "contact": "Questions or suggestions?",
-    "contactEmail": "hello@foot-tracker.app",
-    "copyright": "© {year} Foot-Tracker. All rights reserved."
+    "contactEmail": "hello@nexa.app",
+    "copyright": "© {year} NEXA. All rights reserved."
   },
   "common": {
     "save": "Save",
@@ -119,8 +119,8 @@
   },
   "about_page": {
     "badge": "⚡ Next-Gen Sports Analytics",
-    "title": "Foot-Tracker Hub",
-    "subtitle": "Welcome to the ultimate player tracker application. Designed for teams, trainers, and aspiring athletes, Foot-Tracker bridges quantitative statistics with qualitative feedback to elevate player development.",
+    "title": "NEXA Hub",
+    "subtitle": "Welcome to NEXA. Methodology of development and performance applied to football. Connecting quantitative data with qualitative knowledge to drive evolution.",
     "btn_dashboard": "Go to Video Analysis",
     "btn_explore": "Explore Features",
     "stats": {
@@ -265,10 +265,10 @@
     "resend_success": "A new verification code has been sent."
   },
   "email": {
-    "subject": "Verification Code - Foot-Tracker",
+    "subject": "Verification Code - NEXA",
     "title": "Verify your email address",
     "greeting": "Hello {name},",
-    "body": "Thank you for registering at Foot-Tracker. Please use the following verification code to complete your registration:",
+    "body": "Thank you for registering at NEXA. Please use the following verification code to complete your registration:",
     "expiration": "This code will expire in 10 minutes.",
     "security_notice": "If you did not request this registration, please ignore this email."
   },

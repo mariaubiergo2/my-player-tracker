@@ -1,6 +1,6 @@
 {
   "header": {
-    "brand": "Foot-Tracker",
+    "brand": "NEXA",
     "about": "Cómo funciona",
     "users": "Usuarios",
     "players": "Jugadores",
@@ -24,11 +24,11 @@
     "training_feedback": "Bandeja de feedback"
   },
   "footer": {
-    "brand": "Foot-Tracker",
-    "slogan": "La plataforma que conecta a jugadores y entrenadores, partido a partido.",
+    "brand": "NEXA",
+    "slogan": "Convertimos rendimiento en conocimiento y conocimiento en evolución. Metodología de desarrollo y rendimiento aplicada al fútbol.",
     "contact": "¿Dudas o sugerencias?",
-    "contactEmail": "hola@foot-tracker.app",
-    "copyright": "© {year} Foot-Tracker. Todos los derechos reservados."
+    "contactEmail": "hola@nexa.app",
+    "copyright": "© {year} NEXA. Todos los derechos reservados."
   },
   "common": {
     "save": "Guardar",
@@ -119,8 +119,8 @@
   },
   "about_page": {
     "badge": "⚡ Analítica deportiva de nueva generación",
-    "title": "Foot-Tracker Hub",
-    "subtitle": "Bienvenido a la aplicación definitiva de seguimiento de jugadores. Diseñada para equipos, entrenadores y atletas, conecta estadísticas cuantitativas con comentarios cualitativos.",
+    "title": "NEXA Hub",
+    "subtitle": "Bienvenido a NEXA. Metodología de desarrollo y rendimiento aplicada al fútbol. Conectamos análisis cuantitativo con conocimiento cualitativo para impulsar tu evolución.",
     "btn_dashboard": "Ir al análisis de vídeo",
     "btn_explore": "Explorar funciones",
     "stats": {
@@ -265,10 +265,10 @@
     "resend_success": "Se ha enviado un nuevo código de verificación."
   },
   "email": {
-    "subject": "Código de Verificación - Foot-Tracker",
+    "subject": "Código de Verificación - NEXA",
     "title": "Verifica tu correo electrónico",
     "greeting": "Hola {name},",
-    "body": "Gracias por registrarte en Foot-Tracker. Por favor, usa el siguiente código de verificación para completar tu registro:",
+    "body": "Gracias por registrarte en NEXA. Por favor, usa el siguiente código de verificación para completar tu registro:",
     "expiration": "Este código caducará en 10 minutos.",
     "security_notice": "Si no has solicitado este registro, por favor ignora este correo electrónico."
   },

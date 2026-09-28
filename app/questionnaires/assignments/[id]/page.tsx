@@ -137,7 +137,7 @@ export default function AssignmentDetailPage({ params }: { params: Promise<{ id:
       {/* Printable Header */}
       <div className="hidden print:block border-b-2 border-black pb-4 mb-6">
         <div className="flex justify-between items-center mb-4">
-          <span className="text-xl font-extrabold tracking-wider text-black">FOOT-TRACKER REPORT</span>
+          <span className="text-xl font-extrabold tracking-wider text-black">NEXA REPORT</span>
           <span className="text-xs text-gray-500">{new Date().toLocaleDateString(locale)}</span>
         </div>
         <h1 className="text-3xl font-extrabold text-black mt-2">{title}</h1>

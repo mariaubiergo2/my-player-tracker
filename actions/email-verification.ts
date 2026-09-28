@@ -11,7 +11,7 @@ import { verifyEmailCodeSchema, resendVerificationCodeSchema } from "@/lib/valid
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 // TODO: Before running in production, verify your domain in the Resend dashboard and configure RESEND_SENDER_EMAIL in your environment variables.
-const SENDER_EMAIL = process.env.RESEND_SENDER_EMAIL || "Foot-Tracker <noreply@foot-tracker.com>";
+const SENDER_EMAIL = process.env.RESEND_SENDER_EMAIL || "NEXA <noreply@nexa.app>";
 
 /**
  * Generate a 6-digit verification code, hash it, save to DB, and send via Resend
@@ -76,10 +76,10 @@ export async function generateAndSendVerificationCode(userId: string, db: Prisma
   const t = await getTranslationsServer();
 
   // Send email via Resend
-  const subject = t("email.subject") || "Código de Verificación - Foot-Tracker";
+  const subject = t("email.subject") || "Código de Verificación - NEXA";
   const emailTitle = t("email.title") || "Verifica tu correo electrónico";
   const greeting = t("email.greeting", { name: user.name }) || `Hola ${user.name},`;
-  const body = t("email.body") || "Gracias por registrarte en Foot-Tracker. Por favor, usa el siguiente código de verificación para completar tu registro:";
+  const body = t("email.body") || "Gracias por registrarte en NEXA. Por favor, usa el siguiente código de verificación para completar tu registro:";
   const expirationText = t("email.expiration") || "Este código caducará en 10 minutos.";
   const securityNotice = t("email.security_notice") || "Si no has solicitado este registro, por favor ignora este correo electrónico.";
 

@@ -1,4 +1,4 @@
-# Foot-Tracker (My Player Tracker)
+# NEXA (My Player Tracker)
 
 [![CI](https://github.com/mariaubiergo2/my-player-tracker/actions/workflows/ci.yml/badge.svg)](https://github.com/mariaubiergo2/my-player-tracker/actions/workflows/ci.yml)
 
