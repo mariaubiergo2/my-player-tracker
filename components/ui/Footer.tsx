@@ -8,21 +8,21 @@ export default function Footer() {
   const contactEmail = t("footer.contactEmail");
 
   return (
-    <footer className="flex flex-col items-center text-center gap-3 bg-base-200 text-base-content p-10 border-t-4 border-secondary/40">
+    <footer className="flex flex-col items-center text-center gap-3 bg-base-200 text-base-content p-8 border-t border-base-content/10 font-sans">
       {/* Marca */}
-      <p className="font-display text-lg tracking-[0.2em] uppercase text-base-content">
-        ⚽ {t("footer.brand")}
+      <p className="font-display font-black text-lg tracking-[0.25em] uppercase text-base-content">
+        NEXA
       </p>
 
       {/* Eslogan */}
-      <p className="font-serif italic text-sm text-base-content/70 max-w-*">
+      <p className="font-sans text-sm text-base-content/70 max-w-md">
         {t("footer.slogan")}
       </p>
 
       {/* Contacto */}
       <p className="font-mono text-xs text-base-content/60">
         {t("footer.contact")}{" "}
-        <a href={"mailto:" + contactEmail} className="link link-hover link-secondary">
+        <a href={"mailto:" + contactEmail} className="link link-hover hover:text-primary transition-colors">
           {contactEmail}
         </a>
       </p>
@@ -33,4 +33,4 @@ export default function Footer() {
       </p>
     </footer>
   );
-}
+}

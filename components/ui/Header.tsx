@@ -10,12 +10,8 @@ export default function Header() {
   const { locale, setLocale, t } = useTranslation();
 
   return (
-    <div className="navbar border-b border-secondary/20 shadow-lg relative">
-      {/* Capa de fondo de césped con overflow contenido para no cortar los dropdowns */}
-      <div className="absolute inset-0 grass-bg overflow-hidden pointer-events-none">
-        <div className="grass-sweep"></div>
-      </div>
-      <div className="navbar-start z-10">
+    <div className="navbar bg-base-100 border-b border-base-content/10 shadow-sm relative z-20 font-sans">
+      <div className="navbar-start">
         <div className="dropdown">
           <div tabIndex={0} role="button" className="btn btn-ghost lg:hidden">
             <svg
@@ -35,63 +31,54 @@ export default function Header() {
           </div>
           <ul
             tabIndex={0}
-            className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-2 shadow"
+            className="menu menu-sm dropdown-content bg-base-100 rounded-box z-[50] mt-3 w-52 p-2 shadow-lg border border-base-content/10"
           >
             {isAuthenticated && (
               <>
                 {user?.role === "ADMIN" && (
-                  <li><Link href="/admin/users">{t("header.users")}</Link></li>
+                  <li><Link href="/admin/users" className="hover:text-primary transition-colors">{t("header.users")}</Link></li>
                 )}
                 {user?.role === "TRAINER" && (
                   <>
                     <li>
-                      <Link href="/trainer/players" className="font-semibold text-primary">{t("header.players")}</Link>
+                      <Link href="/trainer/players" className="font-semibold hover:text-primary transition-colors">{t("header.players")}</Link>
                       <ul className="pl-4">
-                        <li><Link href="/trainer/players/my-players">{t("header.my_players")}</Link></li>
-                        <li><Link href="/trainer/players/assign">{t("header.all_players")}</Link></li>
+                        <li><Link href="/trainer/players/my-players" className="hover:text-primary transition-colors">{t("header.my_players")}</Link></li>
+                        <li><Link href="/trainer/players/assign" className="hover:text-primary transition-colors">{t("header.all_players")}</Link></li>
                       </ul>
                     </li>
                     <li>
-                      <Link href="/trainer/video-analysis" className="font-semibold text-primary">{t("header.video_analysis")}</Link>
+                      <Link href="/trainer/video-analysis" className="font-semibold hover:text-primary transition-colors">{t("header.video_analysis")}</Link>
                       <ul className="pl-4">
-                        <li><Link href="/trainer/video-analysis/feedback">{t("header.match_feedback")}</Link></li>
-                        <li><Link href="/trainer/video-analysis/matches">{t("header.all_matches")}</Link></li>
+                        <li><Link href="/trainer/video-analysis/feedback" className="hover:text-primary transition-colors">{t("header.match_feedback")}</Link></li>
+                        <li><Link href="/trainer/video-analysis/matches" className="hover:text-primary transition-colors">{t("header.all_matches")}</Link></li>
                       </ul>
                     </li>
-                    <li><Link href="/questionnaires">{t("questionnaires.title")}</Link></li>
+                    <li><Link href="/questionnaires" className="hover:text-primary transition-colors">{t("questionnaires.title")}</Link></li>
                     <li>
-                      <Link href="/trainer/physical-prep" className="font-semibold text-primary">{t("header.physical_prep")}</Link>
+                      <Link href="/trainer/physical-prep" className="font-semibold hover:text-primary transition-colors">{t("header.physical_prep")}</Link>
                       <ul className="pl-4">
-                        <li><Link href="/trainer/exercises">{t("header.exercises")}</Link></li>
-                        <li><Link href="/trainer/training-plans">{t("header.training_plans")}</Link></li>
-                        <li><Link href="/trainer/training-feedback">{t("header.training_feedback")}</Link></li>
+                        <li><Link href="/trainer/exercises" className="hover:text-primary transition-colors">{t("header.exercises")}</Link></li>
+                        <li><Link href="/trainer/training-plans" className="hover:text-primary transition-colors">{t("header.training_plans")}</Link></li>
+                        <li><Link href="/trainer/training-feedback" className="hover:text-primary transition-colors">{t("header.training_feedback")}</Link></li>
                       </ul>
                     </li>
                   </>
                 )}
                 {(user?.role === "PLAYER" || user?.role === "GOAL_KEEPER") && (
                   <>
-                    <li><Link href="/dashboard">{t("header.dashboard")}</Link></li>
-                    <li><Link href="/dashboard/physical">{t("header.physical_prep")}</Link></li>
-                    <li><Link href="/dashboard/nutrition">{t("header.nutrition")}</Link></li>
-                    <li><Link href="/questionnaires">{t("questionnaires.title")}</Link></li>
+                    <li><Link href="/dashboard" className="hover:text-primary transition-colors">{t("header.dashboard")}</Link></li>
+                    <li><Link href="/dashboard/physical" className="hover:text-primary transition-colors">{t("header.physical_prep")}</Link></li>
+                    <li><Link href="/dashboard/nutrition" className="hover:text-primary transition-colors">{t("header.nutrition")}</Link></li>
+                    <li><Link href="/questionnaires" className="hover:text-primary transition-colors">{t("questionnaires.title")}</Link></li>
                   </>
                 )}
               </>
             )}
           </ul>
         </div>
-        <Link href="/about" className="btn btn-ghost text-xl tracking-wide font-display flex items-center gap-2">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="/logo-dark.svg"
-            alt="Logo"
-            className="h-8 w-auto transition-transform duration-300 hover:scale-105"
-            onError={(e) => {
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-          <span>{t("header.brand")}</span>
+        <Link href="/about" className="btn btn-ghost text-xl tracking-widest font-display font-black text-base-content hover:text-primary transition-colors">
+          NEXA
         </Link>
       </div>
       <div className="navbar-center hidden lg:flex z-10">
@@ -232,27 +219,27 @@ export default function Header() {
               {user?.role === "TRAINER" && (
                 <>
                   <li>
-                    <Link href="/trainer/players" className="font-semibold text-primary">{t("header.players")}</Link>
+                    <Link href="/trainer/players" className="font-semibold text-base-content/90 hover:text-primary transition-colors">{t("header.players")}</Link>
                     <ul className="pl-4">
-                      <li><Link href="/trainer/players/my-players">{t("header.my_players")}</Link></li>
-                      <li><Link href="/trainer/players/assign">{t("header.all_players")}</Link></li>
+                      <li><Link href="/trainer/players/my-players" className="hover:text-primary transition-colors">{t("header.my_players")}</Link></li>
+                      <li><Link href="/trainer/players/assign" className="hover:text-primary transition-colors">{t("header.all_players")}</Link></li>
                     </ul>
                   </li>
                   <li>
-                    <Link href="/trainer/video-analysis" className="font-semibold text-primary">{t("header.video_analysis")}</Link>
+                    <Link href="/trainer/video-analysis" className="font-semibold text-base-content/90 hover:text-primary transition-colors">{t("header.video_analysis")}</Link>
                     <ul className="pl-4">
-                      <li><Link href="/trainer/video-analysis/feedback">{t("header.match_feedback")}</Link></li>
-                      <li><Link href="/trainer/video-analysis/matches">{t("header.all_matches")}</Link></li>
+                      <li><Link href="/trainer/video-analysis/feedback" className="hover:text-primary transition-colors">{t("header.match_feedback")}</Link></li>
+                      <li><Link href="/trainer/video-analysis/matches" className="hover:text-primary transition-colors">{t("header.all_matches")}</Link></li>
                     </ul>
                   </li>
-                  <li><Link href="/notifications">{t("header.notifications")}</Link></li>
-                  <li><Link href="/questionnaires">{t("questionnaires.title")}</Link></li>
+                  <li><Link href="/notifications" className="hover:text-primary transition-colors">{t("header.notifications")}</Link></li>
+                  <li><Link href="/questionnaires" className="hover:text-primary transition-colors">{t("questionnaires.title")}</Link></li>
                   <li>
-                    <Link href="/trainer/physical-prep" className="font-semibold text-primary">{t("header.physical_prep")}</Link>
+                    <Link href="/trainer/physical-prep" className="font-semibold text-base-content/90 hover:text-primary transition-colors">{t("header.physical_prep")}</Link>
                     <ul className="pl-4">
-                      <li><Link href="/trainer/exercises">{t("header.exercises")}</Link></li>
-                      <li><Link href="/trainer/training-plans">{t("header.training_plans")}</Link></li>
-                      <li><Link href="/trainer/training-feedback">{t("header.training_feedback")}</Link></li>
+                      <li><Link href="/trainer/exercises" className="hover:text-primary transition-colors">{t("header.exercises")}</Link></li>
+                      <li><Link href="/trainer/training-plans" className="hover:text-primary transition-colors">{t("header.training_plans")}</Link></li>
+                      <li><Link href="/trainer/training-feedback" className="hover:text-primary transition-colors">{t("header.training_feedback")}</Link></li>
                     </ul>
                   </li>
                 </>
