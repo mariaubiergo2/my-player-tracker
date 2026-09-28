@@ -10,9 +10,9 @@ export default function ConditionalChrome({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const isRoot = pathname === "/";
+  const isNoChrome = pathname === "/" || pathname?.startsWith("/entrar/");
 
-  if (isRoot) {
+  if (isNoChrome) {
     return <main className="flex-1 flex flex-col">{children}</main>;
   }
 
