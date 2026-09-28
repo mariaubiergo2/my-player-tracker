@@ -27,7 +27,6 @@ export default async function RootLayout({
 }>) {
   const cookieStore = await cookies();
   const locale = (cookieStore.get("locale")?.value as Locale) || defaultLocale;
-  const theme = (cookieStore.get("theme")?.value as "light" | "dark") || "light";
 
   return (
     <html
@@ -39,7 +38,7 @@ export default async function RootLayout({
       <body
         className="antialiased min-h-screen flex flex-col"
       >
-        <Providers initialLocale={locale} initialTheme={theme}>
+        <Providers initialLocale={locale}>
           <ConditionalChrome>{children}</ConditionalChrome>
         </Providers>
       </body>

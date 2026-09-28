@@ -3,13 +3,11 @@
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "@/components/LanguageProvider";
-import { useTheme } from "@/components/ThemeProvider";
 import NotificationBell from "./NotificationBell";
 
 export default function Header() {
   const { isAuthenticated, user, logout, isLoading } = useAuth();
   const { locale, setLocale, t } = useTranslation();
-  const { theme, toggleTheme } = useTheme();
 
   return (
     <div className="navbar border-b border-secondary/20 shadow-lg relative">
@@ -86,7 +84,7 @@ export default function Header() {
         <Link href="/about" className="btn btn-ghost text-xl tracking-wide font-display flex items-center gap-2">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={theme === "dark" ? "/logo-dark.svg" : "/logo-light.svg"}
+            src="/logo-dark.svg"
             alt="Logo"
             className="h-8 w-auto transition-transform duration-300 hover:scale-105"
             onError={(e) => {
@@ -149,25 +147,6 @@ export default function Header() {
         </ul>
       </div>
       <div className="navbar-end flex gap-2 z-10">
-        {/* Theme Toggle Button */}
-        <button
-          onClick={toggleTheme}
-          aria-label={theme === "dark" ? t("header.theme_light") : t("header.theme_dark")}
-          className="btn btn-ghost btn-sm flex items-center gap-1.5 border border-base-content/10 bg-base-100/50 hover:bg-base-200"
-        >
-          {theme === "dark" ? (
-            <>
-              <span className="text-sm">☀️</span>
-              <span className="text-xs font-normal font-sans hidden sm:inline">{t("header.theme_light_short")}</span>
-            </>
-          ) : (
-            <>
-              <span className="text-sm">🌙</span>
-              <span className="text-xs font-normal font-sans hidden sm:inline">{t("header.theme_dark_short")}</span>
-            </>
-          )}
-        </button>
-
         {/* Notification Bell Dropdown */}
         <NotificationBell />
 
