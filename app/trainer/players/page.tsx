@@ -20,19 +20,6 @@ export default function PlayersDashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Route protection
-  useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        router.push("/login");
-      } else if (user?.role !== "TRAINER") {
-        router.push("/dashboard");
-      } else {
-        loadStats();
-      }
-    }
-  }, [isLoading, isAuthenticated, user, router]);
-
   async function loadStats() {
     setLoading(true);
     setError(null);
@@ -50,6 +37,19 @@ export default function PlayersDashboardPage() {
       setLoading(false);
     }
   }
+
+  // Route protection
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+      } else if (user?.role !== "TRAINER") {
+        router.push("/dashboard");
+      } else {
+        loadStats();
+      }
+    }
+  }, [isLoading, isAuthenticated, user, router]);
 
   if (isLoading || (user && user.role !== "TRAINER")) {
     return null;

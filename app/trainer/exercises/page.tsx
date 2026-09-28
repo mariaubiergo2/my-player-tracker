@@ -40,6 +40,15 @@ export default function ExercisesPage() {
   const [successMsg, setSuccessMsg] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const fetchExercises = async () => {
+    setLoading(true);
+    const res = await getExercises();
+    if (res.success && res.data) {
+      setExercises(res.data as Exercise[]);
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
@@ -51,15 +60,6 @@ export default function ExercisesPage() {
       }
     }
   }, [isLoading, isAuthenticated, user, router]);
-
-  const fetchExercises = async () => {
-    setLoading(true);
-    const res = await getExercises();
-    if (res.success && res.data) {
-      setExercises(res.data as Exercise[]);
-    }
-    setLoading(false);
-  };
 
   const handleOpenCreate = () => {
     setEditingExercise(null);

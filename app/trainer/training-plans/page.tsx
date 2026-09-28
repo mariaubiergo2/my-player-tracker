@@ -47,18 +47,6 @@ export default function TrainingPlansPage() {
   const [errorMsg, setErrorMsg] = useState("");
   const [sending, setSending] = useState(false);
 
-  useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        router.push("/login");
-      } else if (user?.role !== "TRAINER" && user?.role !== "ADMIN") {
-        router.push("/dashboard");
-      } else {
-        fetchData();
-      }
-    }
-  }, [isLoading, isAuthenticated, user, router]);
-
   const fetchData = async () => {
     setLoading(true);
     const plansRes = await getTrainingPlans();
@@ -71,6 +59,18 @@ export default function TrainingPlansPage() {
     }
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+      } else if (user?.role !== "TRAINER" && user?.role !== "ADMIN") {
+        router.push("/dashboard");
+      } else {
+        fetchData();
+      }
+    }
+  }, [isLoading, isAuthenticated, user, router]);
 
   const handleOpenCreate = () => {
     setPlanTitle("");

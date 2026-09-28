@@ -44,6 +44,15 @@ export default function TrainerFeedbackInboxPage() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "pending" | "reviewed">("pending");
 
+  const fetchFeedbacks = async () => {
+    setLoading(true);
+    const res = await getTrainerFeedbackInbox();
+    if (res.success && res.data) {
+      setFeedbacks(res.data as FeedbackItem[]);
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
     if (!isLoading) {
       if (!isAuthenticated) {
@@ -55,15 +64,6 @@ export default function TrainerFeedbackInboxPage() {
       }
     }
   }, [isLoading, isAuthenticated, user, router]);
-
-  const fetchFeedbacks = async () => {
-    setLoading(true);
-    const res = await getTrainerFeedbackInbox();
-    if (res.success && res.data) {
-      setFeedbacks(res.data as FeedbackItem[]);
-    }
-    setLoading(false);
-  };
 
   const handleReview = async (id: string) => {
     const res = await reviewFeedback(id);

@@ -46,6 +46,21 @@ export default function AdminUsersPage() {
   const [playerSearchQuery, setPlayerSearchQuery] = useState("");
   const [loadingAssignments, setLoadingAssignments] = useState(false);
   const [savingAssignments, setSavingAssignments] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+
+  // Utility to show temporary message banners
+  const showSuccess = (msg: string) => {
+    setSuccessMessage(msg);
+    setErrorMessage("");
+    setTimeout(() => setSuccessMessage(""), 5000);
+  };
+
+  const showError = (msg: string) => {
+    setErrorMessage(msg);
+    setSuccessMessage("");
+    setTimeout(() => setErrorMessage(""), 5000);
+  };
 
   // Fetch assignments data
   const fetchAssignmentsData = async () => {
@@ -164,8 +179,6 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserListItem[]>([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState("");
@@ -303,18 +316,6 @@ export default function AdminUsersPage() {
   });
 
   // Client-side authentication check
-  // Utility to show temporary message banners
-  const showSuccess = (msg: string) => {
-    setSuccessMessage(msg);
-    setErrorMessage("");
-    setTimeout(() => setSuccessMessage(""), 5000);
-  };
-
-  const showError = (msg: string) => {
-    setErrorMessage(msg);
-    setSuccessMessage("");
-    setTimeout(() => setErrorMessage(""), 5000);
-  };
 
   // Fetch all users
   const fetchUsers = async () => {

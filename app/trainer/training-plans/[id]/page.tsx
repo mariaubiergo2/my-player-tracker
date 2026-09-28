@@ -44,18 +44,6 @@ export default function TrainingPlanBuilderPage({ params }: { params: Promise<{ 
   const [sessions, setSessions] = useState<SessionForm[]>([]);
   const [libraryExercises, setLibraryExercises] = useState<Exercise[]>([]);
 
-  useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        router.push("/login");
-      } else if (user?.role !== "TRAINER" && user?.role !== "ADMIN") {
-        router.push("/dashboard");
-      } else {
-        loadData();
-      }
-    }
-  }, [isLoading, isAuthenticated, user, router]);
-
   const loadData = async () => {
     setLoading(true);
     setErrorMsg("");
@@ -93,6 +81,18 @@ export default function TrainingPlanBuilderPage({ params }: { params: Promise<{ 
 
     setLoading(false);
   };
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+      } else if (user?.role !== "TRAINER" && user?.role !== "ADMIN") {
+        router.push("/dashboard");
+      } else {
+        loadData();
+      }
+    }
+  }, [isLoading, isAuthenticated, user, router]);
 
   const handleAddSession = () => {
     const newSession: SessionForm = {

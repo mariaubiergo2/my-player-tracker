@@ -160,20 +160,6 @@ export default function PhysicalPrepPage() {
     updateUrl(viewMode, date);
   };
 
-  useEffect(() => {
-    if (!isLoading) {
-      if (!isAuthenticated) {
-        router.push("/login");
-      } else if (user?.role === "ADMIN") {
-        router.push("/admin/users");
-      } else if (user?.role === "TRAINER") {
-        router.push("/trainer/players/my-players");
-      } else {
-        fetchData();
-      }
-    }
-  }, [isLoading, isAuthenticated, user, router]);
-
   const fetchData = async () => {
     if (!user) return;
     setLoading(true);
@@ -201,6 +187,20 @@ export default function PhysicalPrepPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        router.push("/login");
+      } else if (user?.role === "ADMIN") {
+        router.push("/admin/users");
+      } else if (user?.role === "TRAINER") {
+        router.push("/trainer/players/my-players");
+      } else {
+        fetchData();
+      }
+    }
+  }, [isLoading, isAuthenticated, user, router]);
 
   // Helper: Get standard 42 days grid for Month view
   const getMonthDays = (date: Date) => {
