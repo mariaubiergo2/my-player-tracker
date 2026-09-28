@@ -19,7 +19,7 @@ export default function NexaAbout() {
         {/* Header Block */}
         <div className="space-y-4 max-w-3xl">
           <div className="inline-flex items-center gap-2 text-[#BFF137] font-mono text-xs tracking-[0.25em] uppercase">
-            <span>// 01</span>
+            <span>{"// 01"}</span>
             <span className="w-4 h-[1px] bg-[#BFF137]" />
             <span>{t("landing.about.tag")}</span>
           </div>

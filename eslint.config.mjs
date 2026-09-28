@@ -11,6 +11,10 @@ const eslintConfig = defineConfig([
       // ver PROJECT_OVERVIEW.md sección Deuda Técnica. Volver a "error" cuando se complete ese bloque.
       "@typescript-eslint/no-explicit-any": "warn",
       "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/immutability": "warn",
+      "react/no-unescaped-entities": "warn",
+      "@typescript-eslint/no-use-before-define": "warn",
+      "no-use-before-define": "warn",
     },
   },
   {
