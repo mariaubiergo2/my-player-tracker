@@ -1,0 +1,388 @@
+{
+  "version": "1.0.0",
+  "grid": 24,
+  "strokeWidth": 1.5,
+  "color": "currentColor",
+  "accent": "var(--nexa-accent, #BFF137)",
+  "icons": [
+    {
+      "name": "match",
+      "file": "match.svg",
+      "usage": "Partidos: listado, detalle y marcador de un partido",
+      "replacesEmoji": "⚽",
+      "hasAccent": true
+    },
+    {
+      "name": "stats",
+      "file": "stats.svg",
+      "usage": "Estadísticas y métricas de rendimiento",
+      "replacesEmoji": "📊",
+      "hasAccent": true
+    },
+    {
+      "name": "chat-feedback",
+      "file": "chat-feedback.svg",
+      "usage": "Feedback y comentarios del staff",
+      "replacesEmoji": "💬",
+      "hasAccent": true
+    },
+    {
+      "name": "objective-target",
+      "file": "objective-target.svg",
+      "usage": "Objetivos individuales y metas",
+      "replacesEmoji": "🎯",
+      "hasAccent": true
+    },
+    {
+      "name": "player-run",
+      "file": "player-run.svg",
+      "usage": "Jugador de campo / rol jugador",
+      "replacesEmoji": "🏃",
+      "hasAccent": false,
+      "min-size": 20
+    },
+    {
+      "name": "goalkeeper",
+      "file": "goalkeeper.svg",
+      "usage": "Portero / rol portero (NEXA GK)",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "staff-coach",
+      "file": "staff-coach.svg",
+      "usage": "Staff técnico / entrenador",
+      "replacesEmoji": null,
+      "hasAccent": true
+    },
+    {
+      "name": "admin-shield",
+      "file": "admin-shield.svg",
+      "usage": "Administración y permisos",
+      "replacesEmoji": null,
+      "hasAccent": true
+    },
+    {
+      "name": "questionnaire",
+      "file": "questionnaire.svg",
+      "usage": "Cuestionarios y encuestas",
+      "replacesEmoji": "📋",
+      "hasAccent": false
+    },
+    {
+      "name": "edit-note",
+      "file": "edit-note.svg",
+      "usage": "Editar / añadir nota",
+      "replacesEmoji": "📝",
+      "hasAccent": false
+    },
+    {
+      "name": "video-analysis-search",
+      "file": "video-analysis-search.svg",
+      "usage": "Análisis de vídeo, buscar jugadas",
+      "replacesEmoji": "🔍",
+      "hasAccent": true
+    },
+    {
+      "name": "notification-bell",
+      "file": "notification-bell.svg",
+      "usage": "Notificaciones (sin pendientes)",
+      "replacesEmoji": "🔔",
+      "hasAccent": false
+    },
+    {
+      "name": "notification-bell-unread",
+      "file": "notification-bell-unread.svg",
+      "usage": "Notificaciones con avisos pendientes",
+      "replacesEmoji": "🔔",
+      "hasAccent": true
+    },
+    {
+      "name": "close",
+      "file": "close.svg",
+      "usage": "Cerrar, descartar, cancelar",
+      "replacesEmoji": "❌",
+      "hasAccent": false
+    },
+    {
+      "name": "attack-defense",
+      "file": "attack-defense.svg",
+      "usage": "Acciones ofensivas / defensivas",
+      "replacesEmoji": "⚔️",
+      "hasAccent": true
+    },
+    {
+      "name": "location-pin",
+      "file": "location-pin.svg",
+      "usage": "Ubicación / campo del partido",
+      "replacesEmoji": "📍",
+      "hasAccent": true
+    },
+    {
+      "name": "calendar",
+      "file": "calendar.svg",
+      "usage": "Calendario, fechas, convocatorias",
+      "replacesEmoji": "📅",
+      "hasAccent": true
+    },
+    {
+      "name": "language",
+      "file": "language.svg",
+      "usage": "Selector de idioma",
+      "replacesEmoji": "🌐",
+      "hasAccent": false
+    },
+    {
+      "name": "nutrition",
+      "file": "nutrition.svg",
+      "usage": "Nutrición",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "physical-prep",
+      "file": "physical-prep.svg",
+      "usage": "Preparación física",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "training-plan",
+      "file": "training-plan.svg",
+      "usage": "Plan de entrenamiento semanal",
+      "replacesEmoji": null,
+      "hasAccent": true
+    },
+    {
+      "name": "exercise",
+      "file": "exercise.svg",
+      "usage": "Ejercicio / tarea de entrenamiento",
+      "replacesEmoji": null,
+      "hasAccent": true
+    },
+    {
+      "name": "hydration",
+      "file": "hydration.svg",
+      "usage": "Hidratación",
+      "replacesEmoji": null,
+      "hasAccent": true
+    },
+    {
+      "name": "sleep",
+      "file": "sleep.svg",
+      "usage": "Sueño y descanso",
+      "replacesEmoji": null,
+      "hasAccent": true
+    },
+    {
+      "name": "heart-rate",
+      "file": "heart-rate.svg",
+      "usage": "Frecuencia cardíaca",
+      "replacesEmoji": null,
+      "hasAccent": true
+    },
+    {
+      "name": "vo2max",
+      "file": "vo2max.svg",
+      "usage": "VO2 máx / capacidad aeróbica",
+      "replacesEmoji": null,
+      "hasAccent": true
+    },
+    {
+      "name": "fatigue-rpe",
+      "file": "fatigue-rpe.svg",
+      "usage": "Fatiga percibida (RPE)",
+      "replacesEmoji": null,
+      "hasAccent": true
+    },
+    {
+      "name": "pain-injury",
+      "file": "pain-injury.svg",
+      "usage": "Dolor / lesión",
+      "replacesEmoji": null,
+      "hasAccent": true
+    },
+    {
+      "name": "home-match",
+      "file": "home-match.svg",
+      "usage": "Partido en casa (local)",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "away-match",
+      "file": "away-match.svg",
+      "usage": "Partido fuera (visitante)",
+      "replacesEmoji": null,
+      "hasAccent": true
+    },
+    {
+      "name": "match-type-friendly",
+      "file": "match-type-friendly.svg",
+      "usage": "Tipo de partido: amistoso",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "match-type-league",
+      "file": "match-type-league.svg",
+      "usage": "Tipo de partido: liga",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "match-type-cup",
+      "file": "match-type-cup.svg",
+      "usage": "Tipo de partido: copa",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "match-type-training",
+      "file": "match-type-training.svg",
+      "usage": "Tipo de sesión: entrenamiento",
+      "replacesEmoji": null,
+      "hasAccent": true
+    },
+    {
+      "name": "review-check",
+      "file": "review-check.svg",
+      "usage": "Revisado / análisis completado",
+      "replacesEmoji": null,
+      "hasAccent": true
+    },
+    {
+      "name": "warning",
+      "file": "warning.svg",
+      "usage": "Aviso",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "info",
+      "file": "info.svg",
+      "usage": "Información",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "success",
+      "file": "success.svg",
+      "usage": "Éxito / confirmación",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "error",
+      "file": "error.svg",
+      "usage": "Error",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "user-profile",
+      "file": "user-profile.svg",
+      "usage": "Perfil de usuario",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "logout",
+      "file": "logout.svg",
+      "usage": "Cerrar sesión",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "menu",
+      "file": "menu.svg",
+      "usage": "Menú de navegación",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "chevron-left",
+      "file": "chevron-left.svg",
+      "usage": "Atrás / anterior",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "chevron-right",
+      "file": "chevron-right.svg",
+      "usage": "Siguiente / avanzar",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "chevron-down",
+      "file": "chevron-down.svg",
+      "usage": "Desplegar / expandir",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "arrow-right",
+      "file": "arrow-right.svg",
+      "usage": "Continuar / ir a",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "arrow-up-right",
+      "file": "arrow-up-right.svg",
+      "usage": "Progreso / tendencia al alza",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "plus",
+      "file": "plus.svg",
+      "usage": "Añadir / crear",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "trash",
+      "file": "trash.svg",
+      "usage": "Eliminar",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "search",
+      "file": "search.svg",
+      "usage": "Buscar",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "filter",
+      "file": "filter.svg",
+      "usage": "Filtrar",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "upload",
+      "file": "upload.svg",
+      "usage": "Subir vídeo o archivo",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "external-link",
+      "file": "external-link.svg",
+      "usage": "Enlace externo",
+      "replacesEmoji": null,
+      "hasAccent": false
+    },
+    {
+      "name": "lock",
+      "file": "lock.svg",
+      "usage": "Bloqueado / acceso restringido",
+      "replacesEmoji": null,
+      "hasAccent": true
+    }
+  ]
+}
