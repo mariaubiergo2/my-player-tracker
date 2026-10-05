@@ -133,7 +133,7 @@ export default function PlayersDashboardPage() {
             <div className="card-actions justify-end mt-8">
               <Link
                 href="/trainer/players/assign"
-                className="btn btn-secondary btn-md rounded-2xl shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 w-full md:w-auto text-secondary-content"
+                className="btn btn-primary btn-md rounded-2xl shadow-lg hover:scale-105 active:scale-95 transition-all duration-300 w-full md:w-auto"
               >
                 {t("common.manage")} &rarr;
               </Link>

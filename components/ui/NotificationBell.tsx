@@ -313,7 +313,7 @@ export default function NotificationBell() {
           />
         </svg>
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-error text-[10px] font-bold text-error-content animate-pulse">
+          <span className="absolute -top-1 -right-1 flex h-4 min-w-4 w-auto px-1 items-center justify-center rounded-full bg-error text-[10px] font-bold text-error-content animate-pulse leading-none">
             {unreadCount}
           </span>
         )}

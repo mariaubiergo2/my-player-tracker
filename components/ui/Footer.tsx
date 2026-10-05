@@ -15,7 +15,7 @@ export default function Footer() {
       </p>
 
       {/* Eslogan */}
-      <p className="font-sans text-sm text-base-content/70 max-w-md">
+      <p className="font-sans text-sm text-base-content/50 w-full max-w-3xl text-balance leading-relaxed">
         {t("footer.slogan")}
       </p>
 
@@ -33,4 +33,4 @@ export default function Footer() {
       </p>
     </footer>
   );
-}
+}

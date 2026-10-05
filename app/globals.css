@@ -22,6 +22,16 @@
   --cat-video: #38bdf8;
   --cat-physical: #4ade80;
   --cat-nutrition: #facc15;
+
+  /* DaisyUI structural tokens */
+  --border: 1px;
+  --radius-selector: 6px;
+  --radius-field: 6px;
+  --radius-box: 12px;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --depth: 1;
+  --noise: 0;
 }
 
 @plugin "daisyui/theme" {
@@ -47,6 +57,15 @@
   --color-warning-content: #422006;
   --color-error: #f87171;
   --color-error-content: #450a0a;
+
+  --border: 1px;
+  --radius-selector: 6px;
+  --radius-field: 6px;
+  --radius-box: 12px;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --depth: 1;
+  --noise: 0;
 }
 
 @theme {
@@ -138,6 +157,75 @@ h1, h2, h3, h4, h5, h6, .font-display {
 .card {
   border-radius: 12px;
   overflow: hidden;
+}
+
+/* NEXA Base Badge & Chip System */
+.badge {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1;
+  min-height: 1.5rem;
+  height: auto;
+  min-width: 1.5rem;
+  padding: 0.25rem 0.625rem;
+  padding-inline: max(0.5rem, calc(var(--size, 1.5rem) / 2 - var(--border, 1px)));
+  border-radius: 6px;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.badge-xs {
+  font-size: 0.6875rem;
+  padding: 0.125rem 0.5rem;
+  min-height: 1.25rem;
+  min-width: 1.5rem;
+  line-height: 1;
+}
+
+.badge-sm {
+  font-size: 0.75rem;
+  padding: 0.1875rem 0.5rem;
+  min-height: 1.375rem;
+  min-width: 1.5rem;
+  line-height: 1;
+}
+
+.badge-md {
+  font-size: 0.8125rem;
+  padding: 0.25rem 0.625rem;
+  min-height: 1.5rem;
+  min-width: 1.5rem;
+  line-height: 1;
+}
+
+.badge-lg {
+  font-size: 0.9375rem;
+  padding: 0.3125rem 0.75rem;
+  min-height: 1.75rem;
+  min-width: 1.75rem;
+  line-height: 1;
+}
+
+/* Ensure high contrast on solid bright badges (excluding outline/ghost/soft variants) */
+.badge-primary:not(.badge-outline):not(.badge-ghost):not(.badge-soft),
+.badge-accent:not(.badge-outline):not(.badge-ghost):not(.badge-soft) {
+  background-color: var(--accent) !important;
+  color: #1A1B1B !important;
+  border-color: var(--accent) !important;
+  font-weight: 700;
+}
+
+.badge-primary.badge-outline,
+.badge-accent.badge-outline {
+  color: var(--accent) !important;
+  border-color: var(--accent) !important;
+}
+
+.badge-warning:not(.badge-outline):not(.badge-ghost):not(.badge-soft) {
+  color: #141515 !important;
+  font-weight: 700;
 }
 
 /* NEXA Category Badges (consistent dark-theme palette) */

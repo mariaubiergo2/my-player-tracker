@@ -264,7 +264,7 @@ export default function VideoAnalysisFeedbackPage() {
                             {pendingReviews > 0 && (
                               <span
                                 title={t("video_analysis_page.pending_reviews_tooltip", { count: pendingReviews })}
-                                className={`badge badge-xs font-black ${selectedPlayerId === p.id ? "badge-secondary text-secondary-content" : "badge-warning text-white"} flex-shrink-0 ml-1`}
+                                className={`badge badge-xs font-black ${selectedPlayerId === p.id ? "badge-secondary text-secondary-content" : "badge-warning text-neutral-900"} flex-shrink-0 ml-1`}
                               >
                                 {pendingReviews}
                               </span>
@@ -284,11 +284,11 @@ export default function VideoAnalysisFeedbackPage() {
             {selectedPlayer && (
               <>
                 {/* Header showing current selected player name */}
-                <div className="border-b border-base-200 pb-3 flex items-center justify-between">
-                  <h3 className="text-2xl font-extrabold text-base-content/80">
+                <div className="border-b border-base-200 pb-3 flex flex-wrap items-center justify-between gap-3">
+                  <h3 className="text-2xl font-extrabold text-base-content/80 min-w-0 break-words">
                     👤 {selectedPlayer.name} {selectedPlayer.surname}
                   </h3>
-                  <div className="badge badge-primary gap-1">
+                  <div className="badge badge-primary gap-1 shrink-0 whitespace-nowrap">
                     {selectedPlayer.matches.length} {t("trainer_my_players.history_title").toLowerCase()}
                   </div>
                 </div>
