@@ -6,17 +6,32 @@ import { cookies } from "next/headers";
 import { defaultLocale, Locale } from "@/lib/i18n";
 import { montserrat, poppins } from "@/lib/fonts";
 
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "NEXA | See. Understand. Evolve.",
   description:
     "Convertimos rendimiento en conocimiento y conocimiento en evolución. Metodología de desarrollo y rendimiento aplicada al fútbol.",
   icons: {
-    icon: "/favicon.svg?v=1",
+    icon: [
+      { url: "/brand/logo/favicon.svg" },
+      { url: "/brand/logo/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/brand/logo/apple-touch-icon.png",
   },
   openGraph: {
     title: "NEXA | See. Understand. Evolve.",
     description: "Convertimos rendimiento en conocimiento y conocimiento en evolución.",
     type: "website",
+    images: [
+      {
+        url: "/brand/social/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "NEXA | See. Understand. Evolve.",
+      },
+    ],
   },
 };
 

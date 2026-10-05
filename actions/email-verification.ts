@@ -88,15 +88,18 @@ export async function generateAndSendVerificationCode(userId: string, db: Prisma
     to: user.email,
     subject: subject,
     html: `
-      <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px; background-color: #ffffff; color: #1f2937;">
-        <h2 style="color: #2563eb; text-align: center; margin-top: 0;">${emailTitle}</h2>
-        <p style="font-size: 16px; line-height: 1.5;">${greeting}</p>
-        <p style="font-size: 16px; line-height: 1.5;">${body}</p>
-        <div style="text-align: center; margin: 30px 0;">
-          <span style="font-size: 32px; font-weight: bold; letter-spacing: 5px; padding: 12px 24px; background-color: #f3f4f6; border-radius: 8px; color: #111827; border: 1px solid #e5e7eb; display: inline-block;">${code}</span>
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 24px; border: 1px solid #e5e7eb; border-radius: 8px; background-color: #ffffff; color: #1f2937;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <span style="font-size: 24px; font-weight: 900; letter-spacing: 4px; color: #111827; display: inline-block;">NEXA</span>
         </div>
-        <p style="color: #dc2626; font-weight: 500; font-size: 14px; text-align: center;">${expirationText}</p>
-        <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
+        <h2 style="color: #111827; font-size: 20px; font-weight: 700; text-align: center; margin-top: 0; margin-bottom: 16px;">${emailTitle}</h2>
+        <p style="font-size: 16px; line-height: 1.5; color: #374151; margin-bottom: 12px;">${greeting}</p>
+        <p style="font-size: 16px; line-height: 1.5; color: #374151; margin-bottom: 24px;">${body}</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <span style="font-size: 32px; font-weight: bold; letter-spacing: 6px; padding: 14px 28px; background-color: #f3f4f6; border-radius: 8px; color: #111827; border: 1px solid #e5e7eb; display: inline-block;">${code}</span>
+        </div>
+        <p style="color: #dc2626; font-weight: 500; font-size: 14px; text-align: center; margin-bottom: 24px;">${expirationText}</p>
+        <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 24px 0;" />
         <p style="font-size: 12px; color: #6b7280; text-align: center; margin-bottom: 0;">${securityNotice}</p>
       </div>
     `,

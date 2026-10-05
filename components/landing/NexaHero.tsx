@@ -46,19 +46,14 @@ export default function NexaHero() {
           <span>{t("landing.hero.badge")}</span>
         </div>
 
-        {/* Brand Typographic Hero Logo */}
-        <div className="flex flex-col items-center select-none">
-          <div className="flex items-center gap-[clamp(0.5rem,1vw,0.85rem)]">
-            <h1 
-              className={`text-[clamp(2.75rem,6vw+1.5vh,6.5rem)] font-black tracking-[0.12em] text-[#EDEDED] leading-none ${montserrat.className}`}
-            >
-              NEXA
-            </h1>
-            <span 
-              className="w-[clamp(0.5rem,1.1vw,1.15rem)] h-[clamp(0.5rem,1.1vw,1.15rem)] bg-[#BFF137] self-end mb-[clamp(0.35rem,0.8vw,0.85rem)] shadow-[0_0_20px_#BFF137]" 
-            />
-          </div>
-        </div>
+        {/* Brand Hero Logo */}
+        <h1 className="flex flex-col items-center select-none">
+          <img
+            src="/brand/logo/nexa-wordmark-on-dark.svg"
+            alt="NEXA"
+            className="h-[clamp(2.75rem,6vw+1.5vh,6.5rem)] w-auto max-w-[90vw] object-contain drop-shadow-[0_0_35px_rgba(191,241,55,0.2)]"
+          />
+        </h1>
 
         {/* Motto: "SEE. UNDERSTAND. EVOLVE." */}
         <div className="space-y-[clamp(0.25rem,0.8vh,0.75rem)] max-w-3xl">

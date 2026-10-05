@@ -91,14 +91,21 @@ export default function DoorAuthPortal({
       className={`min-h-[calc(100vh-8rem)] py-12 px-4 sm:px-6 flex flex-col items-center justify-center ${poppins.className}`}
     >
       <div className="w-full max-w-lg">
-        {/* Navigation Breadcrumb */}
-        <div className="mb-4">
+        {/* Portal Header */}
+        <div className="flex items-center justify-between mb-6">
           <Link
             href="/#entornos"
             className="inline-flex items-center gap-2 text-xs font-mono tracking-widest text-[#EDEDED]/60 hover:text-[#BFF137] transition-colors uppercase"
           >
             <span>←</span>
             <span>Volver a entornos</span>
+          </Link>
+          <Link href="/" aria-label="NEXA" className="hover:opacity-80 transition-opacity">
+            <img
+              src="/brand/logo/nexa-wordmark-on-dark.svg"
+              alt="NEXA"
+              className="h-5 sm:h-6 w-auto"
+            />
           </Link>
         </div>
 

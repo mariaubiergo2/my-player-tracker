@@ -10,9 +10,11 @@ export default function Footer() {
   return (
     <footer className="flex flex-col items-center text-center gap-3 bg-base-200 text-base-content p-8 border-t border-base-content/10 font-sans">
       {/* Marca */}
-      <p className="font-display font-black text-lg tracking-[0.25em] uppercase text-base-content">
-        NEXA
-      </p>
+      <img
+        src="/brand/logo/nexa-monogram-on-dark.svg"
+        alt="NEXA"
+        className="h-6 w-auto opacity-80 hover:opacity-100 transition-opacity"
+      />
 
       {/* Eslogan */}
       <p className="font-sans text-sm text-base-content/50 w-full max-w-3xl text-balance leading-relaxed">

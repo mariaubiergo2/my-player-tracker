@@ -77,8 +77,17 @@ export default function Header() {
             )}
           </ul>
         </div>
-        <Link href="/about" className="btn btn-ghost text-xl tracking-widest font-display font-black text-base-content hover:text-primary transition-colors">
-          NEXA
+        <Link href="/about" className="btn btn-ghost px-2 hover:bg-base-200 transition-colors flex items-center">
+          <img
+            src="/brand/logo/nexa-wordmark-on-dark.svg"
+            alt="NEXA"
+            className="hidden sm:block h-[22px] w-auto"
+          />
+          <img
+            src="/brand/logo/nexa-monogram-on-dark.svg"
+            alt="NEXA"
+            className="block sm:hidden h-[24px] w-auto"
+          />
         </Link>
       </div>
       <div className="navbar-center hidden lg:flex z-10">

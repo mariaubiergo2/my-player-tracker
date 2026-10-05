@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useTranslation } from "@/components/LanguageProvider";
-import { montserrat, poppins } from "./fonts";
+import { poppins } from "./fonts";
 
 export default function NexaFooter() {
   const { t } = useTranslation();
@@ -17,12 +17,11 @@ export default function NexaFooter() {
           
           {/* Brand Identity */}
           <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className={`text-xl font-black tracking-[0.2em] text-[#EDEDED] ${montserrat.className}`}>
-                NEXA
-              </span>
-              <span className="w-2 h-2 bg-[#BFF137]" />
-            </div>
+            <img
+              src="/brand/logo/nexa-monogram-on-dark.svg"
+              alt="NEXA"
+              className="h-6 w-auto"
+            />
             <p className="text-xs font-mono tracking-[0.15em] text-[#EDEDED]/60 uppercase">
               {t("landing.motto")}
             </p>
